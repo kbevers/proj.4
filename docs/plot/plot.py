@@ -243,9 +243,7 @@ def plotproj(plotdef, data, outdir):
 
         if plotdef['type'] == 'poly':
             if isinstance(temp_pol, MultiPolygon):
-                polys = []
-                for polygon in temp_pol:
-                    polys.append(resample_polygon(polygon))
+                polys = [resample_polygon(polygon) for polygon in temp_pol]
                 pol = MultiPolygon(polys)
             else:
                 pol = resample_polygon(temp_pol)
@@ -263,9 +261,10 @@ def plotproj(plotdef, data, outdir):
             axes.plot(x, y, color=COLOR_COAST, linewidth=0.5)
 
     # Plot frame
-    frame = []
-    frame.append(parallel(plotdef['latmin'], plotdef['lonmin'], plotdef['lonmax']))
-    frame.append(parallel(plotdef['latmax'], plotdef['lonmin'], plotdef['lonmax']))
+    frame = [
+        parallel(plotdef['latmin'], plotdef['lonmin'], plotdef['lonmax']),
+        parallel(plotdef['latmax'], plotdef['lonmin'], plotdef['lonmax']),
+    ]
     for line in frame:
         line = project(line, plotdef['projstring'])
         x = line[:, 0]
