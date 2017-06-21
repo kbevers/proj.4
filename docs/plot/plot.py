@@ -77,6 +77,7 @@ COLOR_LAND = '#000000'
 COLOR_COAST = '#000000'
 COLOR_GRAT = '#888888'
 
+
 def interp_coords(coords, tol):
     '''
     Interpolates extra coordinates when the euclidean distance between adjacent
@@ -128,6 +129,7 @@ def interp_coords(coords, tol):
 
     return xy
 
+
 def project(coordinates, proj_string, in_radians=False):
     '''
     Project geographical coordinates
@@ -158,12 +160,14 @@ def project(coordinates, proj_string, in_radians=False):
     out = np.frombuffer(stdout, dtype=np.double)
     return np.reshape(out, (-1, 2))
 
+
 def project_xy(x, y, proj_string):
     '''
     Wrapper for project() that works with shapely.ops.transform().
     '''
     a = project(zip(x, y), proj_string)
     return zip(*a)
+
 
 def meridian(lon, lat_min, lat_max):
     '''
@@ -174,6 +178,7 @@ def meridian(lon, lat_min, lat_max):
     coords[:, 1] = np.linspace(lat_min, lat_max, N_POINTS)
     return coords
 
+
 def parallel(lat, lon_min, lon_max):
     '''
     Calculate parallel coordinates.
@@ -182,6 +187,7 @@ def parallel(lat, lon_min, lon_max):
     coords[:, 0] = np.linspace(lon_min, lon_max, N_POINTS)
     coords[:, 1] = lat
     return coords
+
 
 def build_graticule(lonmin=-180, lonmax=180, latmin=-85, latmax=85):
     '''
@@ -214,6 +220,7 @@ def resample_polygon(polygon):
     for int_ring in polygon.interiors:
         rings.append(interp_coords(int_ring.coords.xy, 2))
     return Polygon(ext, rings)
+
 
 def plotproj(plotdef, data, outdir):
     '''
@@ -342,6 +349,7 @@ def main():
 
     for key in data:
         data[key].close()
+
 
 if __name__ == "__main__":
     sys.exit(main())
