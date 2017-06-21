@@ -166,8 +166,8 @@ def project_xy(x, y, proj_string):
     '''
     Wrapper for project() that works with shapely.ops.transform().
     '''
-    a = project(zip(x, y), proj_string)
-    return zip(*a)
+    a = project(np.column_stack((x, y)), proj_string)
+    return a.T
 
 
 def meridian(lon, lat_min, lat_max):
@@ -269,7 +269,8 @@ def plotproj(plotdef, data, outdir):
     frame.append(parallel(plotdef['latmax'], plotdef['lonmin'], plotdef['lonmax']))
     for line in frame:
         line = project(line, plotdef['projstring'])
-        x, y = zip(*line)
+        x = line[:, 0]
+        y = line[:, 1]
         plt.plot(x, y, '-k')
 
     graticule = build_graticule(
@@ -282,7 +283,8 @@ def plotproj(plotdef, data, outdir):
     # Plot graticule
     for feature in graticule:
         feature = project(feature, plotdef['projstring'])
-        x, y = zip(*feature)
+        x = feature[:, 0]
+        y = feature[:, 1]
         plt.plot(x, y, color=COLOR_GRAT, linewidth=0.4)
 
     axes.axis('off')
