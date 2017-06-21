@@ -227,8 +227,7 @@ def plotproj(plotdef, data, outdir):
     '''
     Plot map.
     '''
-    fig = plt.figure()
-    axes = fig.add_subplot(111)
+    fig, axes = plt.subplots()
 
     bounds = (plotdef['lonmin'], plotdef['latmin'], plotdef['lonmax'], plotdef['latmax'])
     for geom in data.filter(bbox=bounds):
@@ -261,7 +260,7 @@ def plotproj(plotdef, data, outdir):
             axes.add_patch(patch)
         else:
             x, y = proj_geom.xy
-            plt.plot(x, y, color=COLOR_COAST, linewidth=0.5)
+            axes.plot(x, y, color=COLOR_COAST, linewidth=0.5)
 
     # Plot frame
     frame = []
@@ -271,7 +270,7 @@ def plotproj(plotdef, data, outdir):
         line = project(line, plotdef['projstring'])
         x = line[:, 0]
         y = line[:, 1]
-        plt.plot(x, y, '-k')
+        axes.plot(x, y, '-k')
 
     graticule = build_graticule(
         plotdef['lonmin'],
@@ -285,7 +284,7 @@ def plotproj(plotdef, data, outdir):
         feature = project(feature, plotdef['projstring'])
         x = feature[:, 0]
         y = feature[:, 1]
-        plt.plot(x, y, color=COLOR_GRAT, linewidth=0.4)
+        axes.plot(x, y, color=COLOR_GRAT, linewidth=0.4)
 
     axes.axis('off')
     font = {
@@ -294,12 +293,12 @@ def plotproj(plotdef, data, outdir):
         'style': 'italic',
         'size': 12
     }
-    plt.suptitle(plotdef['projstring'], fontdict=font)
+    fig.suptitle(plotdef['projstring'], fontdict=font)
 
-    plt.autoscale(tight=True)
+    axes.autoscale(tight=True)
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    plt.savefig(outdir + '/' + plotdef['filename'], dpi=300)
+    fig.savefig(outdir + '/' + plotdef['filename'], dpi=300)
 
     # Clean up
     fig = None
