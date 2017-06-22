@@ -118,9 +118,9 @@ def interp_coords(coords, tol):
         xy.append((x[offset:i], y[offset:i]))
 
         # Interpolate between points above tolerance.
-        n = round(dsts[i] / tol/2)
-        x1 = np.linspace(x[i], x[i + 1], n + 2)
-        y1 = np.linspace(y[i], y[i + 1], n + 2)
+        n = np.ceil(dsts[i] / tol)
+        x1 = np.linspace(x[i], x[i + 1], n + 1)
+        y1 = np.linspace(y[i], y[i + 1], n + 1)
         xy.append((x1[:-1], y1[:-1]))
 
         offset = i + 1
