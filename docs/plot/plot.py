@@ -107,27 +107,29 @@ def interp_coords(coords, tol):
     x = np.array(x)
     y = np.array(y)
 
-    l = len(x)
-    dsts = np.sqrt((x[0:-1]-x[1:l])**2 + (y[0:-1]-y[1:l])**2)
-    I = dsts > tol
+    dsts = np.hypot(np.diff(x), np.diff(y))
+    # Points to the *beginning* of the segment.
+    I = np.where(dsts > tol)[0]
 
     offset = 0
-    xy = np.ndarray(shape=(2, 0))
-    for i, b in enumerate(I):
-        xy = np.append(xy, (x[i], y[i]))
-        if not b:
-            continue
+    xy = []
+    for i in I:
+        # Add points that are already below tolerance.
+        xy.append((x[offset:i], y[offset:i]))
 
+        # Interpolate between points above tolerance.
         n = round(dsts[i] / tol/2)
-        x1 = np.linspace(x[i], x[i+1], n+2)
-        y1 = np.linspace(y[i], y[i+1], n+2)
-        xy = np.append(xy, zip(x1[1:], y1[1:]))
+        x1 = np.linspace(x[i], x[i + 1], n + 2)
+        y1 = np.linspace(y[i], y[i + 1], n + 2)
+        xy.append((x1[:-1], y1[:-1]))
 
-    # the last coordinate is not added in the loop above
-    #xy = np.append(xy, (x[i+1], y[i+1])).reshape((-1,2)).tolist()
-    xy = xy.reshape((-1, 2)).tolist()
+        offset = i + 1
 
-    return xy
+    xy.append((x[offset:], y[offset:]))
+
+    xy = np.concatenate(xy, axis=1)
+
+    return xy.T
 
 
 def project(coordinates, proj_string, in_radians=False):
