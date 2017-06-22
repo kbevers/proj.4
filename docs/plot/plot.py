@@ -151,6 +151,7 @@ def project(coordinates, proj_string, in_radians=False):
     # proj expects binary input to be in radians
     if not in_radians:
         coordinates = np.deg2rad(coordinates)
+    coordinates = coordinates.astype(np.double, copy=False)
 
     # set up cmd call. -b for binary in/out
     args = [PROJ, '-b']
@@ -158,7 +159,7 @@ def project(coordinates, proj_string, in_radians=False):
 
     proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                             env={'PROJ_LIB': os.path.abspath(PROJ_LIB)})
-    stdout, _ = proc.communicate(coordinates.tobytes())
+    stdout, _ = proc.communicate(coordinates.tobytes(order='C'))
 
     out = np.frombuffer(stdout, dtype=np.double)
     return np.reshape(out, (-1, 2))
