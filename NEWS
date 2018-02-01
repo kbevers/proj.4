@@ -1,55 +1,83 @@
 5.0.0 Release Notes
 -------------------
 
-This version of PROJ introduces significant geodetic improvements
-to the library. The main drivers for the new features is the
-emergence of dynamic reference frames and an increased use of high
-accuracy GNNS that establishes a demand for accurate coordinate
-transformations in geospatial software that has not previously been
-met. While PROJ has had some geodetic functionality in the past,
-this updated version delivers a framework that turns PROJ into a
-generic geospatial coordinate transformation engine. This of course
-includes the well established projection code that is the origin of
-the library. The new functionality is primarily exposed in a new
-programming interface and a new command line utility called "cct".
-The existing programming interface is still available and can - to
-some extend - use the new geodetic transformation features.
+This version of PROJ introduces some significant extensions and
+improvements to (primarily) the geodetic functionality of the system.
 
-As part of the updates many internal architectural improvements has
-been made. All of these improvements has so far respected the
-existing programming interface, although the process has highlighted
-a need to simplify and reduce the code-base in the future in order
-to sustain active development that aligns with modern practices.
-Therefore we have scheduled regular releases over the coming years
-which will gradually remove the old programming interface. This is
-a process that will cause breaking changes with the next two major
-version releases. This will affect all projects that are depending
-on PROJ today. The decision to break the existing API has not been
-easy, but has ultimately been deemed necessary to ensure the
-survival of the project by improving the maintainability immensely.
-In the end the goal is to have a generic coordinate transformation
-software package with a clean and concise code base that appeals to
-both users and developers of PROJ.
+The main driver for introducing the new features is the emergence of
+dynamic reference frames, the increasing use of high accuracy GNNS,
+and the related growing demand for accurate coordinate
+transformations.  While older versions of PROJ included some geodetic
+functionality, the new framework lays the foundation for turning PROJ
+into a generic geospatial coordinate transformation engine.
 
-For the first time in more than 25 years the major version of the
-software is raised. The decision to do this is based on the many
+The core of the library is still the well established projection code.
+The new functionality is primarily exposed in a new programming
+interface and a new command line utility, "cct" (for "Coordinate
+Conversion and Transformation").  The old programming interface is
+still available and can - to some extent - use the new geodetic
+transformation features.
+
+The internal architecture has also seen many changes and much
+improvement.  So far, these improvements respect the existing
+programming interface. But the process has revealed a need to simplify
+and reduce the code base, in order to support sustained active
+development.
+
+!!!
+!!! Therefore we have scheduled regular releases over the coming years
+!!! which will gradually remove the old programming interface.
+!!!
+!!! This will cause breaking changes with the next two major version
+!!! releases, which will affect all projects that depend on PROJ
+!!! (cf. section "deprecations" below).
+!!!
+
+The decision to break the existing API has not been easy, but has
+ultimately been deemed necessary to ensure the long term survival of
+the project. Not only by improving the maintainability immensely, but
+also by extending the potential user (and hence developer) community.
+
+The end goal is to deliver a generic coordinate transformation
+software package with a clean and concise code base appealing to
+both users and developers.
+
+
+VERSIONING AND NAMING
+---------------------
+
+For the first time in more than 25 years the major version number of
+the software is changed. The decision to do this is based on the many
 new features and new API. While backwards compatibility remains -
-except in a few rare corner cases - the addition of a new and
-improved programming interface warrants a new major release. The
-new major version number unfortunately leaves the project in a bit
+except in a few rare corner cases - the addition of a new and improved
+programming interface warrants a new major release.
+
+The new major version number unfortunately leaves the project in a bit
 of a conundrum regarding the name. For the majority of the life-time
 of the product it has been known as PROJ.4, but since we have now
 reached version 5 the name is no longer aligned with the version
-number. Hence we have decided to decouple the name from the version
-number and from this version and onwards the product will simply be
-called PROJ. In recognition of the history of the software we are
-keeping PROJ.4 as the name of the organizing project. The same
-project also produces the datum-grid. In summation: The PROJ.4
-project provides the product PROJ, which is now at version 5.0.0. The
-foundational component of PROJ is the library libproj. Other PROJ
-components include the application proj, which provide a command line
-interface to libproj. The PROJ.4 project also distributes the
-datum-grid package, which at the time of writing is at version 1.6.0.
+number.
+
+Hence we have decided to decouple the name from the version number and
+from this version and onwards the product will simply be called PROJ.
+
+In recognition of the history of the software we are keeping PROJ.4 as
+the *name of the organizing project*. The same project team also
+produces the datum-grid package.
+
+In summary:
+
+o The PROJ.4 project provides the product PROJ, which is now at
+  version 5.0.0.
+  
+o The foundational component of PROJ is the library libproj.
+
+o Other PROJ components include the application proj, which provides
+  a command line interface to libproj.
+  
+o The PROJ.4 project also distributes the datum-grid package,
+  which at the time of writing is at version 1.6.0.
+
 
  UPDATES
  -------
@@ -57,35 +85,37 @@ datum-grid package, which at the time of writing is at version 1.6.0.
  o Introduced new API in proj.h.
    - The new API is orthogonal to the existing proj_api.h API and the
      internally used projects.h API.
-   - The new API adds the ability to transform spatiotemporal
+   - The new API adds the ability to transform spatiotemporal (4D)
      coordinates.
-   - Functions in the new API uses the "proj_" namespace.
-   - Datatypes in the new API uses the "PJ_" namespace, with a few
+   - Functions in the new API use the "proj_" namespace.
+   - Data types in the new API use the "PJ_" namespace, with a few
      historic exceptions such as XY, XYZ, LP and LPZ.
 
  o Introduced the concept of "transformation pipelines" that makes it
    possible to do complex geodetic transformations of spatiotemporal
-   coordinates in PROJ by daisy chaining simple coordinate
-   operations.
+   coordinates by daisy chaining simple coordinate operations.
 
  o Introduced cct, the Coordinate Conversion and Transformation
    application.
 
  o Introduced gie, the Geospatial Integrity Investigation Environment.
    - Selftest invoked by -C flag in proj has been removed
+   - Ported approx. 1300 built-in selftests to gie format
+   - Ported approx. 1000 tests from the gigs test framework
+   - Added approx. 200 new tests
 
  o Adopted terminology from the OGC/ISO-19100 geospatial standards
    series. Key definitions are:
-   - A coordinate operation is a change of coordinates, based on a
-     one-to-one relationship, from one coordinate reference system
-     to another
-   - A transformation is a coordinate operation in which the two
+   - At the most generic level, a *coordinate operation* is a change
+     of coordinates, based on a one-to-one relationship, from one
+     coordinate reference system to another.
+   - A *transformation* is a coordinate operation in which the two
      coordinate reference systems are based on different datums, e.g.
      a change from a global reference frame to a regional frame.
-   - A conversion is an operation in which both coordinate
-     reference systems are based on the same datum, e.g. change of
-     units of coordinates.
-   - A projection is a coordinate conversion from an ellipsoidal
+   - A *conversion* is a coordinate operation in which both
+     coordinate reference systems are based on the same datum,
+     e.g. change of units of coordinates.
+   - A *projection* is a coordinate conversion from an ellipsoidal
      coordinate system to a plane. Although projections are simply
      conversions according to the standard, they are treated as
      separate entities in PROJ as they make up the vast majority
@@ -95,7 +125,7 @@ datum-grid package, which at the time of writing is at version 1.6.0.
    - The pipeline operator (pipeline)
    - Transformations:
      + Helmert transform (helmert)
-     + Horner complex polynomial evaluation (horner)
+     + Horner real and complex polynomial evaluation (horner)
      + Horizontal gridshift (hgridshift)
      + Vertical gridshift (vgridshift)
      + Molodensky transform (molodensky)
@@ -124,8 +154,9 @@ datum-grid package, which at the time of writing is at version 1.6.0.
    transformation parameters, including plate motion model
    parameters.
 
- o Added parameters for GSK2011, PZ90 and danish (similar to existing
-   andrae ellipsoid which has an incorrect semimajor axis) ellipsoids.
+ o Added ellipsoid parameters for GSK2011, PZ90 and "danish". The
+   latter is similar to the already supported andrae ellipsoid,
+   but has a slightly different semimajor axis.
 
  o Added Copenhagen prime meridian.
 
@@ -138,8 +169,9 @@ datum-grid package, which at the time of writing is at version 1.6.0.
  o Improved performance in Winkel Tripel and Aitoff.
 
  o Introduced pj_has_inverse() function to proj_api.h. Checks if an
-   operation has an inverse. Use this instead of checking if P->inv
-   exists, since that can no longer be relied on.
+   operation has an inverse. Use this instead of checking whether
+   P->inv exists, since that can no longer be relied on.
+
 
  BUG FIXES
  ------------
