@@ -1,145 +1,124 @@
 ###############################################################################
-
-                       Norwegian transformations
-
-Bla Bla
-
+#                                                                             #
+#                                                                             #
+#                       Norwegian transformations                             #
+#          Norwegian Mapping Authority, NMA (Statens Kartverk)                #
+#                                                                             #
+#          The test cases are compared with SkTrans                           #
+#                                                                             #
 ###############################################################################
 
 <gie>
 -------------------------------------------------------------------------------
-1. Transformation from WGS84 lat lon to NTM05
+1. Transformation from WGS84 lat lon to NTM10
 -------------------------------------------------------------------------------
+operation +proj=tmerc +lat_0=58 +lon_0=10.5 +k=1 +x_0=100000 +y_0=1000000 +ellps=GRS80 +units=m +no_defs
+tolerance   1 mm
+accept      10.0000         60.0000 10.0000 10.0000
+expect      72100.1761 1222895.5749 10.0000 10.0000
 
-operation +proj=tmerc +lat_0=58 +lon_0=5.5 +k=1 +x_0=100000 +y_0=1000000 +ellps=GRS80 +units=m +no_defs
+
+-------------------------------------------------------------------------------
+2. Transformation from WGS84 lat lon to EUREF89 zone 32
+-------------------------------------------------------------------------------
+operation +proj=utm +zone=32
+tolerance   1 mm
+accept      10.0000          60.0000 10.0000 10.0000
+expect      555776.2668 6651832.7353 10.0000 10.0000
+
+
+-------------------------------------------------------------------------------
+3. Transformation from EUREF89 zone 32 to NTM10
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=utm +zone=32 +ellps=GRS80  +inv
++step +proj=tmerc +lat_0=58.0000 +lon_0=10.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80 +units=m +no_defs
+tolerance   1 mm
+accept      555776.2668    6651832.7353  10.00 10.000
+expect       72100.1761    1222895.5749  10.00 10.000
+
+
+-------------------------------------------------------------------------------
+4. Transformation from NTM10 to EUREF89 zone 32
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=tmerc +lat_0=58.0000 +lon_0=10.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80 +units=m +inv +no_defs
++step +proj=utm +zone=32 +ellps=GRS80 
+tolerance   1 mm
+accept       72100.1761    1222895.5749  10.00
+expect      555776.2668    6651832.7353  10.00
+
+
+-------------------------------------------------------------------------------
+5. Transformation from EUREF89 zone 32 to ED50 zone 32
+   (Transformation is incorrect)
+-------------------------------------------------------------------------------
+#operation +proj=pipeline
+#+step +proj=utm +zone=32 +inv +ellps=GRS80
+#+step +proj=cart +ellps=GRS80
+#+step +proj=helmert +convention=coordinate_frame +x=-81.0703 +y=-89.3603 +z=-115.7526 +rx=-0.48488 +ry=-0.02436 +rz=-0.41321
+#+step +proj=utm +zone=32 +ellps=intl
+#tolerance   10000 mm
+#accept      555776.2668 6651832.7353 10.0000 10.0000
+#expect      555857.7698 6652040.7392 10.0000 10.0000
+
+
+-------------------------------------------------------------------------------
+7. Transformation from EUREF89 lat lon to EUREF89 XYZ
+-------------------------------------------------------------------------------
+operation +proj=cart +ellps=GRS80
+tolerance   1 mm
+accept           10.0000     60.0000      10.0000 10.0000
+expect      3148538.3085 555172.2536 5500485.7941
+
+-------------------------------------------------------------------------------
+8. Transformation from EUREF89 til NGO1948
+-------------------------------------------------------------------------------
+#Not implemented yet
+
+
+-------------------------------------------------------------------------------
+9. Transformation between NGO1948 axiz
+-------------------------------------------------------------------------------
+#Not implemented yet
+
+
+-------------------------------------------------------------------------------
+10. Transformation between EUREF89 zones (UTM32>UTM31 and UTM32>UTM33)
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=utm +zone=32 +inv +ellps=GRS80
++step +proj=utm +zone=31 +ellps=GRS80
+tolerance   1 mm
+accept      555776.2668 6651832.7353 10.0000 10.0000
+expect      889956.7018 6672079.4938 10.0000 10.0000
+
+operation +proj=pipeline
++step +proj=utm +zone=32 +inv +ellps=GRS80
++step +proj=utm +zone=33 +ellps=GRS80
+tolerance   1 mm
+accept      555776.2668 6651832.7353 10.0000 10.0000
+expect      221288.7702 6661953.0402 10.0000 10.0000 
+
+
+-------------------------------------------------------------------------------
+11. Transformation between NTM zones (NTM10>NTM11)
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=tmerc +lat_0=58.0000 +lon_0=10.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80 +units=m +inv +no_defs
++step +proj=tmerc +lat_0=58.0000 +lon_0=11.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80 +units=m +no_defs
 tolerance   1 mm
 
-accept      10.0000          60.0000 10.0000 10.0000
-expect      350970.8395 1231331.9474 10.0000 10.0000
+accept       72100.1761 1222895.5749 10.0000
+expect       16304.7750 1223739.0183 10.0000
 
 -------------------------------------------------------------------------------
-2. Transformation from EUREF89 til NGO1948
+12. ....
 -------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------
-3. Transformation from EUREF89 til NTM
--------------------------------------------------------------------------------
+#operation +proj=pipeline
+#accept         3148538.3085 555172.2536 5500485.7941
 
 -------------------------------------------------------------------------------
-4. Transformation between NGO1948 axiz
+8. More transformations
 -------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------
-5. Transformation between EUREF89 zones
--------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------
-6. Transformation between NTM zones
--------------------------------------------------------------------------------
-
-
-
--------------------------------------------------------------------------------
-1. Simple coordinate translation
--------------------------------------------------------------------------------
-
-The most basic application of the Helmert transformation is a translation of
-the x-, y- and z-components of the coordinate. This is rarely a good fit for
-large areas but locally a 3 parameter Helmert shift can be very effective. Even
-though the 3 parameter translation doesn't fit particularly well in large areas
-of use it is still commonly used between legacy and modern systems. In this
-exercise we will use a transformation between ED50 in Italy (Sardinia) and
-WGS84.
-
-
-Hints:
-
-    - You can find the transformations parameters by running the following
-      command:
-
-            projinfo -o WKT2_2018 -k operation EPSG:1142
-
-      which returns the WKT2 definition of the transformation.
-
-    - Remember that the input to the Helmert transform is cartesian geocentric
-      coordinates (x, y z).
-
-    - Consult the documentation to find out how to set up the transformation:
-      https://proj4.org/operations/transformations/helmert.html
-
--------------------------------------------------------------------------------
-
-operation   +proj=helmert +x=-97 +y=-103 +z=-120
-tolerance   1 m
-
-accept      4826177.7574   4049643.9762   991162.2529  # Sardinia (40N, 9E)
-expect      4826080.7574   4049540.9762   991042.2529
-
--------------------------------------------------------------------------------
-2.  Translation and rotation
--------------------------------------------------------------------------------
-For larger areas it is not enough to just rely on translation of coordinates.
-In that case the solution is to include rotations of the axes and a scale
-adjustment.
-The rotational aspect of the transformation is handled by a set of three
-rotation matrices. Two conventions for the application of the rotations are
-in common use: Position Vector and Coordinate Frame. In this exercise we will
-using Position Vector. See the PROJ documentation on the Helmert transformation
-for further detail.
-
-
-Hints:
-
-    - You can find the transformations parameters by running the following
-      command:
-
-        projinfo -o WKT2_2018 -k operation EPSG:1626
-
-    - Remember to specify the rotation convention with +convention
-
--------------------------------------------------------------------------------
-
-operation   +proj=helmert +x=-81.1 +y=-89.4 +z=-115.8 +rx=0.485 +ry=0.024 +rz=0.413 +s=-0.54 +convention=position_vector
-tolerance   1 m
-
-accept      3496723.5936    743251.5442  5264442.2361
-expect      3496639.7297    743156.3657  5264324.9341
-
-
--------------------------------------------------------------------------------
-3. Position vector/Coordinate frame
--------------------------------------------------------------------------------
-Effectively, the difference between the two rotation convetions is the sign of
-the rotation parameters. In this exercise we will examine this property by
-looking at a transformation between the German DHDN reference system and ETRS89.
-
-First find the parameters for the EPSG:1309 transformation. In 3a below, enter
-the parameters as reported by projinfo (using the coordinate frame convention).
-Adapt the parameters to the position vector convention in 3b.
-
-
-Hints:
-
-    - You can find the transformations parameters by running the following
-      command:
-
-        projinfo -o WKT2_2018 -k operation EPSG:1309
-
--------------------------------------------------------------------------------
-
-* 3a:
-operation   +proj=helmert +x=582 +y=105 +z=414 +rx=-1.04 +ry=-0.35 +rz=3.08 +s=8.3 +convention=coordinate_frame
-
-accept      4067886.6403    571704.1839  4862789.0376
-expect      4068519.1921    571728.6671  4863239.3787
-
-* 3b:
-operation   +proj=helmert +x=582 +y=105 +z=414 +rx=1.04 +ry=0.35 +rz=-3.08 +s=8.3 +convention=position_vector
-tolerance 1 m
-
-accept      4067886.6403    571704.1839  4862789.0376
-expect      4068519.1921    571728.6671  4863239.3787
-
--------------------------------------------------------------------------------
-
 </gie>
