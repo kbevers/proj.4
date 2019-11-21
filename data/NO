@@ -1,23 +1,23 @@
 #########################################################################################################
-#                                                                               #
-#	Transformations	for Norway                                                  #
-#   Norwegian Mapping Authority, NMA (Statens Kartverk)                         #
-#												    	                        #
-#   Transformations for Norway                                                  #
-#   This init-file describes transformations between global reference frames    #
-#   and EUREF89, NTM projection and height transformations (NN1954 and NN2000)  #
-#                                                                               #
-#                                                                               #
-#                                                                               #
-#                                                                               #
-#                                                                               #
-#                                                                               #
-#                                                                               #	
-#   Sources:                                                                    #
-#                                                                               #
-#                                                                               #
-#                                                                               #
-#                                                                               #
+#                                                                                                       #
+#	Transformations	for Norway                                                                          #
+#   Norwegian Mapping Authority, NMA (Statens Kartverk)                                                 #
+#												    	                                                #
+#   Transformations for Norway                                                                          #
+#   This init-file describes transformations between global reference frames                            #
+#   and EUREF89, NTM projection and height transformations (NN1954 and NN2000)                          #
+#                                                                                                       #
+#                                                                                                       #
+#                                                                                                       #
+#                                                                                                       #
+#                                                                                                       #
+#                                                                                                       #
+#                                                                                                       #	
+#   Sources:                                                                                            #
+#                                                                                                       #
+#                                                                                                       #
+#                                                                                                       #
+#                                                                                                       #
 #########################################################################################################
 
 # EUREF89 -> ITRF2005 @ t_obs
