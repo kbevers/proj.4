@@ -14,16 +14,6 @@ set(PROJ_DICTIONARY
   ITRF2000
   ITRF2008
   ITRF2014
-  NO
-  href2008a.gtx
-  HREF2018A_NN2000_EUREF89.gtx
-  HREF2018B_NN2000_EUREF89.gtx
-  RH2000LU_absup.gtx
-  NNTrans2018A.gtx
-  NNTrans2018B.gtx
-  nkgrf03vel_realigned_z.gtx
-  nkgrf03vel_realigned_xy.ct2
-  Milne.ct2
 )
 
 #
