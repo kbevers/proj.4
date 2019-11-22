@@ -144,7 +144,7 @@ def ingest_datums(root, all_sql, mapEllpsId, mapPmId):
                 assert ellpsCode in mapEllpsId
 
                 # We sheat by using EPSG:1262 = World for area of use
-                sql = """INSERT INTO "geodetic_datum" VALUES('IGNF','%s','%s',NULL,NULL,'%s','%s','%s','%s','EPSG','1262',0);""" % (id, names[0], mapEllpsId[ellpsCode][0], mapEllpsId[ellpsCode][1], mapPmId[pmCode][0], mapPmId[pmCode][1])
+                sql = """INSERT INTO "geodetic_datum" VALUES('IGNF','%s','%s',NULL,NULL,'%s','%s','%s','%s','EPSG','1262',NULL,0);""" % (id, names[0], mapEllpsId[ellpsCode][0], mapEllpsId[ellpsCode][1], mapPmId[pmCode][0], mapPmId[pmCode][1])
                 all_sql.append(sql)
 
                 mapDatumId[id] = ('IGNF', id)
@@ -154,7 +154,7 @@ def ingest_datums(root, all_sql, mapEllpsId, mapPmId):
                 id = node.attrib['id']
                 names = [_name.text for _name in node.iter('name')]
 
-                sql = """INSERT INTO "vertical_datum" VALUES('IGNF','%s','%s',NULL,NULL,'EPSG','1262',0);"""% (id, names[0])
+                sql = """INSERT INTO "vertical_datum" VALUES('IGNF','%s','%s',NULL,NULL,'EPSG','1262',NULL,0);"""% (id, names[0])
                 all_sql.append(sql)
 
                 mapVerticalDatumId[id] = ('IGNF', id)
@@ -504,7 +504,7 @@ for node in root.iterfind('.//Transformation'):
             print('Fixing URL of ' + filename + ' to ' + mapGridURLs[filename])
             filename = mapGridURLs[filename]
 
-        if not filename.endswith('RAF09.mnt'): # no longer available
+        if not filename.endswith('RAF09.mnt') and not filename.endswith('ggspm06v1.mnt'): # no longer available
             r = requests.head(filename, allow_redirects = True  )
             if r.status_code not in (200, 302):
                 assert False, (r.status_code, id, name, filename)
@@ -693,7 +693,13 @@ for node in root.iterfind('.//Transformation'):
                             #sql = """INSERT INTO "coordinate_operation" VALUES('IGNF','%s','concatenated_operation');""" % (id_concat)
                             #all_sql_concat.append(sql)
 
-                            sql = """INSERT INTO "concatenated_operation" VALUES('IGNF','%s','Nouvelle Triangulation Francaise Paris grades to %s',NULL,'%s','IGNF','%s','%s','%s','%s','%s',NULL,'IGNF','%s','IGNF','%s',NULL,NULL,'%s',0);""" % (id_concat, target[1], scope, NTFPalias, target[0], target[1], area_of_use[0], area_of_use[1], idFirstOp, id_geog, operation_version)
+                            sql = """INSERT INTO "concatenated_operation" VALUES('IGNF','%s','Nouvelle Triangulation Francaise Paris grades to %s',NULL,'%s','IGNF','%s','%s','%s','%s','%s',NULL,'%s',0);""" % (id_concat, target[1], scope, NTFPalias, target[0], target[1], area_of_use[0], area_of_use[1], operation_version)
+                            all_sql_concat.append(sql)
+
+                            sql = """INSERT INTO "concatenated_operation_step" VALUES('IGNF','%s',1,'IGNF','%s');""" % (id_concat, idFirstOp)
+                            all_sql_concat.append(sql)
+
+                            sql = """INSERT INTO "concatenated_operation_step" VALUES('IGNF','%s',2,'IGNF','%s');""" % (id_concat, id_geog)
                             all_sql_concat.append(sql)
 
 

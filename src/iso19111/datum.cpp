@@ -200,6 +200,19 @@ void Datum::setAnchor(const util::optional<std::string> &anchor) {
 
 // ---------------------------------------------------------------------------
 
+void Datum::setProperties(
+    const util::PropertyMap &properties) // throw(InvalidValueTypeException)
+{
+    std::string publicationDate;
+    properties.getStringValue("PUBLICATION_DATE", publicationDate);
+    if (!publicationDate.empty()) {
+        d->publicationDate = common::DateTime::create(publicationDate);
+    }
+    ObjectUsage::setProperties(properties);
+}
+
+// ---------------------------------------------------------------------------
+
 bool Datum::__isEquivalentTo(const util::IComparable *other,
                              util::IComparable::Criterion criterion) const {
     auto otherDatum = dynamic_cast<const Datum *>(other);
@@ -553,7 +566,7 @@ Ellipsoid::inverseFlattening() PROJ_PURE_DEFN {
  * has been defined with this value.
  *
  * @see computeSemiMinorAxis() that will always return a valid value of the
- * inverse flattening, whether the ellipsoid has been defined through inverse
+ * semi-minor axis, whether the ellipsoid has been defined through inverse
  * flattening or semi-minor axis.
  *
  * @return the semi-minor axis of the ellipsoid, or empty.

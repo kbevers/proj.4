@@ -94,12 +94,12 @@ def fill_geodetic_datum(proj_db_cursor):
         raise Exception('Found unexpected datum_type in epsg_datum: %s' % str(res))
 
     proj_db_cursor.execute(
-        "INSERT INTO geodetic_datum SELECT ?, datum_code, datum_name, NULL, NULL, ?, ellipsoid_code, ?, prime_meridian_code, ?, area_of_use_code, deprecated FROM epsg.epsg_datum WHERE datum_type = 'geodetic'", (EPSG_AUTHORITY, EPSG_AUTHORITY, EPSG_AUTHORITY, EPSG_AUTHORITY))
+        "INSERT INTO geodetic_datum SELECT ?, datum_code, datum_name, NULL, NULL, ?, ellipsoid_code, ?, prime_meridian_code, ?, area_of_use_code, CASE WHEN realization_epoch = '' THEN NULL ELSE realization_epoch END, deprecated FROM epsg.epsg_datum WHERE datum_type = 'geodetic'", (EPSG_AUTHORITY, EPSG_AUTHORITY, EPSG_AUTHORITY, EPSG_AUTHORITY))
 
 
 def fill_vertical_datum(proj_db_cursor):
     proj_db_cursor.execute(
-        "INSERT INTO vertical_datum SELECT ?, datum_code, datum_name, NULL, NULL, ?, area_of_use_code, deprecated FROM epsg.epsg_datum WHERE datum_type = 'vertical'", (EPSG_AUTHORITY,EPSG_AUTHORITY))
+        "INSERT INTO vertical_datum SELECT ?, datum_code, datum_name, NULL, NULL, ?, area_of_use_code, CASE WHEN realization_epoch = '' THEN NULL ELSE realization_epoch END, deprecated FROM epsg.epsg_datum WHERE datum_type = 'vertical'", (EPSG_AUTHORITY,EPSG_AUTHORITY))
 
 
 def fill_coordinate_system(proj_db_cursor):
@@ -137,7 +137,12 @@ BEFORE INSERT ON conversion
 BEGIN
 """
 
-    proj_db_cursor.execute("SELECT coord_op_code, coord_op_name, area_of_use_code, coord_op_method_code, coord_op_method_name, epsg_coordoperation.deprecated FROM epsg.epsg_coordoperation LEFT JOIN epsg.epsg_coordoperationmethod USING (coord_op_method_code) WHERE coord_op_type = 'conversion' AND coord_op_name NOT LIKE '%to DMSH'")
+    # 1068 and 1069 are Height Depth Reversal and Change of Vertical Unit
+    # In EPSG, there is one generic instance of those as 7812 and 7813 that
+    # don't refer to particular CRS, and instances pointing to CRS names
+    # The later are imported in the other_transformation table since we recover
+    # the source/target CRS names from the transformation name.
+    proj_db_cursor.execute("SELECT coord_op_code, coord_op_name, area_of_use_code, coord_op_method_code, coord_op_method_name, epsg_coordoperation.deprecated FROM epsg.epsg_coordoperation LEFT JOIN epsg.epsg_coordoperationmethod USING (coord_op_method_code) WHERE coord_op_type = 'conversion' AND coord_op_name NOT LIKE '%to DMSH' AND (coord_op_method_code NOT IN (1068, 1069) OR coord_op_code IN (7812,7813))")
     for (code, name, area_of_use_code, method_code, method_name, deprecated) in proj_db_cursor.fetchall():
         expected_order = 1
         max_n_params = 7
@@ -343,7 +348,7 @@ def fill_helmert_transformation(proj_db_cursor):
             '?,?,?, ?,?, ?,?,?, ?,?, ?,?, ?,?, ?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?, ?,?)', arg)
 
 def fill_grid_transformation(proj_db_cursor):
-    proj_db_cursor.execute("SELECT coord_op_code, coord_op_name, coord_op_method_code, coord_op_method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, epsg_coordoperation.deprecated, coord_op_scope, epsg_coordoperation.remarks FROM epsg.epsg_coordoperation LEFT JOIN epsg.epsg_coordoperationmethod USING (coord_op_method_code) WHERE coord_op_type = 'transformation' AND (coord_op_method_name LIKE 'Geographic3D to%' OR coord_op_method_name LIKE 'Geog3D to%' OR coord_op_method_name LIKE 'Point motion by grid%' OR coord_op_method_name LIKE 'Vertical Offset by Grid Interpolation%' OR coord_op_method_name IN ('NADCON', 'NTv1', 'NTv2', 'VERTCON'))")
+    proj_db_cursor.execute("SELECT coord_op_code, coord_op_name, coord_op_method_code, coord_op_method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, epsg_coordoperation.deprecated, coord_op_scope, epsg_coordoperation.remarks FROM epsg.epsg_coordoperation LEFT JOIN epsg.epsg_coordoperationmethod USING (coord_op_method_code) WHERE coord_op_type = 'transformation' AND (coord_op_method_name LIKE 'Geographic3D to%' OR coord_op_method_name LIKE 'Geog3D to%' OR coord_op_method_name LIKE 'Point motion by grid%' OR coord_op_method_name LIKE 'Vertical Offset by Grid Interpolation%' OR coord_op_method_name IN ('NADCON', 'NADCON5 (2D)', 'NTv1', 'NTv2', 'VERTCON'))")
     for (code, name, method_code, method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, deprecated, scope, remarks) in proj_db_cursor.fetchall():
         expected_order = 1
         max_n_params = 2
@@ -384,6 +389,12 @@ def fill_grid_transformation(proj_db_cursor):
             grid2_param_code = param_code[1]
             grid2_param_name = param_name[1]
             grid2_value = param_value[1]
+        elif method_code == 1074: # NADCON5 (2D)
+            assert param_code[1] == 8658, param_code[1]
+            grid2_param_auth_name = EPSG_AUTHORITY
+            grid2_param_code = param_code[1]
+            grid2_param_name = param_name[1]
+            grid2_value = param_value[1]
         elif method_code == 1071: # Vertical Offset by Grid Interpolation (NZLVD) 
             assert param_code[1] == 1048, param_code[1]
             interpolation_crs_auth_name = EPSG_AUTHORITY
@@ -417,8 +428,31 @@ def fill_other_transformation(proj_db_cursor):
     # 9619: Geographic2D offsets
     # 9624: Affine Parametric Transformation
     # 9660: Geographic3D offsets
-    proj_db_cursor.execute("SELECT coord_op_code, coord_op_name, coord_op_method_code, coord_op_method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, epsg_coordoperation.deprecated, coord_op_scope, epsg_coordoperation.remarks FROM epsg.epsg_coordoperation LEFT JOIN epsg.epsg_coordoperationmethod USING (coord_op_method_code) WHERE coord_op_type = 'transformation' AND coord_op_method_code IN (9601, 9616, 9618, 9619, 9624, 9660)")
+    # 1068: Height Depth Reversal
+    # 1069: Change of Vertical Unit
+    proj_db_cursor.execute("SELECT coord_op_code, coord_op_name, coord_op_method_code, coord_op_method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, epsg_coordoperation.deprecated, coord_op_scope, epsg_coordoperation.remarks FROM epsg.epsg_coordoperation LEFT JOIN epsg.epsg_coordoperationmethod USING (coord_op_method_code) WHERE coord_op_method_code IN (9601, 9616, 9618, 9619, 9624, 9660, 1068, 1069)")
     for (code, name, method_code, method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, deprecated, scope, remarks) in proj_db_cursor.fetchall():
+
+        # 1068 and 1069 are Height Depth Reversal and Change of Vertical Unit
+        # In EPSG, there is one generic instance of those as 7812 and 7813 that
+        # don't refer to particular CRS, and instances pointing to CRS names
+        # The later are imported in the other_transformation table since we recover
+        # the source/target CRS names from the transformation name.
+        if method_code in (1068, 1069) and source_crs_code is None and target_crs_code is None:
+            parts = name.split(" to ")
+            if len(parts) != 2:
+                continue
+
+            proj_db_cursor.execute("SELECT coord_ref_sys_code FROM epsg_coordinatereferencesystem WHERE coord_ref_sys_name = ?", (parts[0],))
+            source_codes = proj_db_cursor.fetchall()
+            proj_db_cursor.execute("SELECT coord_ref_sys_code FROM epsg_coordinatereferencesystem WHERE coord_ref_sys_name = ?", (parts[1],))
+            target_codes = proj_db_cursor.fetchall()
+            if len(source_codes) != 1 and len(target_codes) != 1:
+                continue
+
+            source_crs_code = source_codes[0][0]
+            target_crs_code = target_codes[0][0]
+
         expected_order = 1
         max_n_params = 7
         param_auth_name = [None for i in range(max_n_params)]
@@ -465,6 +499,7 @@ def fill_other_transformation(proj_db_cursor):
                deprecated)
 
         #proj_db_cursor.execute("INSERT INTO coordinate_operation VALUES (?,?,'other_transformation')", (EPSG_AUTHORITY, code))
+        #print(arg)
         proj_db_cursor.execute('INSERT INTO other_transformation VALUES (' +
             '?,?,?, ?,?, ?,?,?, ?,?, ?,?, ?,?, ?, ?,?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?, ' +
             '?,?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?, ?,?)', arg)
@@ -473,57 +508,44 @@ def fill_concatenated_operation(proj_db_cursor):
     proj_db_cursor.execute("SELECT coord_op_code, coord_op_name, coord_op_method_code, coord_op_method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, epsg_coordoperation.deprecated, coord_op_scope, epsg_coordoperation.remarks FROM epsg.epsg_coordoperation LEFT JOIN epsg.epsg_coordoperationmethod USING (coord_op_method_code) WHERE coord_op_type = 'concatenated operation'")
     for (code, name, method_code, method_name, source_crs_code, target_crs_code, area_of_use_code, coord_op_accuracy, coord_tfm_version, deprecated, scope, remarks) in proj_db_cursor.fetchall():
         expected_order = 1
-        max_n_params = 3
-        step_code = [None for i in range(max_n_params)]
-
-        proj_db_cursor.execute("SELECT COUNT(*) FROM epsg_coordoperationpath WHERE concat_operation_code = ?", (code,))
-        (nsteps, ) = proj_db_cursor.fetchone()
-        # Our database model has only provision for up to 3 steps currently.
-        # As of EPSG v9.8.2, only EPSG:9103 (NAD27 to ITRF2014 (1)) and 9104 (NAD27 to ITRF2014 (2)) have respectively 4 and 7 steps.
-        # Tracked as https://github.com/OSGeo/PROJ/issues/1632
-        if nsteps > 3:
-            print('Cannot import concatenated_operation ' + str(code) + ', as it has more than 3 steps.')
-            continue
+        steps_code = []
 
         iterator = proj_db_cursor.execute("SELECT op_path_step, single_operation_code FROM epsg_coordoperationpath WHERE concat_operation_code = ? ORDER BY op_path_step", (code,))
         for (order, single_operation_code) in iterator:
-            assert order <= max_n_params
             assert order == expected_order
-            step_code[order - 1] = single_operation_code
+            steps_code.append(single_operation_code)
             expected_order += 1
         n_params = expected_order - 1
         if n_params == 0:  # For example http://www.epsg-registry.org//export.htm?gml=urn:ogc:def:coordinateOperation:EPSG::8658
             continue
-        assert n_params in (2, 3), (code, n_params)
 
-        arg = (EPSG_AUTHORITY, code, name,
-               remarks, scope,
-               EPSG_AUTHORITY, source_crs_code,
-               EPSG_AUTHORITY, target_crs_code,
-               EPSG_AUTHORITY, area_of_use_code,
-               coord_op_accuracy,
-               EPSG_AUTHORITY, step_code[0],
-               EPSG_AUTHORITY, step_code[1],
-               EPSG_AUTHORITY if step_code[2] else None, step_code[2],
-               coord_tfm_version,
-               deprecated
-               )
+        all_steps_exist = True
+        for step_code in steps_code:
+            proj_db_cursor.execute("SELECT 1 FROM coordinate_operation_with_conversion_view WHERE code = ?", (step_code,))
+            if proj_db_cursor.fetchone() is None:
+                print('Step of code %d for concatenated_operation %d does not exist' % (step_code, code))
+                all_steps_exist = False
+                break
 
-        proj_db_cursor.execute("SELECT 1 FROM coordinate_operation_with_conversion_view WHERE code = ?", (step_code[0],))
-        step1_exists = proj_db_cursor.fetchone() is not None
+        if all_steps_exist:
 
-        proj_db_cursor.execute("SELECT 1 FROM coordinate_operation_with_conversion_view WHERE code = ?", (step_code[1],))
-        step2_exists = proj_db_cursor.fetchone() is not None
+            arg = (EPSG_AUTHORITY, code, name,
+                remarks, scope,
+                EPSG_AUTHORITY, source_crs_code,
+                EPSG_AUTHORITY, target_crs_code,
+                EPSG_AUTHORITY, area_of_use_code,
+                coord_op_accuracy,
+                coord_tfm_version,
+                deprecated
+                )
 
-        step3_exists = True
-        if step_code[2]:
-            proj_db_cursor.execute("SELECT 1 FROM coordinate_operation_with_conversion_view WHERE code = ?", (step_code[2],))
-            step3_exists = proj_db_cursor.fetchone() is not None
-
-        if step1_exists and step2_exists and step3_exists:
             #proj_db_cursor.execute("INSERT INTO coordinate_operation VALUES (?,?,'concatenated_operation')", (EPSG_AUTHORITY, code))
             proj_db_cursor.execute('INSERT INTO concatenated_operation VALUES (' +
-            '?,?,?, ?,?, ?,?, ?,?, ?,?, ?, ?,?, ?,?, ?,?, ?,?)', arg)
+            '?,?,?, ?,?, ?,?, ?,?, ?,?, ?, ?,?)', arg)
+
+            for i in range(len(steps_code)):
+                proj_db_cursor.execute('INSERT INTO concatenated_operation_step VALUES (?,?,?,?,?)', (EPSG_AUTHORITY, code, i+1, EPSG_AUTHORITY,steps_code[i]))
+
 
 def fill_alias(proj_db_cursor):
     proj_db_cursor.execute("SELECT object_code, alias FROM epsg.epsg_alias WHERE object_table_name = 'epsg_datum'")

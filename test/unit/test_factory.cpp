@@ -251,6 +251,17 @@ TEST(factory, AuthorityFactory_createGeodeticDatum) {
     auto extent = domain->domainOfValidity();
     ASSERT_TRUE(extent != nullptr);
     EXPECT_TRUE(extent->isEquivalentTo(factory->createExtent("1262").get()));
+    EXPECT_FALSE(grf->publicationDate().has_value());
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(factory, AuthorityFactory_createGeodeticDatum_with_publication_date) {
+    auto factory = AuthorityFactory::create(DatabaseContext::create(), "EPSG");
+    //'World Geodetic System 1984 (G1762)
+    auto grf = factory->createGeodeticDatum("1156");
+    EXPECT_TRUE(grf->publicationDate().has_value());
+    EXPECT_EQ(grf->publicationDate()->toString(), "2005-01-01");
 }
 
 // ---------------------------------------------------------------------------
@@ -538,6 +549,15 @@ TEST(factory, AuthorityFactory_createConversion) {
         EXPECT_EQ(measure.unit(), UnitOfMeasure::DEGREE);
         EXPECT_EQ(measure.value(), 3.0);
     }
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(factory, AuthorityFactory_createConversion_from_other_transformation) {
+    auto factory = AuthorityFactory::create(DatabaseContext::create(), "EPSG");
+    auto op = factory->createCoordinateOperation("7984", false);
+    auto conversion = nn_dynamic_pointer_cast<Conversion>(op);
+    ASSERT_TRUE(conversion != nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -1116,6 +1136,28 @@ TEST(
 
 // ---------------------------------------------------------------------------
 
+TEST(
+    factory,
+    AuthorityFactory_createCoordinateOperation_concatenated_operation_epsg_9103) {
+    auto factory = AuthorityFactory::create(DatabaseContext::create(), "EPSG");
+    auto op = factory->createCoordinateOperation("9103", false);
+    auto concatenated = nn_dynamic_pointer_cast<ConcatenatedOperation>(op);
+    ASSERT_TRUE(concatenated != nullptr);
+    auto operations = concatenated->operations();
+    ASSERT_EQ(operations.size(),
+              5U); // we've added an explicit geographic -> geocentric step
+    EXPECT_EQ(operations[0]->nameStr(), "NAD27 to NAD83 (1)");
+    EXPECT_EQ(operations[1]->nameStr(), "NAD83 to NAD83(2011) (1)");
+    EXPECT_EQ(
+        operations[2]->nameStr(),
+        "Conversion from NAD83(2011) (geog2D) to NAD83(2011) (geocentric)");
+    EXPECT_EQ(operations[3]->nameStr(),
+              "Inverse of ITRF2008 to NAD83(2011) (1)");
+    EXPECT_EQ(operations[4]->nameStr(), "ITRF2008 to ITRF2014 (1)");
+}
+
+// ---------------------------------------------------------------------------
+
 static bool in(const std::string &str, const std::vector<std::string> &list) {
     for (const auto &listItem : list) {
         if (str == listItem) {
@@ -1135,9 +1177,7 @@ TEST(factory, AuthorityFactory_build_all_concatenated) {
         AuthorityFactory::ObjectType::CONCATENATED_OPERATION, false);
     EXPECT_LT(setConcatenatedNoDeprecated.size(), setConcatenated.size());
     for (const auto &code : setConcatenated) {
-        if (in(code, {"8422", "8481", "8482", "8565", "8566", "8572",
-                      // the issue with 7987 is the chaining of two conversions
-                      "7987"})) {
+        if (in(code, {"8422", "8481", "8482", "8565", "8566", "8572"})) {
             EXPECT_THROW(factory->createCoordinateOperation(code, false),
                          FactoryException)
                 << code;
@@ -1385,11 +1425,11 @@ class FactoryWithTmpDatabase : public ::testing::Test {
         ASSERT_TRUE(
             execute("INSERT INTO geodetic_datum "
                     "VALUES('EPSG','6326','World Geodetic System 1984','',NULL,"
-                    "'EPSG','7030','EPSG','8901','EPSG','1262',0);"))
+                    "'EPSG','7030','EPSG','8901','EPSG','1262',NULL,0);"))
             << last_error();
         ASSERT_TRUE(
             execute("INSERT INTO vertical_datum VALUES('EPSG','1027','EGM2008 "
-                    "geoid',NULL,NULL,'EPSG','1262',0);"))
+                    "geoid',NULL,NULL,'EPSG','1262',NULL,0);"))
             << last_error();
         ASSERT_TRUE(execute("INSERT INTO coordinate_system "
                             "VALUES('EPSG','6422','ellipsoidal',2);"))
@@ -1514,12 +1554,21 @@ class FactoryWithTmpDatabase : public ::testing::Test {
             "NULL,NULL,NULL,NULL,NULL,NULL,NULL,0);"))
             << last_error();
 
-        ASSERT_TRUE(execute(
-            "INSERT INTO concatenated_operation "
-            "VALUES('EPSG','DUMMY_CONCATENATED','name',NULL,NULL,"
-            "'EPSG','4326','EPSG'"
-            ",'4326','EPSG','1262',NULL,'EPSG','DUMMY_OTHER_TRANSFORMATION'"
-            ",'EPSG','DUMMY_OTHER_TRANSFORMATION',NULL,NULL,NULL,0);"))
+        ASSERT_TRUE(
+            execute("INSERT INTO concatenated_operation "
+                    "VALUES('EPSG','DUMMY_CONCATENATED','name',NULL,NULL,"
+                    "'EPSG','4326','EPSG'"
+                    ",'4326','EPSG','1262',NULL,NULL,0);"))
+            << last_error();
+
+        ASSERT_TRUE(execute("INSERT INTO concatenated_operation_step "
+                            "VALUES('EPSG','DUMMY_CONCATENATED',1,"
+                            "'EPSG','DUMMY_OTHER_TRANSFORMATION');"))
+            << last_error();
+
+        ASSERT_TRUE(execute("INSERT INTO concatenated_operation_step "
+                            "VALUES('EPSG','DUMMY_CONCATENATED',2,"
+                            "'EPSG','DUMMY_OTHER_TRANSFORMATION');"))
             << last_error();
     }
 
@@ -1532,7 +1581,7 @@ class FactoryWithTmpDatabase : public ::testing::Test {
                         "VALUES('FOO','" +
                         val + "','" + val +
                         "','',NULL,"
-                        "'EPSG','7030','EPSG','8901','EPSG','1262',0);"))
+                        "'EPSG','7030','EPSG','8901','EPSG','1262',NULL,0);"))
                 << last_error();
             ASSERT_TRUE(execute("INSERT INTO geodetic_crs "
                                 "VALUES('NS_" +

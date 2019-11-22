@@ -137,7 +137,7 @@ GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.25722
 
 PROJJSON:
 {
-  "$schema": "https://proj.org/schemas/v0.1/projjson.schema.json",
+  "$schema": "https://proj.org/schemas/v0.2/projjson.schema.json",
   "type": "GeographicCRS",
   "name": "WGS 84",
   "datum": {
@@ -212,7 +212,7 @@ CONVERSION["UTM zone 31N",
 
 Testing projinfo -s NAD27 -t NAD83
 Candidate operations found: 1
-Note: using '--spatial-test intersects' would bring more results (8)
+Note: using '--spatial-test intersects' would bring more results (10)
 -------------------------------------
 Operation n°1:
 
@@ -267,7 +267,7 @@ COORDINATEOPERATION["Ballpark geographic offset from NAD27 to NAD83",
         BBOX[-90,-180,90,180]]]
 
 Testing projinfo -s NAD27 -t NAD83 --grid-check none --spatial-test intersects --summary
-Candidate operations found: 8
+Candidate operations found: 10
 DERIVED_FROM(EPSG):1312, NAD27 to NAD83 (3), 1.0 m, Canada
 DERIVED_FROM(EPSG):1313, NAD27 to NAD83 (4), 1.5 m, Canada - NAD27
 DERIVED_FROM(EPSG):1241, NAD27 to NAD83 (1), 0.15 m, USA - CONUS including EEZ
@@ -276,9 +276,11 @@ EPSG:1462, NAD27 to NAD83 (5), 1.0 m, Canada - Quebec
 EPSG:1573, NAD27 to NAD83 (6), 1.5 m, Canada - Quebec
 EPSG:9111, NAD27 to NAD83 (9), 1.5 m, Canada - Saskatchewan
 unknown id, Ballpark geographic offset from NAD27 to NAD83, unknown accuracy, World, has ballpark transformation
+EPSG:8555, NAD27 to NAD83 (7), 0.15 m, USA - CONUS and GoM
+EPSG:8549, NAD27 to NAD83 (8), 0.5 m, USA - Alaska
 
 Testing projinfo -s NAD27 -t NAD83 --grid-check none --spatial-test intersects
-Candidate operations found: 8
+Candidate operations found: 10
 -------------------------------------
 Operation n°1:
 
@@ -685,6 +687,110 @@ COORDINATEOPERATION["Ballpark geographic offset from NAD27 to NAD83",
         AREA["World"],
         BBOX[-90,-180,90,180]]]
 
+-------------------------------------
+Operation n°9:
+
+EPSG:8555, NAD27 to NAD83 (7), 0.15 m, USA - CONUS and GoM
+
+PROJ string:
+
+WKT2:2019 string:
+COORDINATEOPERATION["NAD27 to NAD83 (7)",
+    VERSION["NGS-Usa Conus Nadcon5"],
+    SOURCECRS[
+        GEOGCRS["NAD27",
+            DATUM["North American Datum 1927",
+                ELLIPSOID["Clarke 1866",6378206.4,294.978698213898,
+                    LENGTHUNIT["metre",1]]],
+            PRIMEM["Greenwich",0,
+                ANGLEUNIT["degree",0.0174532925199433]],
+            CS[ellipsoidal,2],
+                AXIS["geodetic latitude (Lat)",north,
+                    ORDER[1],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+                AXIS["geodetic longitude (Lon)",east,
+                    ORDER[2],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+            ID["EPSG",4267]]],
+    TARGETCRS[
+        GEOGCRS["NAD83",
+            DATUM["North American Datum 1983",
+                ELLIPSOID["GRS 1980",6378137,298.257222101,
+                    LENGTHUNIT["metre",1]]],
+            PRIMEM["Greenwich",0,
+                ANGLEUNIT["degree",0.0174532925199433]],
+            CS[ellipsoidal,2],
+                AXIS["geodetic latitude (Lat)",north,
+                    ORDER[1],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+                AXIS["geodetic longitude (Lon)",east,
+                    ORDER[2],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+            ID["EPSG",4269]]],
+    METHOD["NADCON5 (2D)",
+        ID["EPSG",1074]],
+    PARAMETERFILE["Latitude difference file","nadcon5.nad27.nad83_1986.conus.lat.trn.20160901.b"],
+    PARAMETERFILE["Longitude difference file","nadcon5.nad27.nad83_1986.conus.lon.trn.20160901.b"],
+    OPERATIONACCURACY[0.15],
+    USAGE[
+        SCOPE["Spatial referencing."],
+        AREA["USA - CONUS and GoM"],
+        BBOX[23.82,-124.79,49.38,-66.91]],
+    ID["EPSG",8555],
+    REMARK["Uses NADCON5 method which expects longitudes positive east in range 0-360°; source and target CRSs have longitudes positive east in range -180° to +180°. Accuracy at 67% confidence level is 0.15m onshore, 1m nearshore and undetermined farther offshore."]]
+
+-------------------------------------
+Operation n°10:
+
+EPSG:8549, NAD27 to NAD83 (8), 0.5 m, USA - Alaska
+
+PROJ string:
+
+WKT2:2019 string:
+COORDINATEOPERATION["NAD27 to NAD83 (8)",
+    VERSION["NGS-Usa AK Nadcon5"],
+    SOURCECRS[
+        GEOGCRS["NAD27",
+            DATUM["North American Datum 1927",
+                ELLIPSOID["Clarke 1866",6378206.4,294.978698213898,
+                    LENGTHUNIT["metre",1]]],
+            PRIMEM["Greenwich",0,
+                ANGLEUNIT["degree",0.0174532925199433]],
+            CS[ellipsoidal,2],
+                AXIS["geodetic latitude (Lat)",north,
+                    ORDER[1],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+                AXIS["geodetic longitude (Lon)",east,
+                    ORDER[2],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+            ID["EPSG",4267]]],
+    TARGETCRS[
+        GEOGCRS["NAD83",
+            DATUM["North American Datum 1983",
+                ELLIPSOID["GRS 1980",6378137,298.257222101,
+                    LENGTHUNIT["metre",1]]],
+            PRIMEM["Greenwich",0,
+                ANGLEUNIT["degree",0.0174532925199433]],
+            CS[ellipsoidal,2],
+                AXIS["geodetic latitude (Lat)",north,
+                    ORDER[1],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+                AXIS["geodetic longitude (Lon)",east,
+                    ORDER[2],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+            ID["EPSG",4269]]],
+    METHOD["NADCON5 (2D)",
+        ID["EPSG",1074]],
+    PARAMETERFILE["Latitude difference file","nadcon5.nad27.nad83_1986.alaska.lat.trn.20160901.b"],
+    PARAMETERFILE["Longitude difference file","nadcon5.nad27.nad83_1986.alaska.lon.trn.20160901.b"],
+    OPERATIONACCURACY[0.5],
+    USAGE[
+        SCOPE["Spatial referencing."],
+        AREA["USA - Alaska"],
+        BBOX[51.3,172.42,71.4,-129.99]],
+    ID["EPSG",8549],
+    REMARK["Uses NADCON5 method which expects longitudes positive east in range 0-360°; source and target CRSs have longitudes positive east in range -180° to +180°. Accuracy at 67% confidence level is 0.5m onshore, 5m nearshore and undetermined farther offshore."]]
+
 Testing projinfo -s EPSG:4230 -t EPSG:4258 --bbox 8,54.51,15.24,57.8 --summary
 Candidate operations found: 1
 Note: using '--spatial-test intersects' would bring more results (2)
@@ -841,14 +947,14 @@ COORDINATEOPERATION["RH2000 height to SWEREF99",
     ID["PROJ","EPSG_5613_TO_EPSG_4977"]]
 
 Testing NAD83(2011) + NAVD88 height -> NAD83(2011) : projinfo -s EPSG:6349 -t EPSG:6319 --spatial-test intersects -o PROJ
-Candidate operations found: 3
+Candidate operations found: 2
 -------------------------------------
 Operation n°1:
 
-unknown id, Inverse of NAD83(2011) to NAVD88 height (1), 0.02 m, USA - CONUS - onshore
+unknown id, Inverse of NAD83(2011) to NAVD88 height (3), 0.015 m, USA - CONUS - onshore
 
 PROJ string:
-+proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift +grids=g2012bu0.gtx +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1
++proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift +grids=g2018u0.gtx +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1
 
 -------------------------------------
 Operation n°2:
@@ -857,14 +963,6 @@ unknown id, Inverse of NAD83(2011) to NAVD88 height (2), 0.02 m, USA - Alaska
 
 PROJ string:
 +proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift +grids=g2012ba0.gtx +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1
-
--------------------------------------
-Operation n°3:
-
-unknown id, Inverse of NAD83(2011) to NAVD88 height (3), 0.015 m, USA - CONUS - onshore
-
-PROJ string:
-+proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +inv +proj=vgridshift +grids=g2018u0.bin +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1
 
 Testing NGF IGN69 height to RGF93: projinfo -s EPSG:5720 -t EPSG:4965 -o PROJ
 Candidate operations found: 2
@@ -949,4 +1047,27 @@ INVERSE(EPSG):9225, Inverse of WGS 84 to ETRS89 (2), 0.1 m, Europe - offshore No
 
 Testing -s +proj=longlat +datum=WGS84 +geoidgrids=@foo.gtx +type=crs -t EPSG:4326 -o PROJ -q
 +proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift +grids=@foo.gtx +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1
+
+Testing -s "GDA94" -t "WGS 84 (G1762)" --spatial-test intersects --summary. Should include transformations through ITRF2008 and GDA2020
+Candidate operations found: 6
+unknown id, GDA94 to GDA2020 (1) + Conversion from GDA2020 (geog2D) to GDA2020 (geocentric) + GDA2020 to WGS 84 (G1762) (1) + Conversion from WGS 84 (G1762) (geocentric) to WGS 84 (G1762) (geog2D), 0.21 m, Australia - GDA
+unknown id, Conversion from GDA94 (geog2D) to GDA94 (geocentric) + Inverse of ITRF2008 to GDA94 (1) + Inverse of WGS 84 (G1762) to ITRF2008 (1) + Conversion from WGS 84 (G1762) (geocentric) to WGS 84 (G1762) (geog2D), 0.04 m, Australia - onshore and EEZ
+unknown id, GDA94 to GDA2020 (2) + Conversion from GDA2020 (geog2D) to GDA2020 (geocentric) + GDA2020 to WGS 84 (G1762) (1) + Conversion from WGS 84 (G1762) (geocentric) to WGS 84 (G1762) (geog2D), 0.25 m, Australia - onshore
+unknown id, GDA94 to GDA2020 (3) + Conversion from GDA2020 (geog2D) to GDA2020 (geocentric) + GDA2020 to WGS 84 (G1762) (1) + Conversion from WGS 84 (G1762) (geocentric) to WGS 84 (G1762) (geog2D), 0.25 m, Australia - onshore
+unknown id, GDA94 to GDA2020 (5) + Conversion from GDA2020 (geog2D) to GDA2020 (geocentric) + GDA2020 to WGS 84 (G1762) (1) + Conversion from WGS 84 (G1762) (geocentric) to WGS 84 (G1762) (geog2D), 0.25 m, Cocos (Keeling) Islands - onshore
+unknown id, GDA94 to GDA2020 (4) + Conversion from GDA2020 (geog2D) to GDA2020 (geocentric) + GDA2020 to WGS 84 (G1762) (1) + Conversion from WGS 84 (G1762) (geocentric) to WGS 84 (G1762) (geog2D), 0.25 m, Christmas Island - onshore
+
+Testing -s "AGD66" -t "WGS 84 (G1762)" --spatial-test intersects --summary. Should include a transformation through GDA2020
+Candidate operations found: 11
+unknown id, AGD66 to WGS 84 (18) + WGS 84 to WGS 84 (G1762), 5 m, Australia - offshore
+unknown id, AGD66 to WGS 84 (16) + WGS 84 to WGS 84 (G1762), 7 m, Australia - onshore
+unknown id, AGD66 to WGS 84 (15) + WGS 84 to WGS 84 (G1762), 3 m, Australia - Northern Territory
+unknown id, AGD66 to WGS 84 (13) + WGS 84 to WGS 84 (G1762), 3 m, Australia - New South Wales and Victoria
+unknown id, AGD66 to WGS 84 (21) + WGS 84 to WGS 84 (G1762), 7 m, Papua New Guinea - mainland onshore
+unknown id, AGD66 to WGS 84 (14) + WGS 84 to WGS 84 (G1762), 3 m, Australia - Tasmania
+unknown id, AGD66 to WGS 84 (19) + WGS 84 to WGS 84 (G1762), 4 m, Papua New Guinea - PFTB
+unknown id, AGD66 to WGS 84 (23) + WGS 84 to WGS 84 (G1762), 6 m, Papua New Guinea - North Fly
+unknown id, AGD66 to GDA2020 (1) + Conversion from GDA2020 (geog2D) to GDA2020 (geocentric) + GDA2020 to WGS 84 (G1762) (1) + Conversion from WGS 84 (G1762) (geocentric) to WGS 84 (G1762) (geog2D), 0.25 m, Australia - Australian Capital Territory
+unknown id, AGD66 to WGS 84 (17) + WGS 84 to WGS 84 (G1762), 3 m, Australia - onshore
+unknown id, Ballpark geographic offset from AGD66 to WGS 84 (G1762), unknown accuracy, World, has ballpark transformation
 

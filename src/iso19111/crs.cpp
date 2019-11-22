@@ -697,14 +697,29 @@ CRSNNPtr CRS::normalizeForVisualization() const {
  * The method returns a list of matching reference CRS, and the percentage
  * (0-100) of confidence in the match. The list is sorted by decreasing
  * confidence.
- *
- * 100% means that the name of the reference entry
+ * <ul>
+ * <li>100% means that the name of the reference entry
  * perfectly matches the CRS name, and both are equivalent. In which case a
  * single result is returned.
- * 90% means that CRS are equivalent, but the names are not exactly the same.
- * 70% means that CRS are equivalent), but the names do not match at all.
- * 25% means that the CRS are not equivalent, but there is some similarity in
- * the names.
+ * Note: in the case of a GeographicCRS whose axis
+ * order is implicit in the input definition (for example ESRI WKT), then axis
+ * order is ignored for the purpose of identification. That is the CRS built
+ * from
+ * GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],
+ * PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]
+ * will be identified to EPSG:4326, but will not pass a
+ * isEquivalentTo(EPSG_4326, util::IComparable::Criterion::EQUIVALENT) test,
+ * but rather isEquivalentTo(EPSG_4326,
+ * util::IComparable::Criterion::EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS)
+ * </li>
+ * <li>90% means that CRS are equivalent, but the names are not exactly the
+ * same.</li>
+ * <li>70% means that CRS are equivalent), but the names do not match at
+ * all.</li>
+ * <li>25% means that the CRS are not equivalent, but there is some similarity
+ * in
+ * the names.</li>
+ * </ul>
  * Other confidence values may be returned by some specialized implementations.
  *
  * This is implemented for GeodeticCRS, ProjectedCRS, VerticalCRS and
@@ -993,7 +1008,8 @@ bool SingleCRS::baseIsEquivalentTo(
 
     // TODO test DatumEnsemble
     return d->coordinateSystem->_isEquivalentTo(
-        otherSingleCRS->d->coordinateSystem.get(), criterion);
+               otherSingleCRS->d->coordinateSystem.get(), criterion) &&
+           getExtensionProj4() == otherSingleCRS->getExtensionProj4();
 }
 
 // ---------------------------------------------------------------------------
@@ -1595,17 +1611,33 @@ static bool hasCodeCompatibleOfAuthorityFactory(
  * authorityFactory is not null.
  *
  * The method returns a list of matching reference CRS, and the percentage
- * (0-100) of confidence in the match.
- * 100% means that the name of the reference entry
+ * (0-100) of confidence in the match:
+ * <ul>
+ * <li>100% means that the name of the reference entry
  * perfectly matches the CRS name, and both are equivalent. In which case a
  * single result is returned.
- * 90% means that CRS are equivalent, but the names are not exactly the same.
- * 70% means that CRS are equivalent (equivalent datum and coordinate system),
- * but the names do not match at all.
- * 60% means that ellipsoid, prime meridian and coordinate systems are
- * equivalent, but the CRS and datum names do not match.
- * 25% means that the CRS are not equivalent, but there is some similarity in
- * the names.
+ * Note: in the case of a GeographicCRS whose axis
+ * order is implicit in the input definition (for example ESRI WKT), then axis
+ * order is ignored for the purpose of identification. That is the CRS built
+ * from
+ * GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],
+ * PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]
+ * will be identified to EPSG:4326, but will not pass a
+ * isEquivalentTo(EPSG_4326, util::IComparable::Criterion::EQUIVALENT) test,
+ * but rather isEquivalentTo(EPSG_4326,
+ * util::IComparable::Criterion::EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS)
+ * </li>
+ * <li>90% means that CRS are equivalent, but the names are not exactly the
+ * same.
+ * <li>70% means that CRS are equivalent (equivalent datum and coordinate
+ * system),
+ * but the names do not match at all.</li>
+ * <li>60% means that ellipsoid, prime meridian and coordinate systems are
+ * equivalent, but the CRS and datum names do not match.</li>
+ * <li>25% means that the CRS are not equivalent, but there is some similarity
+ * in
+ * the names.</li>
+ * </ul>
  *
  * @param authorityFactory Authority factory (or null, but degraded
  * functionality)
@@ -2170,7 +2202,7 @@ GeographicCRS::demoteTo2D(const std::string &newName,
     const auto &axisList = coordinateSystem()->axisList();
     if (axisList.size() == 3) {
         const auto &l_identifiers = identifiers();
-        // First check if there is a Geographic 3D CRS in the database
+        // First check if there is a Geographic 2D CRS in the database
         // of the same name.
         // This is the common practice in the EPSG dataset.
         if (dbContext && l_identifiers.size() == 1) {
@@ -2477,6 +2509,14 @@ void VerticalCRS::_exportToWKT(io::WKTFormatter *formatter) const {
     cs->_exportToWKT(formatter);
     formatter->setOutputAxis(oldAxisOutputRule);
 
+    if (isWKT2 && formatter->use2019Keywords() && !d->geoidModel.empty()) {
+        const auto &model = d->geoidModel[0];
+        formatter->startNode(io::WKTConstants::GEOIDMODEL, false);
+        formatter->addQuotedString(model->nameStr());
+        model->formatID(formatter);
+        formatter->endNode();
+    }
+
     ObjectUsage::baseExportToWKT(formatter);
     formatter->endNode();
 }
@@ -2538,6 +2578,24 @@ void VerticalCRS::_exportToJSON(
     formatter->setOmitTypeInImmediateChild();
     coordinateSystem()->_exportToJSON(formatter);
 
+    if (!d->geoidModel.empty()) {
+        const auto &model = d->geoidModel[0];
+        writer.AddObjKey("geoid_model");
+        auto objectContext2(formatter->MakeObjectContext(nullptr, false));
+        writer.AddObjKey("name");
+        writer.Add(model->nameStr());
+
+        if (model->identifiers().empty()) {
+            const auto &interpCRS = model->interpolationCRS();
+            if (interpCRS) {
+                writer.AddObjKey("interpolation_crs");
+                interpCRS->_exportToJSON(formatter);
+            }
+        }
+
+        model->formatID(formatter);
+    }
+
     ObjectUsage::baseExportToJSON(formatter);
 }
 //! @endcond
@@ -2571,7 +2629,8 @@ void VerticalCRS::addLinearUnitConvert(
  * cs::VerticalCS.
  *
  * @param properties See \ref general_properties.
- * At minimum the name should be defined.
+ * At minimum the name should be defined. The GEOID_MODEL property can be set
+ * to a TransformationNNPtr object.
  * @param datumIn The datum of the CRS.
  * @param csIn a VerticalCS.
  * @return new VerticalCRS.
@@ -2591,7 +2650,8 @@ VerticalCRS::create(const util::PropertyMap &properties,
  * One and only one of datum or datumEnsemble should be set to a non-null value.
  *
  * @param properties See \ref general_properties.
- * At minimum the name should be defined.
+ * At minimum the name should be defined. The GEOID_MODEL property can be set
+ * to a TransformationNNPtr object.
  * @param datumIn The datum of the CRS, or nullptr
  * @param datumEnsembleIn The datum ensemble of the CRS, or nullptr.
  * @param csIn a VerticalCS.
@@ -2606,6 +2666,14 @@ VerticalCRS::create(const util::PropertyMap &properties,
                                                       csIn));
     crs->assignSelf(crs);
     crs->setProperties(properties);
+    const auto geoidModelPtr = properties.get("GEOID_MODEL");
+    if (geoidModelPtr) {
+        auto transf = util::nn_dynamic_pointer_cast<operation::Transformation>(
+            *geoidModelPtr);
+        if (transf) {
+            crs->d->geoidModel.emplace_back(NN_NO_CHECK(transf));
+        }
+    }
     return crs;
 }
 
@@ -3332,13 +3400,16 @@ void ProjectedCRS::addUnitConvertAndAxisSwap(io::PROJStringFormatter *formatter,
         if (!formatter->getCRSExport()) {
             formatter->addStep("unitconvert");
             formatter->addParam("xy_in", "m");
-            formatter->addParam("z_in", "m");
+            if (!formatter->omitZUnitConversion())
+                formatter->addParam("z_in", "m");
             if (projUnit.empty()) {
                 formatter->addParam("xy_out", toSI);
-                formatter->addParam("z_out", toSI);
+                if (!formatter->omitZUnitConversion())
+                    formatter->addParam("z_out", toSI);
             } else {
                 formatter->addParam("xy_out", projUnit);
-                formatter->addParam("z_out", projUnit);
+                if (!formatter->omitZUnitConversion())
+                    formatter->addParam("z_out", projUnit);
             }
         } else {
             if (projUnit.empty()) {

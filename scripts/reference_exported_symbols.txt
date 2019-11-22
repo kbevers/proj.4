@@ -299,8 +299,8 @@ osgeo::proj::io::AuthorityFactory::create(dropbox::oxygen::nn<std::shared_ptr<os
 osgeo::proj::io::AuthorityFactory::createEllipsoid(std::string const&) const
 osgeo::proj::io::AuthorityFactory::createExtent(std::string const&) const
 osgeo::proj::io::AuthorityFactory::createFromCoordinateReferenceSystemCodes(std::string const&, std::string const&) const
-osgeo::proj::io::AuthorityFactory::createFromCoordinateReferenceSystemCodes(std::string const&, std::string const&, std::string const&, std::string const&, bool, bool, bool) const
-osgeo::proj::io::AuthorityFactory::createFromCRSCodesWithIntermediates(std::string const&, std::string const&, std::string const&, std::string const&, bool, bool, bool, std::vector<std::pair<std::string, std::string>, std::allocator<std::pair<std::string, std::string> > > const&) const
+osgeo::proj::io::AuthorityFactory::createFromCoordinateReferenceSystemCodes(std::string const&, std::string const&, std::string const&, std::string const&, bool, bool, bool, bool, bool, std::shared_ptr<osgeo::proj::metadata::Extent> const&, std::shared_ptr<osgeo::proj::metadata::Extent> const&) const
+osgeo::proj::io::AuthorityFactory::createFromCRSCodesWithIntermediates(std::string const&, std::string const&, std::string const&, std::string const&, bool, bool, bool, std::vector<std::pair<std::string, std::string>, std::allocator<std::pair<std::string, std::string> > > const&, osgeo::proj::io::AuthorityFactory::ObjectType, std::vector<std::string, std::allocator<std::string> > const&, std::shared_ptr<osgeo::proj::metadata::Extent> const&, std::shared_ptr<osgeo::proj::metadata::Extent> const&) const
 osgeo::proj::io::AuthorityFactory::createGeodeticCRS(std::string const&) const
 osgeo::proj::io::AuthorityFactory::createGeodeticDatum(std::string const&) const
 osgeo::proj::io::AuthorityFactory::createGeographicCRS(std::string const&) const
@@ -495,6 +495,7 @@ osgeo::proj::operation::Conversion::createGeostationarySatelliteSweepY(osgeo::pr
 osgeo::proj::operation::Conversion::createGnomonic(osgeo::proj::util::PropertyMap const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Length const&, osgeo::proj::common::Length const&)
 osgeo::proj::operation::Conversion::createGoodeHomolosine(osgeo::proj::util::PropertyMap const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Length const&, osgeo::proj::common::Length const&)
 osgeo::proj::operation::Conversion::createGuamProjection(osgeo::proj::util::PropertyMap const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Length const&, osgeo::proj::common::Length const&)
+osgeo::proj::operation::Conversion::createHeightDepthReversal(osgeo::proj::util::PropertyMap const&)
 osgeo::proj::operation::Conversion::createHotineObliqueMercatorTwoPointNaturalOrigin(osgeo::proj::util::PropertyMap const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Scale const&, osgeo::proj::common::Length const&, osgeo::proj::common::Length const&)
 osgeo::proj::operation::Conversion::createHotineObliqueMercatorVariantA(osgeo::proj::util::PropertyMap const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Scale const&, osgeo::proj::common::Length const&, osgeo::proj::common::Length const&)
 osgeo::proj::operation::Conversion::createHotineObliqueMercatorVariantB(osgeo::proj::util::PropertyMap const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Angle const&, osgeo::proj::common::Scale const&, osgeo::proj::common::Length const&, osgeo::proj::common::Length const&)
@@ -898,13 +899,14 @@ proj_create_operations
 proj_create_projected_crs
 proj_create_transformation
 proj_create_vertical_crs
+proj_create_vertical_crs_ex
 proj_crs_alter_cs_angular_unit
 proj_crs_alter_cs_linear_unit
 proj_crs_alter_geodetic_crs
 proj_crs_alter_parameters_linear_unit
 proj_crs_create_bound_crs
 proj_crs_create_bound_crs_to_WGS84
-proj_crs_create_bound_vertical_crs_to_WGS84
+proj_crs_create_bound_vertical_crs
 proj_crs_create_projected_3D_crs_from_2D
 proj_crs_demote_to_2D
 proj_crs_get_coordinate_system

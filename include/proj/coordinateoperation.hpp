@@ -1323,6 +1323,9 @@ class PROJ_GCC_DLL Conversion : public SingleOperation {
     createChangeVerticalUnit(const util::PropertyMap &properties,
                              const common::Scale &factor);
 
+    PROJ_DLL static ConversionNNPtr
+    createHeightDepthReversal(const util::PropertyMap &properties);
+
     PROJ_DLL static ConversionNNPtr createAxisOrderReversal(bool is3D);
 
     PROJ_DLL static ConversionNNPtr
@@ -1347,6 +1350,10 @@ class PROJ_GCC_DLL Conversion : public SingleOperation {
 
     PROJ_INTERNAL ConversionNNPtr alterParametersLinearUnit(
         const common::UnitOfMeasure &unit, bool convertToNewUnit) const;
+
+    PROJ_INTERNAL static ConversionNNPtr
+    createGeographicGeocentric(const crs::CRSNNPtr &sourceCRS,
+                               const crs::CRSNNPtr &targetCRS);
 
     //! @endcond
 
