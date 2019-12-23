@@ -1361,10 +1361,6 @@ PJ_CONTEXT *proj_context_destroy (PJ_CONTEXT *ctx) {
 }
 
 
-
-
-
-
 /*****************************************************************************/
 static char *path_append (char *buf, const char *app, size_t *buf_size) {
 /******************************************************************************

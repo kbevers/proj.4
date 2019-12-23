@@ -51,6 +51,10 @@ Last update: 2018-10-26
 
 #include <errno.h>
 #include <math.h>
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <cstddef>
 
 #include "proj_internal.h"
 #include "geocent.h"
@@ -60,8 +64,6 @@ PROJ_HEAD(molobadekas, "Molodensky-Badekas transformation");
 
 static PJ_XYZ helmert_forward_3d (PJ_LPZ lpz, PJ *P);
 static PJ_LPZ helmert_reverse_3d (PJ_XYZ xyz, PJ *P);
-
-
 
 /***********************************************************************/
 namespace { // anonymous namespace
@@ -89,7 +91,6 @@ struct pj_opaque_helmert {
 };
 } // anonymous namespace
 
-
 /* Make the maths of the rotation operations somewhat more readable and textbook like */
 #define R00 (Q->R[0][0])
 #define R01 (Q->R[0][1])
@@ -103,6 +104,14 @@ struct pj_opaque_helmert {
 #define R21 (Q->R[2][1])
 #define R22 (Q->R[2][2])
 
+struct commonPointPair
+{
+	std::string name;
+	PJ_LP fromPoint;
+	PJ_LP toPoint;
+	__int32 area;
+};
+	
 /**************************************************************************/
 static void update_parameters(PJ *P) {
 /***************************************************************************
@@ -317,9 +326,6 @@ static void build_rot_matrix(PJ *P) {
     }
 }
 
-
-
-
 /***********************************************************************/
 static PJ_XY helmert_forward (PJ_LP lp, PJ *P) {
 /***********************************************************************/
@@ -339,7 +345,6 @@ static PJ_XY helmert_forward (PJ_LP lp, PJ *P) {
     return point.xy;
 }
 
-
 /***********************************************************************/
 static PJ_LP helmert_reverse (PJ_XY xy, PJ *P) {
 /***********************************************************************/
@@ -358,7 +363,6 @@ static PJ_LP helmert_reverse (PJ_XY xy, PJ *P) {
 
     return point.lp;
 }
-
 
 /***********************************************************************/
 static PJ_XYZ helmert_forward_3d (PJ_LPZ lpz, PJ *P) {
@@ -399,7 +403,6 @@ static PJ_XYZ helmert_forward_3d (PJ_LPZ lpz, PJ *P) {
     return point.xyz;
 }
 
-
 /***********************************************************************/
 static PJ_LPZ helmert_reverse_3d (PJ_XYZ xyz, PJ *P) {
 /***********************************************************************/
@@ -436,7 +439,6 @@ static PJ_LPZ helmert_reverse_3d (PJ_XYZ xyz, PJ *P) {
     return point.lpz;
 }
 
-
 static PJ_COORD helmert_forward_4d (PJ_COORD point, PJ *P) {
     struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
 
@@ -453,7 +455,6 @@ static PJ_COORD helmert_forward_4d (PJ_COORD point, PJ *P) {
 
     return point;
 }
-
 
 static PJ_COORD helmert_reverse_4d (PJ_COORD point, PJ *P) {
     struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
@@ -474,7 +475,6 @@ static PJ_COORD helmert_reverse_4d (PJ_COORD point, PJ *P) {
 
 /* Arcsecond to radians */
 #define ARCSEC_TO_RAD (DEG_TO_RAD / 3600.0)
-
 
 static PJ* init_helmert_six_parameters(PJ* P) {
     struct pj_opaque_helmert *Q = static_cast<struct pj_opaque_helmert*>(pj_calloc (1, sizeof (struct pj_opaque_helmert)));
@@ -513,7 +513,6 @@ static PJ* init_helmert_six_parameters(PJ* P) {
     return P;
 }
 
-
 static PJ* read_convention(PJ* P) {
 
     struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *)P->opaque;
@@ -550,7 +549,6 @@ static PJ* read_convention(PJ* P) {
 
     return P;
 }
-
 
 /***********************************************************************/
 PJ *TRANSFORMATION(helmert, 0) {
@@ -750,4 +748,78 @@ PJ *TRANSFORMATION(molobadekas, 0) {
     build_rot_matrix(P);
 
     return P;
+}
+
+/***********************************************************************
+* 
+* http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
+*
+/***********************************************************************/
+static void calculateHelmertParameters()
+{
+	std::list<commonPointPair> commonPointList;
+
+	// NOTE: Test.
+	commonPointPair	commonPoint;
+	commonPoint.fromPoint.phi = 60.0;
+	commonPoint.fromPoint.lam = 10.0;
+	commonPoint.toPoint.phi = 59.9;
+	commonPoint.toPoint.lam = 9.9;
+	commonPointList.push_back(commonPoint);	
+}
+
+/***********************************************************************
+*
+/***********************************************************************/
+PJ_LP proj_commonCloudInit(PJ *P)
+{
+	PJ_LP out;
+
+	std::list<commonPointPair> commonPointList;
+	char* fileName = "C:/Users/Administrator/source/repos/Skproj/Octave/lan1_fellesp_20081014.cpt"; 	
+	std::ifstream file(fileName, std::ios::in | std::ios::binary | std::ios::ate);
+
+	if (file.is_open())
+	{
+		int bufferSize8 = 8; 
+		int bufferSize4 = 4;
+		std::string name = "";
+		char *charBuffer8 = new char[bufferSize8];
+		char *charBuffer4 = new char[bufferSize4];	
+
+		file.seekg(0, std::ios::beg);
+		
+		while (!file.eof())
+		{
+			commonPointPair	commonPoint;
+
+			file.read(charBuffer8, bufferSize8);			
+			name = "";
+			for (int i = 0; i < bufferSize8; i++) 			
+				name += charBuffer8[i];
+			commonPoint.name = name;
+			
+			file.read(charBuffer8, bufferSize8);
+			commonPoint.fromPoint.phi = *(reinterpret_cast<double*>(charBuffer8));
+
+			file.read(charBuffer8, bufferSize8);
+			commonPoint.fromPoint.lam = *(reinterpret_cast<double*>(charBuffer8));
+
+			file.read(charBuffer8, bufferSize8);
+			commonPoint.toPoint.phi = *(reinterpret_cast<double*>(charBuffer8));
+
+			file.read(charBuffer8, bufferSize8);
+			commonPoint.toPoint.lam = *(reinterpret_cast<double*>(charBuffer8));
+
+			file.read(charBuffer4, bufferSize4);
+			commonPoint.area = *(reinterpret_cast<__int32*>(charBuffer4));
+
+			commonPointList.push_back(commonPoint);
+		}
+	};
+
+	// TODO: Find closest points
+	// TODO: 
+
+	return out;
 }

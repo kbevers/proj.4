@@ -202,6 +202,7 @@ int             proj_hgrid_init(PJ *P, const char *grids);
 double          proj_vgrid_value(PJ *P, PJ_LP lp, double vmultiplier);
 PJ_LP           proj_hgrid_value(PJ *P, PJ_LP lp);
 PJ_LP           proj_hgrid_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction);
+PJ_LP           proj_commonCloudInit(PJ *P);
 
 void PROJ_DLL proj_log_error (PJ *P, const char *fmt, ...);
 void proj_log_debug (PJ *P, const char *fmt, ...);

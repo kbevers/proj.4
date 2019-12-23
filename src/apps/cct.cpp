@@ -307,6 +307,10 @@ int main(int argc, char **argv) {
     }
 
     info = proj_pj_info (P);
+
+	// Testing Helmert:
+	proj_commonCloudInit(P);
+
     print (PJ_LOG_TRACE, "Final: %s argc=%d pargc=%d\n", info.definition, argc, o->pargc);
 
     if (direction== PJ_INV) {
@@ -332,7 +336,6 @@ int main(int argc, char **argv) {
             fclose (fout);
         return 1;
     }
-
 
     /* Loop over all records of all input files */
     while (opt_input_loop (o, optargs_file_format_text)) {
