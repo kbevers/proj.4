@@ -55,9 +55,11 @@ Last update: 2018-10-26
 #include <fstream>
 #include <cstring>
 #include <cstddef>
+#include <algorithm>
 
 #include "proj_internal.h"
 #include "geocent.h"
+#include "point_in_polygon.h"
 
 PROJ_HEAD(helmert, "3(6)-, 4(8)- and 7(14)-parameter Helmert shift");
 PROJ_HEAD(molobadekas, "Molodensky-Badekas transformation");
@@ -104,12 +106,13 @@ struct pj_opaque_helmert {
 #define R21 (Q->R[2][1])
 #define R22 (Q->R[2][2])
 
-struct commonPointPair
+struct CommonPointPair
 {
 	std::string name;
 	PJ_LP fromPoint;
 	PJ_LP toPoint;
 	__int32 area;
+	double dist;
 };
 	
 /**************************************************************************/
@@ -755,29 +758,119 @@ PJ *TRANSFORMATION(molobadekas, 0) {
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 *
 /***********************************************************************/
-static void calculateHelmertParameters()
+static void calculateHelmertParameters(std::vector<CommonPointPair> *commonPointList)
 {
-	std::list<commonPointPair> commonPointList;
+	// TODO: Implementere Helmert
 
-	// NOTE: Test.
-	commonPointPair	commonPoint;
-	commonPoint.fromPoint.phi = 60.0;
-	commonPoint.fromPoint.lam = 10.0;
-	commonPoint.toPoint.phi = 59.9;
-	commonPoint.toPoint.lam = 9.9;
-	commonPointList.push_back(commonPoint);	
+
+
+}
+ 
+bool DistanceLess(const CommonPointPair& lhs, const CommonPointPair& rhs)
+{
+	return lhs.dist < rhs.dist;
+}
+
+/***********************************************************************
+*
+* https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
+*
+/***********************************************************************/
+std::vector<CommonPointPair> findClosestPoints(std::vector<CommonPointPair> *commonPointList, PJ_LP point, int n, int areaId)
+{
+	std::vector<CommonPointPair> distances;
+	std::vector<CommonPointPair> closestDistances;
+
+	for each (CommonPointPair pair in *(commonPointList))
+	{
+		double deltaPhi = pair.fromPoint.phi - point.phi;
+		double deltaLam = pair.fromPoint.lam - point.lam;
+		
+		pair.dist = sqrt ((deltaPhi * deltaPhi) + (deltaLam * deltaLam));
+		distances.push_back(pair);
+	}
+	
+	std::sort(distances.begin(), distances.end(), DistanceLess);
+
+	for (int i = 0; i < n; i++)
+		closestDistances.push_back(distances[i]);
+
+	return closestDistances;
 }
 
 /***********************************************************************
 *
 /***********************************************************************/
-PJ_LP proj_commonCloudInit(PJ *P)
-{
-	PJ_LP out;
+bool PointIsInArea(PJ_LP pointPJ_LP, char* fileName)
+{	 
+	std::ifstream file(fileName, std::ios::in);
 
-	std::list<commonPointPair> commonPointList;
-	char* fileName = "C:/Users/Administrator/source/repos/Skproj/Octave/lan1_fellesp_20081014.cpt"; 	
+	Point points[] = { {} };
+	Point point = { pointPJ_LP.phi, pointPJ_LP.lam };
+	vector<Point> pointVector;
+
+	if (file.is_open())
+	{
+		std::vector<std::vector<std::string> > dataList;
+		std::string line = "";
+		double x, y;
+
+		while (!file.eof())
+		{
+			getline(file, line, ',');
+			x = atof(line.c_str());
+
+			getline(file, line, '\n');
+			y = atof(line.c_str());
+
+			Point areaPoint;
+			areaPoint.x = x;
+			areaPoint.y = y;
+
+			pointVector.push_back(areaPoint);
+		}
+		file.close();
+	};
+
+	Point *vectorPointer = pointVector.data();
+	int n = size(pointVector);
+
+	return isInside(vectorPointer, n, point);
+}
+
+/***********************************************************************
+*
+/***********************************************************************/
+int AreaIdPoint(PJ_LP pointPJ_LP) // TODO: Endre namn og argument 
+{
+	// TODO: Områdefil som geojson
+	// TODO: Flytte områdefilene
+	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
+	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
+	char* fileName4 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area4.csv";
+	
+	if (PointIsInArea(pointPJ_LP, fileName2))
+		return 2;
+	else if (PointIsInArea(pointPJ_LP, fileName3))
+		return 3;
+	else if (PointIsInArea(pointPJ_LP, fileName4))
+		return 4;
+
+	return 1;
+}
+
+/***********************************************************************
+*
+/***********************************************************************/
+PJ_LP proj_commonPointInit(PJ_LP lp)
+{
+	std::vector<CommonPointPair> commonPointList;
+
+	// TODO: Flytte lan1_fellesp_20081014.cpt til ei anna mappe
+	char* fileName = "C:/Users/Administrator/source/repos/Skproj/Octave/lan1_fellesp_20081014.cpt";
 	std::ifstream file(fileName, std::ios::in | std::ios::binary | std::ios::ate);
+
+	int areaId = AreaIdPoint(lp);
 
 	if (file.is_open())
 	{
@@ -791,12 +884,14 @@ PJ_LP proj_commonCloudInit(PJ *P)
 		
 		while (!file.eof())
 		{
-			commonPointPair	commonPoint;
+			CommonPointPair	commonPoint;
 
-			file.read(charBuffer8, bufferSize8);			
+			file.read(charBuffer8, bufferSize8);
 			name = "";
+
 			for (int i = 0; i < bufferSize8; i++) 			
 				name += charBuffer8[i];
+
 			commonPoint.name = name;
 			
 			file.read(charBuffer8, bufferSize8);
@@ -814,12 +909,21 @@ PJ_LP proj_commonCloudInit(PJ *P)
 			file.read(charBuffer4, bufferSize4);
 			commonPoint.area = *(reinterpret_cast<__int32*>(charBuffer4));
 
+			if (areaId != commonPoint.area)
+				continue;
+
 			commonPointList.push_back(commonPoint);
 		}
+		file.close();
 	};
 
-	// TODO: Find closest points
-	// TODO: 
+    int numberOfSelectedPoints = 20; 
 
-	return out;
+	// TODO: Flytte kalla	
+	auto closestPoints = findClosestPoints(&commonPointList, lp, numberOfSelectedPoints, areaId);
+
+	// TODO: Leggje inn Helmert her.
+	calculateHelmertParameters(&closestPoints);
+
+	return lp;
 }

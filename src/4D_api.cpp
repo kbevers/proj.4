@@ -91,7 +91,6 @@ int proj_angular_output (PJ *P, enum PJ_DIRECTION dir) {
     return proj_angular_input (P, opposite_direction(dir));
 }
 
-
 /* Geodesic distance (in meter) + fwd and rev azimuth between two points on the ellipsoid */
 PJ_COORD proj_geod (const PJ *P, PJ_COORD a, PJ_COORD b) {
     PJ_COORD c;
@@ -140,8 +139,6 @@ double proj_xy_dist (PJ_COORD a, PJ_COORD b) {
 double proj_xyz_dist (PJ_COORD a, PJ_COORD b) {
     return hypot (proj_xy_dist (a, b), a.xyz.z - b.xyz.z);
 }
-
-
 
 /* Measure numerical deviation after n roundtrips fwd-inv (or inv-fwd) */
 double proj_roundtrip (PJ *P, PJ_DIRECTION direction, int n, PJ_COORD *coord) {

@@ -221,7 +221,7 @@ set(SRC_LIBPROJ_CORE
   adjlon.cpp
   apply_gridshift.cpp
   apply_vgridshift.cpp
-  auth.cpp
+  auth.cpp 
   ctx.cpp
   datum_set.cpp
   datums.cpp
@@ -260,6 +260,7 @@ set(SRC_LIBPROJ_CORE
   phi2.cpp
   pipeline.cpp
   pj_list.h
+  point_in_polygon.h
   pr_list.cpp
   proj_internal.h
   proj_mdist.cpp

@@ -83,7 +83,6 @@ Thomas Knudsen, thokn@sdfe.dk, 2016-05-25/2017-10-26
 #include "proj_strtod.h"
 #include "optargpm.h"
 
-
 static void logger(void *data, int level, const char *msg);
 static void print(PJ_LOG_LEVEL log_level, const char *fmt, ...);
 
@@ -199,7 +198,6 @@ static void print(PJ_LOG_LEVEL log_level, const char *fmt, ...) {
     free( msg_buf );
 }
 
-
 int main(int argc, char **argv) {
     PJ *P;
     PJ_COORD point;
@@ -306,10 +304,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    info = proj_pj_info (P);
-
-	// Testing Helmert:
-	proj_commonCloudInit(P);
+    info = proj_pj_info(P);
 
     print (PJ_LOG_TRACE, "Final: %s argc=%d pargc=%d\n", info.definition, argc, o->pargc);
 
@@ -365,6 +360,9 @@ int main(int argc, char **argv) {
             print (PJ_LOG_ERROR, "%s: Could not parse file '%s' line %d\n", o->progname, opt_filename (o), opt_record (o));
             continue;
         }
+
+		// Testing Helmert:
+		proj_commonPointInit(point.lp);
 
         if (proj_angular_input (P, direction)) {
             point.lpzt.lam = proj_torad (point.lpzt.lam);
