@@ -48,6 +48,9 @@ Last update: 2018-10-26
 ***********************************************************************/
 
 #define PJ_LIB__
+//#define ARMA_DONT_USE_WRAPPER
+//#define ARMA_USE_LAPACK
+//#define ARMA_USE_BLAS 
 
 #include <errno.h>
 #include <math.h>
@@ -60,6 +63,9 @@ Last update: 2018-10-26
 #include "proj_internal.h"
 #include "geocent.h"
 #include "point_in_polygon.h"
+#include "Eigen\Eigen"
+
+using namespace Eigen;
 
 PROJ_HEAD(helmert, "3(6)-, 4(8)- and 7(14)-parameter Helmert shift");
 PROJ_HEAD(molobadekas, "Molodensky-Badekas transformation");
@@ -754,14 +760,135 @@ PJ *TRANSFORMATION(molobadekas, 0) {
 }
 
 /***********************************************************************
-* 
-* http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 *
 /***********************************************************************/
-static void calculateHelmertParameters(std::vector<CommonPointPair> *commonPointList)
+static void testReadGeojson()
 {
-	// TODO: Implementere Helmert
 
+}
+
+/******************************************************************************************
+* http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
+*
+* https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
+/******************************************************************************************/
+static void calculateHelmertParameters(std::vector<CommonPointPair> *commonPointList, PJ_LP lp)
+{
+	auto n = commonPointList->size();
+	 
+	double k = 0.00039;
+	double c = 0.06900;
+
+	double coslat = cos(lp.phi * M_PI / 180.0);
+
+	double x = lp.phi;
+	double y = lp.lam * coslat;		 
+
+	MatrixXd cnn(n, n);
+	MatrixXd cmn(n, 1);
+
+	// Vector From System
+	MatrixXd xF(n, 1);
+	MatrixXd yF(n, 1);
+
+	// Vector To System
+	MatrixXd xT(n, 1);
+	MatrixXd yT(n, 1);	
+	
+	for (int i = 0; i < n; i++)
+	{
+		CommonPointPair point1 = commonPointList->at(i);
+		xF(i, 0) = point1.fromPoint.phi;
+		yF(i, 0) = point1.fromPoint.lam * coslat;
+
+		xT(i, 0) = point1.toPoint.phi;
+		yT(i, 0) = point1.toPoint.lam * coslat;		
+	}
+    // cout << "xF:" << endl << xF << endl;
+ 	//cout << "yF:" << endl << yF << endl;
+	//cout << "xT:" << endl << xT << endl;
+	//cout << "yT:" << endl << yT << endl;
+
+	for (int i = 0; i < n; i++)
+	{
+		double dist = hypot(xF(i, 0) - x, yF(i, 0) - y);
+		double a = (M_PI / 2.0) * (dist / c);
+		cmn(i, 0) = k * exp(-a) * cos(a);
+
+		for (int j = 0; j < n; j++)
+		{
+			dist = hypot(xF(i, 0) - xF(j, 0), yF(i, 0) - yF(j, 0));
+			a = (M_PI / 2.0) * (dist / c);
+			cnn(i, j) = k * exp(-a) * cos(a);
+		}
+	}
+	//	cout << "cmn:" << endl << cmn << endl;
+	//	cout << "cnn:" << endl << cnn << endl;
+
+	MatrixXd p = cnn.inverse();
+	//cout << "p:" << endl << p << endl;
+	 
+	// N, diagonal sum of p:
+	MatrixXd sep = p * MatrixXd::Ones(n, 1);
+	MatrixXd N = MatrixXd::Ones(1, n) * sep;
+	//cout << "N:" << endl << N << endl;
+
+	// Mean values
+	MatrixXd xFT = MatrixXd::Ones(1, n) * p * xF;
+	MatrixXd yFT = MatrixXd::Ones(1, n) * p * yF;
+	MatrixXd xTT = MatrixXd::Ones(1, n) * p * xT;
+	MatrixXd yTT = MatrixXd::Ones(1, n) * p * yT;
+	 
+	// Mass center: 
+	MatrixXd xF0 = xFT * N.inverse();
+	MatrixXd yF0 = yFT * N.inverse();
+	MatrixXd xT0 = xTT * N.inverse();
+	MatrixXd yT0 = yTT * N.inverse();
+	
+	// Coordinates with Mass center origin
+	MatrixXd dxF = xF - MatrixXd::Ones(n, 1) * xF0;
+	MatrixXd dyF = yF - MatrixXd::Ones(n, 1) * yF0;
+	MatrixXd dxT = xT - MatrixXd::Ones(n, 1) * xT0;
+	MatrixXd dyT = yT - MatrixXd::Ones(n, 1) * yT0;
+
+	double n11 = 0.0;
+	double t1 = 0.0;
+	double t2 = 0.0;
+
+	for (int i = 0; i < n; i++)
+	{
+		n11 += (pow(dxF(i), 2) * sep(i)) + (pow(dyF(i), 2) * sep(i));
+		t1 += (dxF(i) * dxT(i) + dyF(i) * dyT(i)) * sep(i);
+		t2 += (dyF(i) * dxT(i) - dxF(i) * dyT(i)) * sep(i);
+	}
+	double a = t1 / n11;
+	double b = t2 / n11;
+ 
+	double tx = xT0(0) - a * xF0(0) - b * yF0(0);
+	double ty = yT0(0) + b * xF0(0) - a * yF0(0);
+
+	// Sigma noise
+	MatrixXd snx(n, 1);
+	MatrixXd sny(n, 1);
+
+	for (int i = 0; i < n; i++)
+	{
+		snx(i) = dxT(i) - a * dxF(i) - b * dyF(i);
+		sny(i) = dyT(i) + b * dxF(i) - a * dyF(i);
+	}
+	//cout << "snx:" << endl << snx << endl;
+	//cout << "sny:" << endl << sny << endl;
+
+	double xTrans = xT0(0) - a * (xF0(0) - x) - b * (yF0(0) - y);
+	double yTrans = yT0(0) + b * (xF0(0) - x) - a * (yF0(0) - y);
+	
+	MatrixXd smx = cmn.transpose() * p * snx;
+	MatrixXd smy = cmn.transpose() * p * sny;
+	//cout << "smx:" << endl << smx << endl;
+	//cout << "smy:" << endl << smy << endl;
+
+	double xEst = xTrans + smx(0);
+	double yEst = yTrans + smy(0);
 
 
 }
@@ -772,19 +899,18 @@ bool DistanceLess(const CommonPointPair& lhs, const CommonPointPair& rhs)
 }
 
 /***********************************************************************
-*
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
-*
 /***********************************************************************/
-std::vector<CommonPointPair> findClosestPoints(std::vector<CommonPointPair> *commonPointList, PJ_LP point, int n, int areaId)
+std::vector<CommonPointPair> findClosestPoints(std::vector<CommonPointPair> *commonPointList, PJ_LP lp, int n, int areaId)
 {
 	std::vector<CommonPointPair> distances;
 	std::vector<CommonPointPair> closestDistances;
+	double coslat = cos(lp.phi * M_PI / 180.0);
 
 	for each (CommonPointPair pair in *(commonPointList))
 	{
-		double deltaPhi = pair.fromPoint.phi - point.phi;
-		double deltaLam = pair.fromPoint.lam - point.lam;
+		double deltaPhi = pair.fromPoint.phi - lp.phi;
+		double deltaLam = (pair.fromPoint.lam - lp.lam) * coslat;
 		
 		pair.dist = sqrt ((deltaPhi * deltaPhi) + (deltaLam * deltaLam));
 		distances.push_back(pair);
@@ -843,7 +969,7 @@ bool PointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 /***********************************************************************/
 int AreaIdPoint(PJ_LP pointPJ_LP) // TODO: Endre namn og argument 
 {
-	// TODO: Områdefil som geojson
+	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
 	// TODO: Flytte områdefilene
 	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
 	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
@@ -923,7 +1049,7 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 	auto closestPoints = findClosestPoints(&commonPointList, lp, numberOfSelectedPoints, areaId);
 
 	// TODO: Leggje inn Helmert her.
-	calculateHelmertParameters(&closestPoints);
+	calculateHelmertParameters(&closestPoints, lp);
 
 	return lp;
 }
