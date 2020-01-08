@@ -226,7 +226,8 @@ int main(int argc, char **argv) {
     fout = stdout;
 
     /* coverity[tainted_data] */
-    o = opt_parse (argc, argv, "hvI", "cdozts", longflags, longkeys);
+
+	o = opt_parse (argc, argv, "hvI", "cdozts", longflags, longkeys);
     if (nullptr==o)
         return 0;
 
@@ -362,7 +363,7 @@ int main(int argc, char **argv) {
         }
 
 		// Testing Helmert:
-		proj_commonPointInit(point.lp);
+		//proj_commonPointInit(point.lp);
 
         if (proj_angular_input (P, direction)) {
             point.lpzt.lam = proj_torad (point.lpzt.lam);

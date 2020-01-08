@@ -766,6 +766,35 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 
 #endif /* def PJ_LIB__ */
 
+// GeoJson area boundary struct
+/*
+struct GeoJsonAreaBoundary
+{
+	std::string type;
+	std::string name;
+	// crs
+	// features
+
+};
+
+struct crs
+{
+	std::string type;
+	struct a;
+};
+
+struct Features
+{
+	//properties
+	//geometry
+};
+
+struct MultiPolygon
+{
+	PJ_LP vtgf;
+	// coordinates 
+};
+*/
 
 #define MAX_TAB_ID 80
 typedef struct { float lam, phi; } FLP;

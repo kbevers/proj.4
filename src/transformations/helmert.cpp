@@ -48,14 +48,12 @@ Last update: 2018-10-26
 ***********************************************************************/
 
 #define PJ_LIB__
-//#define ARMA_DONT_USE_WRAPPER
-//#define ARMA_USE_LAPACK
-//#define ARMA_USE_BLAS 
 
 #include <errno.h>
 #include <math.h>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <cstring>
 #include <cstddef>
 #include <algorithm>
@@ -63,9 +61,11 @@ Last update: 2018-10-26
 #include "proj_internal.h"
 #include "geocent.h"
 #include "point_in_polygon.h"
+#include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
 
-using namespace Eigen;
+using namespace Eigen; 
+using json = nlohmann::json;
 
 PROJ_HEAD(helmert, "3(6)-, 4(8)- and 7(14)-parameter Helmert shift");
 PROJ_HEAD(molobadekas, "Molodensky-Badekas transformation");
@@ -759,12 +759,105 @@ PJ *TRANSFORMATION(molobadekas, 0) {
     return P;
 }
 
+template<class UnaryFunction>
+void recursive_iterate(const json& j, UnaryFunction f)
+{
+	for (auto it = j.begin(); it != j.end(); ++it)
+	{
+		// auto typenam = it->type_name();
+		auto v = it.value();
+
+		if (it->is_array() || it->is_object())
+		{
+			recursive_iterate(*it, f);
+		}	
+		else if (it->is_null())
+		{
+			f(it);
+		}
+		else if (it->is_number_float())
+		{
+			auto value = it.value();
+		}		 
+		else
+		{
+			f(it);
+		}
+	}
+}
+
+// TODO: Flytte all GeoJson til eigen klasse.
 /***********************************************************************
 *
 /***********************************************************************/
-static void testReadGeojson()
+static void testReadGeojson(/*char* fileName*/)
 {
+	char* fileName = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Ngo_areas.geojson";
+ 
+	FILE *f = fopen(fileName, "rb");
+	fseek(f, 0, SEEK_END);
+	long fsize = ftell(f);
+	fseek(f, 0, SEEK_SET);
 
+	char *string = (char *)malloc(fsize + 1);
+	fread(string, fsize, 1, f);
+	fclose(f);
+
+	string[fsize] = 0;
+	 
+	// parse and serialize JSON
+	json j_complete = json::parse(string);
+	// std::cout << std::setw(4) << j_complete << "\n\n";
+		 
+	recursive_iterate(j_complete, [](json::const_iterator it)
+	{});
+
+	// Test
+	auto feat = j_complete.at("features");
+	//auto c = j_complete.find("coordinates");
+ 
+	for (auto it = feat.begin(); it != feat.end(); ++it)
+	{
+		//auto hh =	it1.key["geometry"];
+
+		auto geo = (*it)["geometry"];
+		auto coords = geo.at("coordinates");
+
+		//recursive_iterateToFloat(*it, coords.value);
+
+		//if (it1->is_number_float)
+		/*
+		for (auto it2 = geo.begin(); it2 != geo.end(); ++it2)
+		{
+			auto coord = (*it2)["coordinates"];
+		}*/
+	}
+
+	for (auto& x : feat.items())
+	{
+		//std::cout << "key: " << x.key() << ", value: " << x.value() << '\n';
+	}	 
+	/*
+	 json::iterator it = feat.begin();
+
+	 std::for_each(feat.begin(), feat.end(), [](std::string &string)
+	 { 
+		 std::cout << string << "\n";
+	 }
+	 );
+*/
+	//feat.at()
+	auto feat1 = feat.at(0);
+	auto geo = feat1.at("geometry");
+	auto coords1 = geo.at("coordinates");
+	auto coords2 = coords1.at(0);
+	auto coords3 = coords2.at(0);
+	auto coords4 = coords3.at(0);
+	auto coords5 = coords4.at(0);
+
+	//auto multiPolygon = j_complete.array("MultiPolygon");
+	//auto items = j_complete.items();
+	auto json_string = j_complete.dump();
 }
 
 /******************************************************************************************
@@ -889,8 +982,6 @@ static void calculateHelmertParameters(std::vector<CommonPointPair> *commonPoint
 
 	double xEst = xTrans + smx(0);
 	double yEst = yTrans + smy(0);
-
-
 }
  
 bool DistanceLess(const CommonPointPair& lhs, const CommonPointPair& rhs)
@@ -968,13 +1059,15 @@ bool PointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 *
 /***********************************************************************/
 int AreaIdPoint(PJ_LP pointPJ_LP) // TODO: Endre namn og argument 
-{
-	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
+{	
 	// TODO: Flytte områdefilene
 	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
 	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
 	char* fileName4 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area4.csv";
 	
+	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
+	//testReadGeojson();
+
 	if (PointIsInArea(pointPJ_LP, fileName2))
 		return 2;
 	else if (PointIsInArea(pointPJ_LP, fileName3))
