@@ -215,6 +215,8 @@
 #define EPSG_NAME_METHOD_VERTICAL_PERSPECTIVE "Vertical Perspective"
 #define EPSG_CODE_METHOD_VERTICAL_PERSPECTIVE 9838
 
+#define PROJ_WKT2_NAME_METHOD_POLE_ROTATION_GRIB_CONVENTION "Pole rotation (GRIB convention)"
+
 /* ------------------------------------------------------------------------ */
 
 /* Projection parameters */
@@ -474,6 +476,15 @@
 #define \
     EPSG_NAME_PARAMETER_FLATTENING_DIFFERENCE "Flattening difference"
 
+#define PROJ_WKT2_NAME_PARAMETER_SOUTH_POLE_LATITUDE_GRIB_CONVENTION \
+    "Latitude of the southern pole (GRIB convention)"
+
+#define PROJ_WKT2_NAME_PARAMETER_SOUTH_POLE_LONGITUDE_GRIB_CONVENTION \
+    "Longitude of the southern pole (GRIB convention)"
+
+#define PROJ_WKT2_NAME_PARAMETER_AXIS_ROTATION_GRIB_CONVENTION \
+    "Axis rotation (GRIB convention)"
+
 /* ------------------------------------------------------------------------ */
 
 #define EPSG_CODE_METHOD_NTV1 9614
@@ -501,6 +512,9 @@
 
 #define EPSG_CODE_METHOD_VERTCON 9658
 #define EPSG_NAME_METHOD_VERTCON "VERTCON"
+
+#define EPSG_CODE_METHOD_VERTICALGRID_NZLVD 1071
+#define EPSG_NAME_METHOD_VERTICALGRID_NZLVD "Vertical Offset by Grid Interpolation (NZLVD)"
 
 #define EPSG_NAME_PARAMETER_VERTICAL_OFFSET_FILE "Vertical offset file"
 #define EPSG_CODE_PARAMETER_VERTICAL_OFFSET_FILE 8732
