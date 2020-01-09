@@ -765,7 +765,8 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 struct AreaBoundary
 {
 	std::string type;
-	std::string name;	
+	std::string name;
+
 	// crs
 	// features
 };
@@ -779,11 +780,17 @@ struct Features
 struct MultiPolygon
 {
 	PJ_LP vtgf;
-
-
 	// coordinates
 };
 
+struct PJ_LP_Pair
+{
+	std::string name;
+	PJ_LP fromPoint;
+	PJ_LP toPoint;
+	__int32 area;
+	double dist;
+}; 
 
 #define MAX_TAB_ID 80
 typedef struct { float lam, phi; } FLP;

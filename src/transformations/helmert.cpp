@@ -111,15 +111,6 @@ struct pj_opaque_helmert {
 #define R20 (Q->R[2][0])
 #define R21 (Q->R[2][1])
 #define R22 (Q->R[2][2])
-
-struct CommonPointPair
-{
-	std::string name;
-	PJ_LP fromPoint;
-	PJ_LP toPoint;
-	__int32 area;
-	double dist;
-};
 	
 /**************************************************************************/
 static void update_parameters(PJ *P) {
@@ -865,7 +856,7 @@ static void testReadGeojson(/*char* fileName*/)
 *
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static void calculateHelmertParameters(std::vector<CommonPointPair> *commonPointList, PJ_LP lp)
+static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP lp)
 {
 	auto n = commonPointList->size();
 	 
@@ -890,7 +881,8 @@ static void calculateHelmertParameters(std::vector<CommonPointPair> *commonPoint
 	
 	for (int i = 0; i < n; i++)
 	{
-		CommonPointPair point1 = commonPointList->at(i);
+		PJ_LP_Pair point1 = commonPointList->at(i);
+
 		xF(i, 0) = point1.fromPoint.phi;
 		yF(i, 0) = point1.fromPoint.lam * coslat;
 
@@ -984,7 +976,7 @@ static void calculateHelmertParameters(std::vector<CommonPointPair> *commonPoint
 	double yEst = yTrans + smy(0);
 }
  
-bool DistanceLess(const CommonPointPair& lhs, const CommonPointPair& rhs)
+bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
 {
 	return lhs.dist < rhs.dist;
 }
@@ -992,13 +984,13 @@ bool DistanceLess(const CommonPointPair& lhs, const CommonPointPair& rhs)
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-std::vector<CommonPointPair> findClosestPoints(std::vector<CommonPointPair> *commonPointList, PJ_LP lp, int n, int areaId)
+std::vector<PJ_LP_Pair> findClosestPoints(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP lp, int n, int areaId)
 {
-	std::vector<CommonPointPair> distances;
-	std::vector<CommonPointPair> closestDistances;
+	std::vector<PJ_LP_Pair> distances;
+	std::vector<PJ_LP_Pair> closestDistances;
 	double coslat = cos(lp.phi * M_PI / 180.0);
 
-	for each (CommonPointPair pair in *(commonPointList))
+	for each (PJ_LP_Pair pair in *(commonPointList))
 	{
 		double deltaPhi = pair.fromPoint.phi - lp.phi;
 		double deltaLam = (pair.fromPoint.lam - lp.lam) * coslat;
@@ -1083,7 +1075,7 @@ int AreaIdPoint(PJ_LP pointPJ_LP) // TODO: Endre namn og argument
 /***********************************************************************/
 PJ_LP proj_commonPointInit(PJ_LP lp)
 {
-	std::vector<CommonPointPair> commonPointList;
+	std::vector<PJ_LP_Pair> commonPointList;
 
 	// TODO: Flytte lan1_fellesp_20081014.cpt til ei anna mappe
 	char* fileName = "C:/Users/Administrator/source/repos/Skproj/Octave/lan1_fellesp_20081014.cpt";
@@ -1103,7 +1095,7 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 		
 		while (!file.eof())
 		{
-			CommonPointPair	commonPoint;
+			PJ_LP_Pair	commonPoint;
 
 			file.read(charBuffer8, bufferSize8);
 			name = "";
