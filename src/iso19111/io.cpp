@@ -2683,7 +2683,9 @@ WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
     auto cs = buildCS(csNode, node, angularUnit);
     auto ellipsoidalCS = nn_dynamic_pointer_cast<EllipsoidalCS>(cs);
     if (ellipsoidalCS) {
-        assert(!ci_equal(nodeName, WKTConstants::GEOCCS));
+        if (ci_equal(nodeName, WKTConstants::GEOCCS)) {
+            throw ParsingException("ellipsoidal CS not expected in GEOCCS");
+        }
         try {
             auto crs = GeographicCRS::create(props, datum, datumEnsemble,
                                              NN_NO_CHECK(ellipsoidalCS));
@@ -5669,13 +5671,18 @@ static BaseObjectNNPtr createFromUserInput(const std::string &text,
         DatabaseContextNNPtr dbContextNNPtr(NN_NO_CHECK(dbContext));
         const auto &authName = tokens[0];
         const auto &code = tokens[1];
-        static const std::string epsg_lowercase("epsg");
-        auto factory = AuthorityFactory::create(
-            dbContextNNPtr,
-            authName == epsg_lowercase ? Identifier::EPSG : authName);
+        auto factory = AuthorityFactory::create(dbContextNNPtr, authName);
         try {
             return factory->createCoordinateReferenceSystem(code);
         } catch (...) {
+
+            // Convenience for well-known misused code
+            // See https://github.com/OSGeo/PROJ/issues/1730
+            if (ci_equal(authName, "EPSG") && code == "102100") {
+                factory = AuthorityFactory::create(dbContextNNPtr, "ESRI");
+                return factory->createCoordinateReferenceSystem(code);
+            }
+
             const auto authorities = dbContextNNPtr->getAuthorities();
             for (const auto &authCandidate : authorities) {
                 if (ci_equal(authCandidate, authName)) {
@@ -6278,12 +6285,25 @@ struct Step {
             return key == otherKey && value == otherVal;
         }
 
+        bool operator==(const KeyValue &other) const noexcept {
+            return key == other.key && value == other.value;
+        }
+
         bool operator!=(const KeyValue &other) const noexcept {
             return key != other.key || value != other.value;
         }
     };
 
     std::vector<KeyValue> paramValues{};
+
+    bool hasKey(const char *keyName) const {
+        for (const auto &kv : paramValues) {
+            if (kv.key == keyName) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 Step::KeyValue::KeyValue(const char *keyIn, const std::string &valueIn)
@@ -6790,6 +6810,46 @@ const std::string &PROJStringFormatter::toString() const {
                 }
             }
 
+            // +step +proj=hgridshift +grids=grid_A
+            // +step +proj=vgridshift [...] <== curStep
+            // +step +inv +proj=hgridshift +grids=grid_A
+            // ==>
+            // +step +proj=push +v_1 +v_2
+            // +step +proj=hgridshift +grids=grid_A +omit_inv
+            // +step +proj=vgridshift [...]
+            // +step +inv +proj=hgridshift +grids=grid_A +omit_fwd
+            // +step +proj=pop +v_1 +v_2
+            if (i + 1 < d->steps_.size() && prevStep.name == "hgridshift" &&
+                prevStepParamCount == 1 && curStep.name == "vgridshift") {
+                auto iterNext = iterCur;
+                ++iterNext;
+                auto &nextStep = *iterNext;
+                if (nextStep.name == "hgridshift" &&
+                    nextStep.inverted != prevStep.inverted &&
+                    nextStep.paramValues.size() == 1 &&
+                    prevStep.paramValues[0] == nextStep.paramValues[0]) {
+                    Step pushStep;
+                    pushStep.name = "push";
+                    pushStep.paramValues.emplace_back("v_1");
+                    pushStep.paramValues.emplace_back("v_2");
+                    d->steps_.insert(iterPrev, pushStep);
+
+                    prevStep.paramValues.emplace_back("omit_inv");
+
+                    nextStep.paramValues.emplace_back("omit_fwd");
+
+                    Step popStep;
+                    popStep.name = "pop";
+                    popStep.paramValues.emplace_back("v_1");
+                    popStep.paramValues.emplace_back("v_2");
+                    ++iterNext;
+                    d->steps_.insert(iterNext, popStep);
+
+                    changeDone = true;
+                    break;
+                }
+            }
+
             // detect a step and its inverse
             if (curStep.inverted != prevStep.inverted &&
                 curStep.name == prevStep.name &&
@@ -6813,7 +6873,9 @@ const std::string &PROJStringFormatter::toString() const {
 
     if (d->steps_.size() > 1 ||
         (d->steps_.size() == 1 &&
-         (d->steps_.front().inverted || !d->globalParamValues_.empty()))) {
+         (d->steps_.front().inverted || d->steps_.front().hasKey("omit_inv") ||
+          d->steps_.front().hasKey("omit_fwd") ||
+          !d->globalParamValues_.empty()))) {
         d->appendToResult("+proj=pipeline");
 
         for (const auto &paramValue : d->globalParamValues_) {
@@ -7102,6 +7164,12 @@ void PROJStringFormatter::stopInversion() {
     // the current end of steps
     for (auto iter = startIter; iter != d->steps_.end(); ++iter) {
         iter->inverted = !iter->inverted;
+        for (auto &paramValue : iter->paramValues) {
+            if (paramValue.key == "omit_fwd")
+                paramValue.key = "omit_inv";
+            else if (paramValue.key == "omit_inv")
+                paramValue.key = "omit_fwd";
+        }
     }
     // And reverse the order of steps in that range as well.
     std::reverse(startIter, d->steps_.end());
@@ -8527,7 +8595,11 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
                     break;
                 }
             }
-            if (getNumericValue(getParamValue(step, "a")) == 6378137) {
+            if (getNumericValue(getParamValue(step, "a")) == 6378137 &&
+                getAngularValue(getParamValue(step, "lon_0")) == 0.0 &&
+                getAngularValue(getParamValue(step, "lat_0")) == 0.0 &&
+                getAngularValue(getParamValue(step, "x_0")) == 0.0 &&
+                getAngularValue(getParamValue(step, "y_0")) == 0.0) {
                 bWebMercator = true;
             }
         } else if (hasParamValue(step, "lat_ts")) {

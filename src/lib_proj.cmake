@@ -245,7 +245,6 @@ set(SRC_LIBPROJ_CORE
   initcache.cpp
   internal.cpp
   inv.cpp
-  jniproj.cpp
   list.cpp
   log.cpp
   malloc.cpp
@@ -284,6 +283,7 @@ set(SRC_LIBPROJ_CORE
   wkt_parser.cpp
   wkt_parser.hpp
   zpoly1.cpp
+  proj_json_streaming_writer.hpp
   proj_json_streaming_writer.cpp
   tracing.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/proj_config.h
@@ -294,7 +294,6 @@ set(HEADERS_LIBPROJ
   proj.h
   proj_experimental.h
   proj_constants.h
-  proj_json_streaming_writer.hpp
   geodesic.h
 )
 
@@ -320,26 +319,6 @@ source_group("CMake Files" FILES CMakeLists.txt)
 
 # Embed PROJ_LIB data files location
 add_definitions(-DPROJ_LIB="${CMAKE_INSTALL_PREFIX}/${DATADIR}")
-
-#################################################
-## java wrapping with jni
-#################################################
-option(JNI_SUPPORT "Build support of java/jni wrapping for proj library" OFF)
-find_package(JNI QUIET)
-if(JNI_SUPPORT AND NOT JNI_FOUND)
-  message(FATAL_ERROR "jni support is required but jni is not found")
-endif()
-boost_report_value(JNI_SUPPORT)
-if(JNI_SUPPORT)
-  set(SRC_LIBPROJ_CORE
-    ${SRC_LIBPROJ_CORE} jniproj.cpp)
-  set(HEADERS_LIBPROJ
-    ${HEADERS_LIBPROJ} org_proj4_PJ.h)
-  source_group("Source Files\\JNI" FILES ${SRC_LIBPROJ_JNI})
-  add_definitions(-DJNI_ENABLED)
-  include_directories(${JNI_INCLUDE_DIRS})
-  boost_report_value(JNI_INCLUDE_DIRS)
-endif()
 
 #################################################
 ## targets: libproj and proj_config.h
@@ -444,7 +423,7 @@ endif()
 include_directories(${SQLITE3_INCLUDE_DIR})
 target_link_libraries(${PROJ_CORE_TARGET} ${SQLITE3_LIBRARY})
 
-if(MSVC)
+if(MSVC AND BUILD_LIBPROJ_SHARED)
   target_compile_definitions(${PROJ_CORE_TARGET}
     PRIVATE PROJ_MSVC_DLL_EXPORT=1)
 endif()

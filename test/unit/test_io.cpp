@@ -5577,6 +5577,17 @@ TEST(wkt_parse, invalid_GEOCCS) {
                                            "NORTH],AXIS[\"longitude\",EAST]]"),
                  ParsingException);
 
+    // ellipsoidal CS is invalid in a GEOCCS
+    EXPECT_THROW(WKTParser().createFromWKT(
+                     "GEOCCS[\"WGS 84\",DATUM[\"World Geodetic System 1984\","
+                     "ELLIPSOID[\"WGS 84\",6378274,298.257223564,"
+                     "LENGTHUNIT[\"metre\",1]]],"
+                     "CS[ellipsoidal,2],AXIS[\"geodetic latitude (Lat)\",north,"
+                     "ANGLEUNIT[\"degree\",0.0174532925199433]],"
+                     "AXIS[\"geodetic longitude (Lon)\",east,"
+                     "ANGLEUNIT[\"degree\",0.0174532925199433]]]"),
+                 ParsingException);
+
     // 3 axis required
     EXPECT_THROW(WKTParser().createFromWKT(
                      "GEOCCS[\"x\",DATUM[\"x\",SPHEROID[\"x\",1,0.5]],PRIMEM["
@@ -6828,6 +6839,119 @@ TEST(io, projstringformatter_axisswap_unitconvert_axisswap) {
     fmt->addStep("axisswap");
     fmt->addParam("order", "2,1");
     EXPECT_EQ(fmt->toString(), "+proj=unitconvert +xy_in=rad +xy_out=deg");
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projstringformatter_optim_hgridshift_vgridshift_hgridshift_inv) {
+    // Nominal case
+    {
+        auto fmt = PROJStringFormatter::create();
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo");
+
+        fmt->addStep("vgridshift");
+        fmt->addParam("grids", "bar");
+
+        fmt->startInversion();
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo");
+        fmt->stopInversion();
+
+        EXPECT_EQ(fmt->toString(),
+                  "+proj=pipeline "
+                  "+step +proj=push +v_1 +v_2 "
+                  "+step +proj=hgridshift +grids=foo +omit_inv "
+                  "+step +proj=vgridshift +grids=bar "
+                  "+step +inv +proj=hgridshift +grids=foo +omit_fwd "
+                  "+step +proj=pop +v_1 +v_2");
+    }
+
+    // Test omit_fwd->omit_inv when inversing the pipeline
+    {
+        auto fmt = PROJStringFormatter::create();
+        fmt->startInversion();
+        fmt->ingestPROJString("+proj=hgridshift +grids=foo +omit_fwd");
+        fmt->stopInversion();
+
+        EXPECT_EQ(fmt->toString(),
+                  "+proj=pipeline "
+                  "+step +inv +proj=hgridshift +grids=foo +omit_inv");
+    }
+
+    // Test omit_inv->omit_fwd when inversing the pipeline
+    {
+        auto fmt = PROJStringFormatter::create();
+        fmt->startInversion();
+        fmt->ingestPROJString("+proj=hgridshift +grids=foo +omit_inv");
+        fmt->stopInversion();
+
+        EXPECT_EQ(fmt->toString(),
+                  "+proj=pipeline "
+                  "+step +inv +proj=hgridshift +grids=foo +omit_fwd");
+    }
+
+    // Variant with first hgridshift inverted, and second forward
+    {
+        auto fmt = PROJStringFormatter::create();
+
+        fmt->startInversion();
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo");
+        fmt->stopInversion();
+
+        fmt->addStep("vgridshift");
+        fmt->addParam("grids", "bar");
+
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo");
+
+        EXPECT_EQ(fmt->toString(),
+                  "+proj=pipeline "
+                  "+step +proj=push +v_1 +v_2 "
+                  "+step +inv +proj=hgridshift +grids=foo +omit_inv "
+                  "+step +proj=vgridshift +grids=bar "
+                  "+step +proj=hgridshift +grids=foo +omit_fwd "
+                  "+step +proj=pop +v_1 +v_2");
+    }
+
+    // Do not apply ! not same grid name
+    {
+        auto fmt = PROJStringFormatter::create();
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo");
+
+        fmt->addStep("vgridshift");
+        fmt->addParam("grids", "bar");
+
+        fmt->startInversion();
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo2");
+        fmt->stopInversion();
+
+        EXPECT_EQ(fmt->toString(), "+proj=pipeline "
+                                   "+step +proj=hgridshift +grids=foo "
+                                   "+step +proj=vgridshift +grids=bar "
+                                   "+step +inv +proj=hgridshift +grids=foo2");
+    }
+
+    // Do not apply ! missing inversion
+    {
+        auto fmt = PROJStringFormatter::create();
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo");
+
+        fmt->addStep("vgridshift");
+        fmt->addParam("grids", "bar");
+
+        fmt->addStep("hgridshift");
+        fmt->addParam("grids", "foo");
+
+        EXPECT_EQ(fmt->toString(), "+proj=pipeline "
+                                   "+step +proj=hgridshift +grids=foo "
+                                   "+step +proj=vgridshift +grids=bar "
+                                   "+step +proj=hgridshift +grids=foo");
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -8097,9 +8221,10 @@ TEST(io, projparse_merc_variant_B) {
 // ---------------------------------------------------------------------------
 
 TEST(io, projparse_merc_google_mercator) {
-    auto obj = PROJStringParser().createFromPROJString(
+    auto projString =
         "+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 "
-        "+k=1 +units=m +nadgrids=@null +type=crs");
+        "+k=1 +units=m +nadgrids=@null +no_defs +type=crs";
+    auto obj = PROJStringParser().createFromPROJString(projString);
     auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
     WKTFormatterNNPtr f(WKTFormatter::create());
@@ -8113,6 +8238,36 @@ TEST(io, projparse_merc_google_mercator) {
     EXPECT_TRUE(wkt.find("DATUM[\"World Geodetic System 1984\"") !=
                 std::string::npos)
         << wkt;
+
+    EXPECT_EQ(
+        replaceAll(crs->exportToPROJString(PROJStringFormatter::create().get()),
+                   " +wktext", ""),
+        projString);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_merc_not_quite_google_mercator) {
+    auto projString =
+        "+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=10 +x_0=0 +y_0=0 "
+        "+k=1 +units=m +nadgrids=@null +no_defs +type=crs";
+    auto obj = PROJStringParser().createFromPROJString(projString);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    WKTFormatterNNPtr f(WKTFormatter::create());
+    f->simulCurNodeHasId();
+    f->setMultiLine(false);
+    crs->exportToWKT(f.get());
+    auto wkt = f->toString();
+    EXPECT_TRUE(wkt.find("METHOD[\"Popular Visualisation Pseudo "
+                         "Mercator\",ID[\"EPSG\",1024]") != std::string::npos)
+        << wkt;
+    EXPECT_TRUE(wkt.find("DATUM[\"unknown\",") != std::string::npos) << wkt;
+
+    EXPECT_EQ(
+        replaceAll(crs->exportToPROJString(PROJStringFormatter::create().get()),
+                   " +wktext", ""),
+        projString);
 }
 
 // ---------------------------------------------------------------------------
@@ -8389,7 +8544,7 @@ TEST(io, projparse_axisswap_unitconvert_proj_unitconvert) {
         "+type=crs +proj=pipeline +step +proj=axisswap +order=2,1 +step "
         "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=igh "
         "+lon_0=0 +x_0=0 +y_0=0 +ellps=GRS80 +step +proj=unitconvert +xy_in=m "
-        "+z_in=m +xy_out=ft +z_out=ft";
+        "+xy_out=ft";
     auto obj = PROJStringParser().createFromPROJString(input);
     auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
@@ -8400,7 +8555,7 @@ TEST(io, projparse_axisswap_unitconvert_proj_unitconvert) {
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=igh "
               "+lon_0=0 +x_0=0 +y_0=0 +ellps=GRS80 +step +proj=unitconvert "
-              "+xy_in=m +z_in=m +xy_out=ft +z_out=ft");
+              "+xy_in=m +xy_out=ft");
 }
 
 // ---------------------------------------------------------------------------
@@ -8410,7 +8565,7 @@ TEST(io, projparse_axisswap_unitconvert_proj_unitconvert_numeric_axisswap) {
         "+type=crs +proj=pipeline +step +proj=axisswap +order=2,1 +step "
         "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=igh "
         "+lon_0=0 +x_0=0 +y_0=0 +ellps=GRS80 +step +proj=unitconvert +xy_in=m "
-        "+z_in=m +xy_out=2.5 +z_out=2.5 +step +proj=axisswap +order=-2,-1";
+        "+xy_out=2.5 +step +proj=axisswap +order=-2,-1";
     auto obj = PROJStringParser().createFromPROJString(input);
     auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
@@ -8421,7 +8576,7 @@ TEST(io, projparse_axisswap_unitconvert_proj_unitconvert_numeric_axisswap) {
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=igh "
               "+lon_0=0 +x_0=0 +y_0=0 +ellps=GRS80 +step +proj=unitconvert "
-              "+xy_in=m +z_in=m +xy_out=2.5 +z_out=2.5 +step +proj=axisswap "
+              "+xy_in=m +xy_out=2.5 +step +proj=axisswap "
               "+order=-2,-1");
 }
 
@@ -9200,6 +9355,20 @@ TEST(io, createFromUserInput) {
                  ParsingException);
     EXPECT_NO_THROW(createFromUserInput("WGS84 UTM zone 31N", dbContext));
     EXPECT_NO_THROW(createFromUserInput("ID74", dbContext));
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, createFromUserInput_hack_EPSG_102100) {
+    auto dbContext = DatabaseContext::create();
+    auto obj = createFromUserInput("EPSG:102100", dbContext);
+    auto crs = nn_dynamic_pointer_cast<CRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    const auto &ids = crs->identifiers();
+    ASSERT_EQ(ids.size(), 1U);
+    // we do not lie on the real authority
+    EXPECT_EQ(*ids[0]->codeSpace(), "ESRI");
+    EXPECT_EQ(ids[0]->code(), "102100");
 }
 
 // ---------------------------------------------------------------------------
@@ -11744,5 +11913,42 @@ TEST(json_import, multiple_ids) {
     auto ellps = nn_dynamic_pointer_cast<Ellipsoid>(obj);
     ASSERT_TRUE(ellps != nullptr);
     EXPECT_EQ(ellps->exportToJSON(&(JSONFormatter::create()->setSchema("foo"))),
+              json);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(json_export, coordinate_system_id) {
+    auto json = "{\n"
+                "  \"$schema\": \"foo\",\n"
+                "  \"type\": \"CoordinateSystem\",\n"
+                "  \"subtype\": \"ellipsoidal\",\n"
+                "  \"axis\": [\n"
+                "    {\n"
+                "      \"name\": \"Geodetic latitude\",\n"
+                "      \"abbreviation\": \"Lat\",\n"
+                "      \"direction\": \"north\",\n"
+                "      \"unit\": \"degree\"\n"
+                "    },\n"
+                "    {\n"
+                "      \"name\": \"Geodetic longitude\",\n"
+                "      \"abbreviation\": \"Lon\",\n"
+                "      \"direction\": \"east\",\n"
+                "      \"unit\": \"degree\"\n"
+                "    }\n"
+                "  ],\n"
+                "  \"id\": {\n"
+                "    \"authority\": \"EPSG\",\n"
+                "    \"code\": 6422\n"
+                "  }\n"
+                "}";
+
+    auto dbContext = DatabaseContext::create();
+    auto obj = createFromUserInput("EPSG:4326", dbContext);
+    auto crs = nn_dynamic_pointer_cast<GeographicCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    auto cs = crs->coordinateSystem();
+    ASSERT_TRUE(cs != nullptr);
+    EXPECT_EQ(cs->exportToJSON(&(JSONFormatter::create()->setSchema("foo"))),
               json);
 }

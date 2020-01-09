@@ -1142,15 +1142,9 @@ PJ_OBJ_LIST *proj_get_non_deprecated(PJ_CONTEXT *ctx, const PJ *obj) {
 
 // ---------------------------------------------------------------------------
 
-/** \brief Return whether two objects are equivalent.
- *
- * @param obj Object (must not be NULL)
- * @param other Other object (must not be NULL)
- * @param criterion Comparison criterion
- * @return TRUE if they are equivalent
- */
-int proj_is_equivalent_to(const PJ *obj, const PJ *other,
-                          PJ_COMPARISON_CRITERION criterion) {
+static int proj_is_equivalent_to_internal(PJ_CONTEXT *ctx, const PJ *obj,
+                                          const PJ *other,
+                                          PJ_COMPARISON_CRITERION criterion) {
     assert(obj);
     assert(other);
     if (!obj->iso_obj) {
@@ -1172,7 +1166,50 @@ int proj_is_equivalent_to(const PJ *obj, const PJ *other,
         return IComparable::Criterion::EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS;
     })(criterion);
 
-    return obj->iso_obj->isEquivalentTo(other->iso_obj.get(), cppCriterion);
+    int res = obj->iso_obj->isEquivalentTo(
+        other->iso_obj.get(), cppCriterion,
+        ctx ? getDBcontextNoException(ctx, "proj_is_equivalent_to_with_ctx")
+            : nullptr);
+    if (ctx && ctx->cpp_context) {
+        ctx->cpp_context->autoCloseDbIfNeeded();
+    }
+    return res;
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Return whether two objects are equivalent.
+ *
+ * Use proj_is_equivalent_to_with_ctx() to be able to use database information.
+ *
+ * @param obj Object (must not be NULL)
+ * @param other Other object (must not be NULL)
+ * @param criterion Comparison criterion
+ * @return TRUE if they are equivalent
+ */
+int proj_is_equivalent_to(const PJ *obj, const PJ *other,
+                          PJ_COMPARISON_CRITERION criterion) {
+    return proj_is_equivalent_to_internal(nullptr, obj, other, criterion);
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Return whether two objects are equivalent
+ *
+ * Possibly using database to check for name aliases.
+ *
+ * @param ctx PROJ context, or NULL for default context
+ * @param obj Object (must not be NULL)
+ * @param other Other object (must not be NULL)
+ * @param criterion Comparison criterion
+ * @return TRUE if they are equivalent
+ * @since 6.3
+ */
+int proj_is_equivalent_to_with_ctx(PJ_CONTEXT *ctx, const PJ *obj,
+                                   const PJ *other,
+                                   PJ_COMPARISON_CRITERION criterion) {
+    SANITIZE_CTX(ctx);
+    return proj_is_equivalent_to_internal(ctx, obj, other, criterion);
 }
 
 // ---------------------------------------------------------------------------
@@ -1836,7 +1873,7 @@ PJ *proj_crs_create_bound_crs_to_WGS84(PJ_CONTEXT *ctx, const PJ *crs,
  * @param grid_name Grid name (typically a .gtx file)
  * @return Object that must be unreferenced with proj_destroy(), or NULL
  * in case of error.
- * @since 7.0
+ * @since 6.3
  */
 PJ *proj_crs_create_bound_vertical_crs(PJ_CONTEXT *ctx, const PJ *vert_crs,
                                        const PJ *hub_geographic_3D_crs,
@@ -2947,6 +2984,66 @@ PJ *proj_create_geocentric_crs_from_datum(PJ_CONTEXT *ctx, const char *crs_name,
 
 // ---------------------------------------------------------------------------
 
+/** \brief Create a DerivedGeograhicCRS.
+ *
+ * The returned object must be unreferenced with proj_destroy() after
+ * use.
+ * It should be used by at most one thread at a time.
+ *
+ * @param ctx PROJ context, or NULL for default context
+ * @param crs_name Name of the GeographicCRS. Or NULL
+ * @param base_geographic_crs Base Geographic CRS. Must not be NULL.
+ * @param conversion Conversion from the base Geographic to the
+ * DerivedGeograhicCRS. Must not be NULL.
+ * @param ellipsoidal_cs Coordinate system. Must not be NULL.
+ *
+ * @return Object of type GeodeticCRS that must be unreferenced with
+ * proj_destroy(), or NULL in case of error.
+ *
+ * @since 7.0
+ */
+PJ *proj_create_derived_geographic_crs(PJ_CONTEXT *ctx, const char *crs_name,
+                                       const PJ *base_geographic_crs,
+                                       const PJ *conversion,
+                                       const PJ *ellipsoidal_cs) {
+    SANITIZE_CTX(ctx);
+    auto base_crs =
+        std::dynamic_pointer_cast<GeographicCRS>(base_geographic_crs->iso_obj);
+    auto conversion_cpp =
+        std::dynamic_pointer_cast<Conversion>(conversion->iso_obj);
+    auto cs = std::dynamic_pointer_cast<EllipsoidalCS>(ellipsoidal_cs->iso_obj);
+    if (!base_crs || !conversion_cpp || !cs) {
+        return nullptr;
+    }
+    try {
+        auto derivedCRS = DerivedGeographicCRS::create(
+            createPropertyMapName(crs_name), NN_NO_CHECK(base_crs),
+            NN_NO_CHECK(conversion_cpp), NN_NO_CHECK(cs));
+        return pj_obj_create(ctx, derivedCRS);
+    } catch (const std::exception &e) {
+        proj_log_error(ctx, __FUNCTION__, e.what());
+    }
+    return nullptr;
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Return whether a CRS is a Derived CRS.
+ *
+ * @param ctx PROJ context, or NULL for default context
+ * @param crs CRS. Must not be NULL.
+ *
+ * @return whether a CRS is a Derived CRS.
+ *
+ * @since 7.0
+ */
+int proj_is_derived_crs(PJ_CONTEXT *ctx, const PJ *crs) {
+    SANITIZE_CTX(ctx);
+    return dynamic_cast<DerivedCRS *>(crs->iso_obj.get()) != nullptr;
+}
+
+// ---------------------------------------------------------------------------
+
 /** \brief Create a VerticalCRS
  *
  * The returned object must be unreferenced with proj_destroy() after
@@ -3367,7 +3464,7 @@ PJ *proj_crs_alter_parameters_linear_unit(PJ_CONTEXT *ctx, const PJ *obj,
  *
  * @return Object that must be unreferenced with
  * proj_destroy(), or NULL in case of error.
- * @since 7.0
+ * @since 6.3
  */
 PJ *proj_crs_promote_to_3D(PJ_CONTEXT *ctx, const char *crs_3D_name,
                            const PJ *crs_2D) {
@@ -3422,7 +3519,7 @@ PJ *proj_crs_promote_to_3D(PJ_CONTEXT *ctx, const char *crs_3D_name,
  *
  * @return Object that must be unreferenced with
  * proj_destroy(), or NULL in case of error.
- * @since 7.0
+ * @since 6.3
  */
 PJ *proj_crs_create_projected_3D_crs_from_2D(PJ_CONTEXT *ctx,
                                              const char *crs_name,
@@ -3509,7 +3606,7 @@ PJ *proj_crs_create_projected_3D_crs_from_2D(PJ_CONTEXT *ctx,
  *
  * @return Object that must be unreferenced with
  * proj_destroy(), or NULL in case of error.
- * @since 7.0
+ * @since 6.3
  */
 PJ *proj_crs_demote_to_2D(PJ_CONTEXT *ctx, const char *crs_2D_name,
                           const PJ *crs_3D) {
@@ -4119,7 +4216,7 @@ PJ *proj_create_ellipsoidal_2D_cs(PJ_CONTEXT *ctx,
  *
  * @return Object that must be unreferenced with
  * proj_destroy(), or NULL in case of error.
- * @since 7.0
+ * @since 6.3
  */
 
 PJ *proj_create_ellipsoidal_3D_cs(PJ_CONTEXT *ctx,
@@ -6426,7 +6523,7 @@ PJ *proj_create_conversion_equal_earth(PJ_CONTEXT *ctx, double center_long,
  * linear_unit_conv_factor).
  * Angular parameters are expressed in (ang_unit_name, ang_unit_conv_factor).
  *
- * @since 7.0
+ * @since 6.3
  */
 PJ *proj_create_conversion_vertical_perspective(
     PJ_CONTEXT *ctx, double topo_origin_lat, double topo_origin_long,
@@ -6447,6 +6544,36 @@ PJ *proj_create_conversion_vertical_perspective(
             Length(view_point_height, linearUnit),
             Length(false_easting, linearUnit),
             Length(false_northing, linearUnit));
+        return proj_create_conversion(ctx, conv);
+    } catch (const std::exception &e) {
+        proj_log_error(ctx, __FUNCTION__, e.what());
+    }
+    return nullptr;
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Instantiate a conversion based on the Pole Rotation method, using the
+ * conventions of the GRIB 1 and GRIB 2 data formats.
+ *
+ * See osgeo::proj::operation::Conversion::createPoleRotationGRIBConvention().
+ *
+ * Linear parameters are expressed in (linear_unit_name,
+ * linear_unit_conv_factor).
+ * Angular parameters are expressed in (ang_unit_name, ang_unit_conv_factor).
+ */
+PJ *proj_create_conversion_pole_rotation_grib_convention(
+    PJ_CONTEXT *ctx, double south_pole_lat_in_unrotated_crs,
+    double south_pole_long_in_unrotated_crs, double axis_rotation,
+    const char *ang_unit_name, double ang_unit_conv_factor) {
+    SANITIZE_CTX(ctx);
+    try {
+        UnitOfMeasure angUnit(
+            createAngularUnit(ang_unit_name, ang_unit_conv_factor));
+        auto conv = Conversion::createPoleRotationGRIBConvention(
+            PropertyMap(), Angle(south_pole_lat_in_unrotated_crs, angUnit),
+            Angle(south_pole_long_in_unrotated_crs, angUnit),
+            Angle(axis_rotation, angUnit));
         return proj_create_conversion(ctx, conv);
     } catch (const std::exception &e) {
         proj_log_error(ctx, __FUNCTION__, e.what());
@@ -7671,6 +7798,34 @@ PJ *proj_normalize_for_visualization(PJ_CONTEXT *ctx, const PJ *obj) {
     }
     try {
         return pj_obj_create(ctx, co->normalizeForVisualization());
+    } catch (const std::exception &e) {
+        proj_log_debug(ctx, __FUNCTION__, e.what());
+        return nullptr;
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Returns a PJ* coordinate operation object which represents the
+ * inverse operation of the specified coordinate operation.
+ *
+ * @param ctx PROJ context, or NULL for default context
+ * @param obj Object of type CoordinateOperation (must not be NULL)
+ * @return a new PJ* object to free with proj_destroy() in case of success, or
+ * nullptr in case of error
+ * @since 6.3
+ */
+PJ *proj_coordoperation_create_inverse(PJ_CONTEXT *ctx, const PJ *obj) {
+
+    SANITIZE_CTX(ctx);
+    auto co = dynamic_cast<const CoordinateOperation *>(obj->iso_obj.get());
+    if (!co) {
+        proj_log_error(ctx, __FUNCTION__,
+                       "Object is not a CoordinateOperation");
+        return nullptr;
+    }
+    try {
+        return pj_obj_create(ctx, co->inverse());
     } catch (const std::exception &e) {
         proj_log_debug(ctx, __FUNCTION__, e.what());
         return nullptr;
