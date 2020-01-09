@@ -422,10 +422,6 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-
-
-
-
 /* return a pointer to the n'th column of buf */
 char *column (char *buf, int n) {
     int i;

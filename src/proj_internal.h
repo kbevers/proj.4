@@ -580,9 +580,6 @@ struct PJconsts {
     PJconsts &operator=(const PJconsts &) = delete;
 };
 
-
-
-
 /* Parameter list (a copy of the +proj=... etc. parameters) */
 struct ARG_list {
     paralist *next;
@@ -596,9 +593,7 @@ struct ARG_list {
 #endif
 };
 
-
 typedef union { double  f; int  i; char *s; } PROJVALUE;
-
 
 struct PJ_DATUMS {
     const char    *id;           /* datum keyword */
@@ -766,21 +761,13 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 
 #endif /* def PJ_LIB__ */
 
-// GeoJson area boundary struct
-/*
-struct GeoJsonAreaBoundary
+// Area boundary struct
+struct AreaBoundary
 {
 	std::string type;
-	std::string name;
+	std::string name;	
 	// crs
 	// features
-
-};
-
-struct crs
-{
-	std::string type;
-	struct a;
 };
 
 struct Features
@@ -792,9 +779,11 @@ struct Features
 struct MultiPolygon
 {
 	PJ_LP vtgf;
-	// coordinates 
+
+
+	// coordinates
 };
-*/
+
 
 #define MAX_TAB_ID 80
 typedef struct { float lam, phi; } FLP;
