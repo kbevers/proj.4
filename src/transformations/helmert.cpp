@@ -779,7 +779,7 @@ void recursive_iterate(const json& j, UnaryFunction f)
 
 // TODO: Flytte all GeoJson til eigen klasse.
 /***********************************************************************
-*
+* 
 /***********************************************************************/
 static void testReadGeojson(/*char* fileName*/)
 {

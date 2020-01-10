@@ -179,6 +179,7 @@ libproj_la_SOURCES = \
 	transformations/affine.cpp \
 	transformations/deformation.cpp \
 	transformations/helmert.cpp \
+	transformations/helmertcollocation.cpp \
 	transformations/hgridshift.cpp \
 	transformations/horner.cpp \
 	transformations/molodensky.cpp \

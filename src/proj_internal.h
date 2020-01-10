@@ -764,9 +764,9 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 // Area boundary struct
 struct AreaBoundary
 {
+	char *filename;
 	std::string type;
 	std::string name;
-
 	// crs
 	// features
 };
@@ -791,6 +791,12 @@ struct PJ_LP_Pair
 	__int32 area;
 	double dist;
 }; 
+
+struct PJ_LP_Pair_List
+{
+	char *filename;
+	PJ_LP_Pair* pJ_LP_Pair;
+};
 
 #define MAX_TAB_ID 80
 typedef struct { float lam, phi; } FLP;
