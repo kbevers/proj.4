@@ -121,7 +121,6 @@ struct CTABLE* find_ctable(projCtx ctx, PJ_LP input, int grid_count, PJ_GRIDINFO
     /* keep trying till we find a table that works */
     for( itable = 0; itable < grid_count; itable++ )
     {
-
         PJ_GRIDINFO *gi = tables[itable];
         struct CTABLE *ct = gi->ct;
         double epsilon = (fabs(ct->del.phi)+fabs(ct->del.lam))/10000.0;

@@ -724,9 +724,6 @@ C_NAMESPACE_VAR struct PJ_DATUMS pj_datums[];
 #endif
 
 
-
-
-
 #ifdef PJ_LIB__
 #define PROJ_HEAD(name, desc) static const char des_##name [] = desc
 
@@ -761,6 +758,10 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 
 #endif /* def PJ_LIB__ */
 
+#define MAX_TAB_ID 80
+typedef struct { float lam, phi; } FLP;
+typedef struct { pj_int32 lam, phi; } ILP;
+
 // Area boundary struct
 struct AreaBoundary
 {
@@ -779,8 +780,8 @@ struct Features
 
 struct MultiPolygon
 {
+	// TODO: Liste med punkt
 	PJ_LP vtgf;
-	// coordinates
 };
 
 struct PJ_LP_Pair
@@ -794,13 +795,9 @@ struct PJ_LP_Pair
 
 struct PJ_LP_Pair_List
 {
-	char *filename;
-	PJ_LP_Pair* pJ_LP_Pair;
+	char* filename;
+	std::vector<PJ_LP_Pair>* pJ_LP_PairList;
 };
-
-#define MAX_TAB_ID 80
-typedef struct { float lam, phi; } FLP;
-typedef struct { pj_int32 lam, phi; } ILP;
 
 struct CTABLE {
     char id[MAX_TAB_ID];    /* ascii info */

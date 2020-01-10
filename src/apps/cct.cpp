@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
         }
 
 		// Testing Helmert:
-		// proj_commonPointInit(point.lp);
+		proj_commonPointInit(point.lp);
 
         if (proj_angular_input (P, direction)) {
             point.lpzt.lam = proj_torad (point.lpzt.lam);

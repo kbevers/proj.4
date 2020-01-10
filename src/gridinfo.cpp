@@ -121,7 +121,6 @@ void pj_gridinfo_free( projCtx ctx, PJ_GRIDINFO *gi )
 /************************************************************************/
 
 int pj_gridinfo_load( projCtx_t* ctx, PJ_GRIDINFO *gi )
-
 {
     struct CTABLE ct_tmp;
 

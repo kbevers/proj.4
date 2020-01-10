@@ -152,7 +152,6 @@ struct CTABLE *nad_ctable_init( projCtx ctx, struct projFileAPI_t* fileapi )
 /************************************************************************/
 
 int nad_ctable2_load( projCtx ctx, struct CTABLE *ct, struct projFileAPI_t* fileapi )
-
 {
     PAFile fid = (PAFile)fileapi;
     size_t a_size;
