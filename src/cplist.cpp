@@ -64,17 +64,32 @@ static int pj_cplist_merge(projCtx ctx, const char *cp_name, PJ_COMMONPOINTS ***
 					memcpy(new_list, *p_list, sizeof(void *) * (*p_list_max));
 					pj_dalloc(*p_list);
 				}
-
+				*p_list = new_list;
+				*p_list_max = new_max;
 			}
 
-
+			(*p_list)[(*p_listcount)++] = this_cp;
+			(*p_list)[*p_listcount] = nullptr;
 		}
+		tail = this_cp;
 	}
 
+	if (match == 1)
+		return 1;
 
-	// TODO: Recursive...
+	this_cp = pj_commonpoints_init(ctx, cp_name);
+	
+	if (this_cp == nullptr)
+	{
+		return 0;
+	}
 
-	return 0;
+	if (tail != nullptr)
+		tail->next = this_cp;
+	else 
+		list = this_cp;
+
+	return pj_cplist_merge(ctx, cp_name, p_list, p_listcount, p_list_max);
 }
 
 PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)

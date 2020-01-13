@@ -31,7 +31,7 @@
 
 #include "proj_internal.h"
 
-PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *fileName)
+PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 {
 	PJ_COMMONPOINTS *commonPoints;
 	PAFile fp;
@@ -47,28 +47,30 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *fileName)
 		return nullptr;
 	}
 
-	commonPoints->filename = pj_strdup(fileName);
-	if (!commonPoints->filename)
+	commonPoints->cp_name = pj_strdup(cp_name);
+	if (!commonPoints->cp_name)
 	{
 		pj_dalloc(commonPoints);
 		pj_ctx_set_errno(ctx, ENOMEM);
 		return nullptr;
 	}
 
-	if (!(fp = pj_open_lib(ctx, fileName, "rb")))
+	if (!(fp = pj_open_lib(ctx, cp_name, "rb")))
 	{
-		ctx->last_errno = 0; /* don't treat as a persistent error */
+		ctx->last_errno = 0;
 		return commonPoints;
 	}
-	commonPoints->filename = pj_strdup(fileName);
+	commonPoints->filename = pj_strdup(cp_name);
 
 	if (!commonPoints->filename)
 	{
-		pj_dalloc(commonPoints->filename);
+		pj_dalloc(commonPoints->cp_name);
 		pj_dalloc(commonPoints);
 		pj_ctx_set_errno(ctx, ENOMEM);
 		return nullptr;
 	}
+
+	// TODO: Impl. here.
 
 	pj_ctx_fclose(ctx, fp);
 

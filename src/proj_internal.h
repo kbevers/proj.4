@@ -935,6 +935,8 @@ PJ_GRIDINFO *pj_gridinfo_init( projCtx_t *, const char * );
 int          pj_gridinfo_load( projCtx_t *, PJ_GRIDINFO * );
 void         pj_gridinfo_free( projCtx_t *, PJ_GRIDINFO * );
 
+PJ_COMMONPOINTS *pj_commonpoints_init(projCtx_t *, const char *);
+
 PJ_GridCatalog *pj_gc_findcatalog( projCtx_t *, const char * );
 PJ_GridCatalog *pj_gc_readcatalog( projCtx_t *, const char * );
 void pj_gc_unloadall( projCtx_t *);
