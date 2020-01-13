@@ -2192,6 +2192,10 @@ PJ *proj_get_target_crs(PJ_CONTEXT *ctx, const PJ *obj) {
  * The candidate CRSs are either hard-coded, or looked in the database when
  * it is available.
  *
+ * Note that the implementation uses a set of heuristics to have a good
+ * compromise of successful identifications over execution time. It might miss
+ * legitimate matches in some circumstances.
+ *
  * The method returns a list of matching reference CRS, and the percentage
  * (0-100) of confidence in the match. The list is sorted by decreasing
  * confidence.
@@ -2760,16 +2764,19 @@ static GeodeticReferenceFrameNNPtr createGeodeticReferenceFrame(
                 if (metadata::Identifier::isEquivalentName(
                         datumName.c_str(), refDatum->nameStr().c_str())) {
                     datumName = refDatum->nameStr();
-                }
-            } else {
-                std::string outTableName;
-                std::string authNameFromAlias;
-                std::string codeFromAlias;
-                auto officialName = authFactory->getOfficialNameFromAlias(
-                    datumName, "geodetic_datum", std::string(), true,
-                    outTableName, authNameFromAlias, codeFromAlias);
-                if (!officialName.empty()) {
-                    datumName = officialName;
+                } else if (refDatum->identifiers().size() == 1) {
+                    const auto &id = refDatum->identifiers()[0];
+                    const auto aliases =
+                        authFactory->databaseContext()->getAliases(
+                            *id->codeSpace(), id->code(), refDatum->nameStr(),
+                            "geodetic_datum", std::string());
+                    for (const auto &alias : aliases) {
+                        if (metadata::Identifier::isEquivalentName(
+                                datumName.c_str(), alias.c_str())) {
+                            datumName = refDatum->nameStr();
+                            break;
+                        }
+                    }
                 }
             }
         }

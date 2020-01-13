@@ -730,6 +730,10 @@ CRSNNPtr CRS::normalizeForVisualization() const {
  * The candidate CRSs are either hard-coded, or looked in the database when
  * authorityFactory is not null.
  *
+ * Note that the implementation uses a set of heuristics to have a good
+ * compromise of successful identifications over execution time. It might miss
+ * legitimate matches in some circumstances.
+ *
  * The method returns a list of matching reference CRS, and the percentage
  * (0-100) of confidence in the match. The list is sorted by decreasing
  * confidence.
@@ -1647,6 +1651,10 @@ static bool hasCodeCompatibleOfAuthorityFactory(
  *
  * The candidate CRSs are either hard-coded, or looked in the database when
  * authorityFactory is not null.
+ *
+ * Note that the implementation uses a set of heuristics to have a good
+ * compromise of successful identifications over execution time. It might miss
+ * legitimate matches in some circumstances.
  *
  * The method returns a list of matching reference CRS, and the percentage
  * (0-100) of confidence in the match:
@@ -2746,6 +2754,10 @@ bool VerticalCRS::_isEquivalentTo(
  * The candidate CRSs are looked in the database when
  * authorityFactory is not null.
  *
+ * Note that the implementation uses a set of heuristics to have a good
+ * compromise of successful identifications over execution time. It might miss
+ * legitimate matches in some circumstances.
+ *
  * The method returns a list of matching reference CRS, and the percentage
  * (0-100) of confidence in the match.
  * 100% means that the name of the reference entry
@@ -3444,23 +3456,33 @@ void ProjectedCRS::addUnitConvertAndAxisSwap(io::PROJStringFormatter *formatter,
                                              bool axisSpecFound) const {
     const auto &axisList = d->coordinateSystem()->axisList();
     const auto &unit = axisList[0]->unit();
+    const auto *zUnit = axisList.size() == 3 ? &(axisList[2]->unit()) : nullptr;
     if (!unit._isEquivalentTo(common::UnitOfMeasure::METRE,
-                              util::IComparable::Criterion::EQUIVALENT)) {
+                              util::IComparable::Criterion::EQUIVALENT) ||
+        (zUnit &&
+         !zUnit->_isEquivalentTo(common::UnitOfMeasure::METRE,
+                                 util::IComparable::Criterion::EQUIVALENT))) {
         auto projUnit = unit.exportToPROJString();
         const double toSI = unit.conversionToSI();
         if (!formatter->getCRSExport()) {
             formatter->addStep("unitconvert");
             formatter->addParam("xy_in", "m");
-            if (!formatter->omitZUnitConversion())
+            if (zUnit)
                 formatter->addParam("z_in", "m");
+
             if (projUnit.empty()) {
                 formatter->addParam("xy_out", toSI);
-                if (!formatter->omitZUnitConversion())
-                    formatter->addParam("z_out", toSI);
             } else {
                 formatter->addParam("xy_out", projUnit);
-                if (!formatter->omitZUnitConversion())
-                    formatter->addParam("z_out", projUnit);
+            }
+            if (zUnit) {
+                auto projZUnit = zUnit->exportToPROJString();
+                const double zToSI = zUnit->conversionToSI();
+                if (projZUnit.empty()) {
+                    formatter->addParam("z_out", zToSI);
+                } else {
+                    formatter->addParam("z_out", projZUnit);
+                }
             }
         } else {
             if (projUnit.empty()) {
@@ -3528,6 +3550,10 @@ void ProjectedCRS::addUnitConvertAndAxisSwap(io::PROJStringFormatter *formatter,
  *
  * The candidate CRSs are either hard-coded, or looked in the database when
  * authorityFactory is not null.
+ *
+ * Note that the implementation uses a set of heuristics to have a good
+ * compromise of successful identifications over execution time. It might miss
+ * legitimate matches in some circumstances.
  *
  * The method returns a list of matching reference CRS, and the percentage
  * (0-100) of confidence in the match. The list is sorted by decreasing
@@ -4049,6 +4075,10 @@ bool CompoundCRS::_isEquivalentTo(
  *
  * The candidate CRSs are looked in the database when
  * authorityFactory is not null.
+ *
+ * Note that the implementation uses a set of heuristics to have a good
+ * compromise of successful identifications over execution time. It might miss
+ * legitimate matches in some circumstances.
  *
  * The method returns a list of matching reference CRS, and the percentage
  * (0-100) of confidence in the match. The list is sorted by decreasing
