@@ -60,6 +60,17 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *fileName)
 		ctx->last_errno = 0; /* don't treat as a persistent error */
 		return commonPoints;
 	}
+	commonPoints->filename = pj_strdup(fileName);
+
+	if (!commonPoints->filename)
+	{
+		pj_dalloc(commonPoints->filename);
+		pj_dalloc(commonPoints);
+		pj_ctx_set_errno(ctx, ENOMEM);
+		return nullptr;
+	}
+
+	pj_ctx_fclose(ctx, fp);
 
 	return commonPoints;
 }

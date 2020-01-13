@@ -80,3 +80,9 @@ PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)
 	// TODO: Temporary 
 	return list;
 }
+
+static int pj_cplist_merge(projCtx ctx, const char *cp_name, PJ_COMMONPOINTS ***p_list, int *p_listcount)
+{
+	// TODO: Recursive...
+	return 0;
+}
