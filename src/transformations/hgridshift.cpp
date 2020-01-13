@@ -29,7 +29,6 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P) {
     return point.xyz;
 }
 
-
 static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P) {
     PJ_COORD point = {{0,0,0,0}};
     point.xyz = xyz;
@@ -56,8 +55,7 @@ static PJ_COORD forward_4d(PJ_COORD obs, PJ *P) {
     /* Time restricted - only apply transform if within time bracket */
     if (obs.lpzt.t < Q->t_epoch && Q->t_final > Q->t_epoch)
         point.xyz = forward_3d (obs.lpz, P);
-
-
+	
     return point;
 }
 
@@ -77,7 +75,6 @@ static PJ_COORD reverse_4d(PJ_COORD obs, PJ *P) {
 
     return point;
 }
-
 
 PJ *TRANSFORMATION(hgridshift,0) {
     struct pj_opaque_hgridshift *Q = static_cast<struct pj_opaque_hgridshift*>(pj_calloc (1, sizeof (struct pj_opaque_hgridshift)));
@@ -119,7 +116,6 @@ PJ *TRANSFORMATION(hgridshift,0) {
 
    if (pj_param(P->ctx, P->params, "tt_epoch").i)
         Q->t_epoch = pj_param (P->ctx, P->params, "dt_epoch").f;
-
 
     proj_hgrid_init(P, "grids");
     /* Was gridlist compiled properly? */

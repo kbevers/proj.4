@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
 
     PJ_DIRECTION direction = opt_given (o, "I")? PJ_INV: PJ_FWD;
 
-    verbose   = MIN(opt_given (o, "v"), 3); /* log level can't be larger than 3 */
+    verbose = MIN(opt_given (o, "v"), 3); /* log level can't be larger than 3 */
     if( verbose > 0 ) {
         proj_log_level (PJ_DEFAULT_CTX, static_cast<PJ_LOG_LEVEL>(verbose));
     }
@@ -358,8 +358,8 @@ int main(int argc, char **argv) {
         }
 
 		// Testing Helmert:
-		proj_commonPointInit(point.lp);
-
+	  //  proj_commonPointInit(point.lp);
+ 
         if (proj_angular_input (P, direction)) {
             point.lpzt.lam = proj_torad (point.lpzt.lam);
             point.lpzt.phi = proj_torad (point.lpzt.phi);

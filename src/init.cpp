@@ -70,8 +70,6 @@ static paralist *string_to_paralist (PJ_CONTEXT *ctx, char *definition) {
     return first;
 }
 
-
-
 /**************************************************************************************/
 static char *get_init_string (PJ_CONTEXT *ctx, const char *name) {
 /***************************************************************************************
@@ -86,8 +84,7 @@ static char *get_init_string (PJ_CONTEXT *ctx, const char *name) {
     char *line = nullptr;
     PAFile fid;
     size_t n;
-
-
+	
     line = static_cast<char*>(pj_malloc (MAX_LINE_LENGTH + 1));
     if (nullptr==line)
         return nullptr;
@@ -218,8 +215,6 @@ static char *get_init_string (PJ_CONTEXT *ctx, const char *name) {
     return buffer;
 }
 
-
-
 /************************************************************************/
 static paralist *get_init(PJ_CONTEXT *ctx, const char *key, int allow_init_epsg) {
 /*************************************************************************
@@ -327,8 +322,6 @@ Expand key from buffer or (if not in buffer) from init file
     return init_items;
 }
 
-
-
 static void append_default_ellipsoid_to_paralist (paralist *start) {
     if (nullptr==start)
         return;
@@ -362,7 +355,6 @@ static void append_default_ellipsoid_to_paralist (paralist *start) {
     /* If we're here, it's OK to append the current default item */
     last->next = pj_mkparam("ellps=GRS80");
 }
-
 
 /*****************************************************************************/
 static paralist *pj_expand_init_internal(PJ_CONTEXT *ctx, paralist *init, int allow_init_epsg) {
@@ -409,7 +401,6 @@ Note that 'init=foo:bar' stays in the list. It is ignored after expansion.
 paralist *pj_expand_init(PJ_CONTEXT *ctx, paralist *init) {
     return pj_expand_init_internal(ctx, init, TRUE);
 }
-
 
 /************************************************************************/
 /*                            pj_init_plus()                            */
@@ -493,8 +484,6 @@ pj_init_plus_ctx( projCtx ctx, const char *definition )
     return result;
 }
 
-
-
 /************************************************************************/
 /*                              pj_init()                               */
 /*                                                                      */
@@ -509,7 +498,6 @@ pj_init(int argc, char **argv) {
     return pj_init_ctx( pj_get_default_ctx(), argc, argv );
 }
 
-
 static PJ_CONSTRUCTOR locate_constructor (const char *name) {
     int i;
     const char *s;
@@ -521,14 +509,12 @@ static PJ_CONSTRUCTOR locate_constructor (const char *name) {
     return (PJ_CONSTRUCTOR) operations[i].proj;
 }
 
-
 PJ *
 pj_init_ctx(projCtx ctx, int argc, char **argv) {
     /* Legacy interface: allow init=epsg:XXXX syntax by default */
     int allow_init_epsg = proj_context_get_use_proj4_init_rules(ctx, TRUE);
     return pj_init_ctx_with_allow_init_epsg(ctx, argc, argv, allow_init_epsg);
 }
-
 
 PJ *
 pj_init_ctx_with_allow_init_epsg(projCtx ctx, int argc, char **argv, int allow_init_epsg) {
@@ -557,7 +543,7 @@ pj_init_ctx_with_allow_init_epsg(projCtx ctx, int argc, char **argv, int allow_i
     /* count occurrences of pipelines and inits */
     for (i = 0; i < argc; ++i) {
         if (!strcmp (argv[i], "+proj=pipeline") || !strcmp(argv[i], "proj=pipeline") )
-                n_pipelines++;
+			n_pipelines++;
         if (!strncmp (argv[i], "+init=", 6) || !strncmp(argv[i], "init=", 5))
             n_inits++;
     }
@@ -574,7 +560,6 @@ pj_init_ctx_with_allow_init_epsg(projCtx ctx, int argc, char **argv, int allow_i
         return nullptr;
     }
 
-
     /* put arguments into internal linked list */
     start = curr = pj_mkparam(argv[0]);
     if (!curr) {
@@ -590,7 +575,6 @@ pj_init_ctx_with_allow_init_epsg(projCtx ctx, int argc, char **argv, int allow_i
         }
         curr = curr->next;
     }
-
 
     /* Only expand '+init's in non-pipeline operations. '+init's in pipelines are */
     /* expanded in the individual pipeline steps during pipeline initialization.  */
@@ -636,8 +620,7 @@ pj_init_ctx_with_allow_init_epsg(projCtx ctx, int argc, char **argv, int allow_i
         pj_dealloc_params (ctx, start, ENOMEM);
         return nullptr;
     }
-
-
+	
     PIN->ctx = ctx;
     PIN->params = start;
     PIN->is_latlong = 0;

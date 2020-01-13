@@ -438,7 +438,7 @@ struct PJconsts {
     PJ *helmert = nullptr;
     PJ *hgridshift = nullptr;
     PJ *vgridshift = nullptr;
-
+	PJ *helmertcollocation = nullptr;
 
     /*************************************************************************************
 
@@ -484,8 +484,8 @@ struct PJconsts {
     int     has_geoid_vgrids = 0;      /* TODO: Description needed */
     struct _pj_gi **vgridlist_geoid = nullptr;   /* TODO: Description needed */
     int     vgridlist_geoid_count = 0;
-
-    double  from_greenwich = 0.0;       /* prime meridian offset (in radians) */
+	
+	double  from_greenwich = 0.0;       /* prime meridian offset (in radians) */
     double  long_wrap_center = 0.0;     /* 0.0 for -180 to 180, actually in radians*/
     int     is_long_wrap_set = 0;
     char    axis[4] = {0,0,0,0};        /* Axis order, pj_transform/pj_adjust_axis */
@@ -680,6 +680,7 @@ struct FACTORS {
 #define PJD_ERR_INCONSISTENT_UNIT       -59
 #define PJD_ERR_MUTUALLY_EXCLUSIVE_ARGS -60
 #define PJD_ERR_GENERIC_ERROR           -61
+#define PJD_ERR_FAILED_TO_LOAD_CPL      -62
 /* NOTE: Remember to update src/strerrno.cpp, src/apps/gie.cpp and transient_error in */
 /* src/transform.cpp when adding new value */
 
@@ -793,11 +794,23 @@ struct PJ_LP_Pair
 	double dist;
 }; 
 
-struct PJ_LP_Pair_List
+struct COMMONPOINTS
 {
 	char* filename;
 	std::vector<PJ_LP_Pair>* pJ_LP_PairList;
 };
+
+typedef struct pj_cp
+{
+	char *cp_name;
+	char *filename;
+	const char *format;
+
+	COMMONPOINTS *cp;
+
+	struct pj_cp *next;
+	struct pj_cp *child;
+} PJ_COMMONPOINTS;
 
 struct CTABLE {
     char id[MAX_TAB_ID];    /* ascii info */
@@ -829,7 +842,7 @@ typedef struct {
     double date;        /* year.fraction */
     char *definition;   /* usually the gridname */
 
-    PJ_GRIDINFO  *gridinfo;
+    PJ_GRIDINFO *gridinfo;
     int available;      /* 0=unknown, 1=true, -1=false */
 } PJ_GridCatalogEntry;
 
@@ -860,7 +873,6 @@ paralist PROJ_DLL *pj_param_exists (paralist *list, const char *parameter);
 paralist PROJ_DLL *pj_mkparam(const char *);
 paralist *pj_mkparam_ws (const char *str, const char **next_str);
 
-
 int PROJ_DLL pj_ell_set(projCtx_t *ctx, paralist *, double *, double *);
 int pj_datum_set(projCtx_t *,paralist *, PJ *);
 int pj_angular_units_set(paralist *, PJ *);
@@ -871,7 +883,6 @@ void      pj_insert_initcache( const char *filekey, const paralist *list);
 paralist *pj_expand_init(projCtx_t *ctx, paralist *init);
 
 void     *pj_dealloc_params (projCtx_t *ctx, paralist *start, int errlev);
-
 
 double *pj_enfn(double);
 double  pj_mlfn(double, double, double, double *);

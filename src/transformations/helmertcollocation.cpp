@@ -42,13 +42,14 @@ using json = nlohmann::json;
 
 PROJ_HEAD(helmertcollocation, "2D Helmert parameter estimation with collocation");
 
-// TODO: Under construction
-struct PJ_LP_Pair_List findCommonPointList()
+// TODO: Under construction.. 
+/*
+struct COMMONPOINTS findCommonPointList()
 {
-	PJ_LP_Pair_List commonPointList;
+	 COMMONPOINTS commonPointList;
 
 	return commonPointList;
-};
+};*/
 
 template<class UnaryFunction>
 void recursive_iterate(const json& j, UnaryFunction f)
@@ -376,9 +377,12 @@ int AreaIdPoint(PJ_LP lp) // TODO: Endre namn og argument
 PJ_LP proj_commonPointInit(PJ_LP lp)
 {
 	std::vector<PJ_LP_Pair> commonPointList;	
+	
+	// char* fileName = "C:/Users/Administrator/source/repos/Skproj/Octave/lan1_fellesp_20081014.cpt";
+	// char* fileName = "../../proj-datumgrid/europe/EUREF89_NGO48_20081014.cpt";
+	// TODO: Init cpt fil
+	char* fileName = "C:/Users/Administrator/source/repos/proj-datumgrid/europe/EUREF89_NGO48_20081014.cpt";
 
-	//char* fileName = "C:/Users/Administrator/source/repos/Skproj/Octave/lan1_fellesp_20081014.cpt";
-	char* fileName = "../../../proj-datumgrid/europe/EUREF89_NGO48_20081014.cpt";
 	std::ifstream file(fileName, std::ios::in | std::ios::binary | std::ios::ate);
 
 	int areaId = AreaIdPoint(lp);
@@ -438,4 +442,37 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 	calculateHelmertParameters(&closestPoints, lp);
 
 	return lp;
+}
+
+static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
+{
+	PJ_COORD point = { {0,0,0,0} };
+	point.lpz = lpz;
+
+	// DETTE FUNKAR!!! :-)
+	// TODO: Transformasjon inn her
+
+	return point.xyz;
+}
+
+static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
+{
+	PJ_COORD point = { {0,0,0,0} };
+	point.xyz = xyz;
+
+	// TODO: Transformasjon inn her
+
+	return point.lpz;
+}
+
+PJ *TRANSFORMATION(helmertcollocation, 0)
+{	 
+	P->fwd4d = nullptr;
+	P->inv4d = nullptr;
+	P->fwd3d = forward_3d;
+	P->inv3d = reverse_3d;
+	P->fwd = nullptr;
+	P->inv = nullptr;
+	
+	return P;
 }

@@ -31,7 +31,6 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P) {
     return point.xyz;
 }
 
-
 static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P) {
     struct pj_opaque_vgridshift *Q = (struct pj_opaque_vgridshift *) P->opaque;
     PJ_COORD point = {{0,0,0,0}};
@@ -46,7 +45,6 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P) {
     return point.lpz;
 }
 
-
 static PJ_COORD forward_4d(PJ_COORD obs, PJ *P) {
     struct pj_opaque_vgridshift *Q = (struct pj_opaque_vgridshift *) P->opaque;
     PJ_COORD point = obs;
@@ -60,8 +58,7 @@ static PJ_COORD forward_4d(PJ_COORD obs, PJ *P) {
     /* Time restricted - only apply transform if within time bracket */
     if (obs.lpzt.t < Q->t_epoch && Q->t_final > Q->t_epoch)
         point.xyz = forward_3d (obs.lpz, P);
-
-
+	
     return point;
 }
 
@@ -81,7 +78,6 @@ static PJ_COORD reverse_4d(PJ_COORD obs, PJ *P) {
 
     return point;
 }
-
 
 PJ *TRANSFORMATION(vgridshift,0) {
     struct pj_opaque_vgridshift *Q = static_cast<struct pj_opaque_vgridshift*>(pj_calloc (1, sizeof (struct pj_opaque_vgridshift)));

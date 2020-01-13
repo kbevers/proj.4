@@ -47,7 +47,6 @@ static const int  byte_order_test = 1;
 #define IS_LSB	(1 == ((const unsigned char *) (&byte_order_test))[0])
 
 static void swap_words( unsigned char *data, int word_size, int word_count )
-
 {
     int	word;
 
@@ -86,7 +85,6 @@ static double to_double( unsigned char* data )
 /************************************************************************/
 
 void pj_gridinfo_free( projCtx ctx, PJ_GRIDINFO *gi )
-
 {
     if( gi == nullptr )
         return;
@@ -656,7 +654,6 @@ static int pj_gridinfo_init_ntv2( projCtx ctx, PAFile fid, PJ_GRIDINFO *gilist )
 /************************************************************************/
 
 static int pj_gridinfo_init_ntv1( projCtx ctx, PAFile fid, PJ_GRIDINFO *gi )
-
 {
     unsigned char header[192]; /* 12 records of 16 bytes */
     struct CTABLE *ct;
@@ -742,7 +739,6 @@ static int pj_gridinfo_init_ntv1( projCtx ctx, PAFile fid, PJ_GRIDINFO *gi )
 /************************************************************************/
 
 static int pj_gridinfo_init_gtx( projCtx ctx, PAFile fid, PJ_GRIDINFO *gi )
-
 {
     unsigned char header[40];
     struct CTABLE *ct;
@@ -847,7 +843,6 @@ static int pj_gridinfo_init_gtx( projCtx ctx, PAFile fid, PJ_GRIDINFO *gi )
 /************************************************************************/
 
 PJ_GRIDINFO *pj_gridinfo_init( projCtx ctx, const char *gridname )
-
 {
     PJ_GRIDINFO *gilist;
     PAFile 	fp;

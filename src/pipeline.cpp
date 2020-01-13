@@ -162,7 +162,6 @@ void pj_pipeline_assign_context_to_steps( PJ* P, PJ_CONTEXT* ctx )
         proj_assign_context(step.pj, ctx);
 }
 
-
 static PJ_COORD pipeline_forward_4d (PJ_COORD point, PJ *P) {
     auto pipeline = static_cast<struct Pipeline*>(P->opaque);
     for( auto& step: pipeline->steps )
@@ -175,7 +174,6 @@ static PJ_COORD pipeline_forward_4d (PJ_COORD point, PJ *P) {
 
     return point;
 }
-
 
 static PJ_COORD pipeline_reverse_4d (PJ_COORD point, PJ *P) {
     auto pipeline = static_cast<struct Pipeline*>(P->opaque);
@@ -192,9 +190,6 @@ static PJ_COORD pipeline_reverse_4d (PJ_COORD point, PJ *P) {
     return point;
 }
 
-
-
-
 static PJ_XYZ pipeline_forward_3d (PJ_LPZ lpz, PJ *P) {
     PJ_COORD point = {{0,0,0,0}};
     point.lpz = lpz;
@@ -209,7 +204,6 @@ static PJ_XYZ pipeline_forward_3d (PJ_LPZ lpz, PJ *P) {
 
     return point.xyz;
 }
-
 
 static PJ_LPZ pipeline_reverse_3d (PJ_XYZ xyz, PJ *P) {
     PJ_COORD point = {{0,0,0,0}};
@@ -228,9 +222,6 @@ static PJ_LPZ pipeline_reverse_3d (PJ_XYZ xyz, PJ *P) {
     return point.lpz;
 }
 
-
-
-
 static PJ_XY pipeline_forward (PJ_LP lp, PJ *P) {
     PJ_COORD point = {{0,0,0,0}};
     point.lp = lp;
@@ -245,7 +236,6 @@ static PJ_XY pipeline_forward (PJ_LP lp, PJ *P) {
 
     return point.xy;
 }
-
 
 static PJ_LP pipeline_reverse (PJ_XY xy, PJ *P) {
     PJ_COORD point = {{0,0,0,0}};
@@ -264,9 +254,6 @@ static PJ_LP pipeline_reverse (PJ_XY xy, PJ *P) {
     return point.lp;
 }
 
-
-
-
 static PJ *destructor (PJ *P, int errlev) {
     if (nullptr==P)
         return nullptr;
@@ -284,7 +271,6 @@ static PJ *destructor (PJ *P, int errlev) {
 
     return pj_default_destructor(P, errlev);
 }
-
 
 /* count the number of args in pipeline definition, and mark all args as used */
 static size_t argc_params (paralist *params) {
@@ -311,9 +297,6 @@ static char **argv_params (paralist *params, size_t argc) {
     argv[i++] = const_cast<char*>(argv_sentinel);
     return argv;
 }
-
-
-
 
 /* Being the special operator that the pipeline is, we have to handle the    */
 /* ellipsoid differently than usual. In general, the pipeline operation does */
@@ -369,7 +352,6 @@ static void set_ellipsoid(PJ *P) {
     proj_errno_restore (P, err);
 }
 
-
 static enum pj_io_units get_next_non_whatever_unit(struct Pipeline* pipeline, size_t step, PJ_DIRECTION dir) {
     const auto& steps = pipeline->steps;
     const auto nsteps = steps.size();
@@ -399,8 +381,6 @@ static enum pj_io_units get_next_non_whatever_unit(struct Pipeline* pipeline, si
     return PJ_IO_UNITS_WHATEVER;
 }
 
-
-
 PJ *OPERATION(pipeline,0) {
     int i, nsteps = 0, argc;
     int i_pipeline = -1, i_first_step = -1, i_current_step;
@@ -421,8 +401,7 @@ PJ *OPERATION(pipeline,0) {
     P->skip_fwd_finalize = 1;
     P->skip_inv_prepare  = 1;
     P->skip_inv_finalize = 1;
-
-
+	
     P->opaque  = new (std::nothrow) Pipeline();
     if (nullptr==P->opaque)
         return destructor(P, ENOMEM);
@@ -646,8 +625,6 @@ static PJ_COORD pop(PJ_COORD point, PJ *P) {
     return point;
 }
 
-
-
 static PJ *setup_pushpop(PJ *P) {
     auto pushpop = static_cast<struct PushPop*>(pj_calloc (1, sizeof(struct PushPop)));
     P->opaque = pushpop;
@@ -671,7 +648,6 @@ static PJ *setup_pushpop(PJ *P) {
 
     return P;
 }
-
 
 PJ *OPERATION(push, 0) {
     P->fwd4d = push;

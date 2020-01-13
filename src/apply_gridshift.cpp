@@ -361,5 +361,4 @@ PJ_LP proj_hgrid_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction) {
         pj_ctx_set_errno(P->ctx, PJD_ERR_GRID_AREA);
 
     return out;
-
 }

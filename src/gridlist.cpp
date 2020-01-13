@@ -45,7 +45,6 @@ static PJ_GRIDINFO *grid_list = nullptr;
 /************************************************************************/
 
 void pj_deallocate_grids()
-
 {
     while( grid_list != nullptr )
     {
@@ -69,7 +68,6 @@ static int pj_gridlist_merge_gridfile( projCtx ctx,
                                        PJ_GRIDINFO ***p_gridlist,
                                        int *p_gridcount, 
                                        int *p_gridmax )
-
 {
     int got_match=0;
     PJ_GRIDINFO *this_grid, *tail = nullptr;
@@ -156,7 +154,6 @@ static int pj_gridlist_merge_gridfile( projCtx ctx,
 
 PJ_GRIDINFO **pj_gridlist_from_nadgrids( projCtx ctx, const char *nadgrids, 
                                          int *grid_count)
-
 {
     const char *s;
     PJ_GRIDINFO **gridlist = nullptr;

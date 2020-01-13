@@ -222,7 +222,9 @@ set(SRC_LIBPROJ_CORE
   adjlon.cpp
   apply_gridshift.cpp
   apply_vgridshift.cpp
-  auth.cpp 
+  auth.cpp
+  cplist.cpp
+  cps.cpp
   ctx.cpp
   datum_set.cpp
   datums.cpp

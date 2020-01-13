@@ -85,7 +85,6 @@ static const int transient_error[70] = {
     /* 50 to 59 */ 1, 0, 1, 0, 1, 1, 1, 1, 0, 0,
     /* 60 to 69 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,};
 
-
 /* -------------------------------------------------------------------- */
 /*      Read transient_error[] in a safe way.                           */
 /* -------------------------------------------------------------------- */
@@ -99,7 +98,6 @@ static int get_transient_error_value(int pos_index)
     return transient_error[pos_index];
 }
 
-
 /* -------------------------------------------------------------------- */
 /*      Transform unusual input coordinate axis orientation to          */
 /*      standard form if needed.                                        */
@@ -112,8 +110,6 @@ static int adjust_axes (PJ *P, PJ_DIRECTION dir, long n, int dist, double *x, do
     return adjust_axis( P->ctx, P->axis,
                 dir==PJ_FWD ? 1: 0, n, dist, x, y, z );
 }
-
-
 
 /* ----------------------------------------------------------------------- */
 /*    Transform geographic (lat/long) source coordinates to                */
@@ -158,15 +154,6 @@ static int geographic_to_cartesian (PJ *P, PJ_DIRECTION dir, long n, int dist, d
         x, y, z
     );
 }
-
-
-
-
-
-
-
-
-
 
 /* -------------------------------------------------------------------- */
 /*      Transform destination points to projection coordinates, if      */
@@ -274,10 +261,6 @@ static int geographic_to_projected (PJ *P, long n, int dist, double *x, double *
     }
     return 0;
 }
-
-
-
-
 
 /* ----------------------------------------------------------------------- */
 /*    Transform projected source coordinates to lat/long, if needed        */
@@ -394,8 +377,6 @@ static int projected_to_geographic (PJ *P, long n, int dist, double *x, double *
     return 0;
 }
 
-
-
 /* -------------------------------------------------------------------- */
 /*            Adjust for the prime meridian if needed.                  */
 /* -------------------------------------------------------------------- */
@@ -418,8 +399,6 @@ static int prime_meridian (PJ *P, PJ_DIRECTION dir, long n, int dist, double *x)
 
     return 0;
 }
-
-
 
 /* -------------------------------------------------------------------- */
 /*            Adjust for vertical scale factor if needed                */
@@ -446,8 +425,6 @@ static int height_unit (PJ *P, PJ_DIRECTION dir, long n, int dist, double *z) {
     return 0;
 }
 
-
-
 /* -------------------------------------------------------------------- */
 /*           Transform to ellipsoidal heights if needed                 */
 /* -------------------------------------------------------------------- */
@@ -466,8 +443,6 @@ static int geometric_to_orthometric (PJ *P, PJ_DIRECTION dir, long n, int dist, 
     return 0;
 }
 
-
-
 /* -------------------------------------------------------------------- */
 /*      Convert datums if needed, and possible.                         */
 /* -------------------------------------------------------------------- */
@@ -478,10 +453,6 @@ static int datum_transform (PJ *P, PJ *Q, long n, int dist, double *x, double *y
         return P->ctx->last_errno;
     return Q->ctx->last_errno;
 }
-
-
-
-
 
 /* -------------------------------------------------------------------- */
 /*      If a wrapping center other than 0 is provided, rewrap around    */
@@ -513,8 +484,6 @@ static int long_wrap (PJ *P, long n, int dist, double *x) {
     }
     return 0;
 }
-
-
 
 /************************************************************************/
 /*                            pj_transform()                            */
@@ -592,8 +561,6 @@ int pj_transform(
     return 0;
 }
 
-
-
 /************************************************************************/
 /*                     pj_geodetic_to_geocentric()                      */
 /************************************************************************/
@@ -601,7 +568,6 @@ int pj_transform(
 int pj_geodetic_to_geocentric( double a, double es,
                                long point_count, int point_offset,
                                double *x, double *y, double *z )
-
 {
     double b;
     int    i;
@@ -644,7 +610,6 @@ int pj_geodetic_to_geocentric( double a, double es,
 int pj_geocentric_to_geodetic( double a, double es,
                                long point_count, int point_offset,
                                double *x, double *y, double *z )
-
 {
     double b;
     int    i;
@@ -682,7 +647,6 @@ int pj_geocentric_to_geodetic( double a, double es,
 /************************************************************************/
 
 int pj_compare_datums( PJ *srcdefn, PJ *dstdefn )
-
 {
     if( srcdefn->datum_type != dstdefn->datum_type )
     {
