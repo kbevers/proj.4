@@ -465,14 +465,62 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	return point.lpz;
 }
 
+int proj_cp_init(PJ* P, const char *cps)
+{
+	char *scps = (char *)pj_malloc((strlen(cps) + 1 + 1) * sizeof(char));
+	sprintf(scps, "%s%s", "s", cps);
+
+	if (P->cplist == nullptr)
+	{
+		P->cplist = pj_cplist(P->ctx, pj_param(P->ctx, P->params, scps).s, &(P->cplist_count));
+
+		if (P->cplist == nullptr || P->cplist_count == 0)
+		{
+			pj_dealloc(scps);
+			return 0;
+		}
+	}
+
+	if (P->cplist_count == 0)
+		proj_errno_set(P, PJD_ERR_FAILED_TO_LOAD_CPL);
+
+	pj_dealloc(scps);
+	return P->cplist_count;
+}
+
 PJ *TRANSFORMATION(helmertcollocation, 0)
 {	 
+	// Do not need a opaque struct
+	/*	struct pj_opaque_hgridshift *Q = static_cast<struct pj_opaque_hgridshift*>(pj_calloc(1, sizeof(struct pj_opaque_hgridshift)));
+	
+	if (nullptr == Q)
+		return pj_default_destructor(P, ENOMEM);	
+	P->opaque = (void *)Q;
+	*/
+
 	P->fwd4d = nullptr;
 	P->inv4d = nullptr;
 	P->fwd3d = forward_3d;
 	P->inv3d = reverse_3d;
 	P->fwd = nullptr;
 	P->inv = nullptr;
+
+	// ?
+	P->left = PJ_IO_UNITS_RADIANS; 
+	P->right = PJ_IO_UNITS_RADIANS;
+
+	if (0 == pj_param(P->ctx, P->params, "tcp_trans").i) 
+	{
+		proj_log_error(P, "hgridshift: +cp_trans parameter missing.");
+		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
+	}
 	
+	proj_cp_init(P, "cp_trans");
+
+	if (proj_errno(P))
+	{
+		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
+		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPL);
+	}
 	return P;
 }

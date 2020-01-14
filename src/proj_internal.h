@@ -476,15 +476,18 @@ struct PJconsts {
 
     **************************************************************************************/
 
-    int     datum_type = PJD_UNKNOWN;  /* PJD_UNKNOWN/3PARAM/7PARAM/GRIDSHIFT/WGS84 */
-    double  datum_params[7] = {0,0,0,0,0,0,0}; /* Parameters for 3PARAM and 7PARAM */
+    int    datum_type = PJD_UNKNOWN;  /* PJD_UNKNOWN/3PARAM/7PARAM/GRIDSHIFT/WGS84 */
+    double datum_params[7] = {0,0,0,0,0,0,0}; /* Parameters for 3PARAM and 7PARAM */
     struct _pj_gi **gridlist = nullptr;     /* TODO: Description needed */
-    int     gridlist_count = 0;
+    int    gridlist_count = 0;
 
-    int     has_geoid_vgrids = 0;      /* TODO: Description needed */
+    int    has_geoid_vgrids = 0;      /* TODO: Description needed */
     struct _pj_gi **vgridlist_geoid = nullptr;   /* TODO: Description needed */
-    int     vgridlist_geoid_count = 0;
+    int    vgridlist_geoid_count = 0;
 	
+	struct pj_cp **cplist = nullptr;
+	int cplist_count = 0;
+
 	double  from_greenwich = 0.0;       /* prime meridian offset (in radians) */
     double  long_wrap_center = 0.0;     /* 0.0 for -180 to 180, actually in radians*/
     int     is_long_wrap_set = 0;
@@ -935,6 +938,7 @@ PJ_GRIDINFO *pj_gridinfo_init( projCtx_t *, const char * );
 int          pj_gridinfo_load( projCtx_t *, PJ_GRIDINFO * );
 void         pj_gridinfo_free( projCtx_t *, PJ_GRIDINFO * );
 
+PJ_COMMONPOINTS **pj_cplist(projCtx_t *, const char *, int *);
 PJ_COMMONPOINTS *pj_commonpoints_init(projCtx_t *, const char *);
 
 PJ_GridCatalog *pj_gc_findcatalog( projCtx_t *, const char * );
