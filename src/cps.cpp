@@ -31,6 +31,26 @@
 
 #include "proj_internal.h"
 
+// TODO: Move to another class
+struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
+{
+	PAFile fid = (PAFile)fileapi;
+	struct COMMONPOINTS *cp;
+	int id_end;
+	char header[160];
+
+	cp = (struct COMMONPOINTS *) pj_malloc(sizeof(struct COMMONPOINTS));
+
+	if (pj_ctx_fread(ctx, header, sizeof(header), 1, fid) != 1)
+	{
+		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		return nullptr;
+	}
+
+	return cp;
+
+}
+
 PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 {
 	PJ_COMMONPOINTS *commonPoints;
@@ -73,26 +93,30 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 		return nullptr;
 	}
 
-	// TODO: Impl. here.
-	// Ala:   struct CTABLE *ct = nad_ctable2_init( ctx, (struct projFileAPI_t*)fp );
+	struct COMMONPOINTS *cp = cp_init( ctx, (struct projFileAPI_t*)fp );
+	
+	commonPoints->cp = cp;
 
-
+	if (cp == nullptr)
+	{
+		pj_log(ctx, PJ_LOG_DEBUG_MAJOR, "COMMONPOINTS cp is NULL.");
+	}
+	else
+	{
+		// TODO: Logging
+		/*
+		  pj_log( ctx, PJ_LOG_DEBUG_MAJOR,
+                    "Ctable2 %s %dx%d: LL=(%.9g,%.9g) UR=(%.9g,%.9g)",
+                    ct->id,
+                    ct->lim.lam, ct->lim.phi,
+                    ct->ll.lam * RAD_TO_DEG, ct->ll.phi * RAD_TO_DEG,
+                    (ct->ll.lam + (ct->lim.lam-1)*ct->del.lam) * RAD_TO_DEG,
+                    (ct->ll.phi + (ct->lim.phi-1)*ct->del.phi) * RAD_TO_DEG );
+		
+		*/
+	}
 
 	pj_ctx_fclose(ctx, fp);
 
 	return commonPoints;
-}
-
-// TODO: Move to another class
-struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
-{
-	PAFile fid = (PAFile)fileapi;
-	struct COMMONPOINTS *cp;
-	int id_end;
-
-
-	cp = (struct COMMONPOINTS *) pj_malloc(sizeof(struct COMMONPOINTS));
-
-	return cp;
-
 }

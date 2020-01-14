@@ -308,9 +308,6 @@ std::vector<PJ_LP_Pair> findClosestPoints(std::vector<PJ_LP_Pair> *commonPointLi
 	return closestDistances;
 }
 
-/***********************************************************************
-*
-/***********************************************************************/
 bool PointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 {
 	std::ifstream file(fileName, std::ios::in);
@@ -348,9 +345,6 @@ bool PointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 	return isInside(vectorPointer, n, point);
 }
 
-/***********************************************************************
-*
-/***********************************************************************/
 int AreaIdPoint(PJ_LP lp) // TODO: Endre namn og argument 
 {
 	// TODO: Flytte områdefilene
@@ -371,9 +365,6 @@ int AreaIdPoint(PJ_LP lp) // TODO: Endre namn og argument
 	return 1;
 }
 
-/***********************************************************************
-*
-/***********************************************************************/
 PJ_LP proj_commonPointInit(PJ_LP lp)
 {
 	std::vector<PJ_LP_Pair> commonPointList;	
@@ -524,3 +515,15 @@ PJ *TRANSFORMATION(helmertcollocation, 0)
 	}
 	return P;
 }
+
+PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
+{
+	struct COMMONPOINTS *cp;
+	int inverse;
+	PJ_LP out;
+
+
+
+	return out;
+}
+
