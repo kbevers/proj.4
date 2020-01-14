@@ -44,6 +44,7 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 	if (!commonPoints)
 	{
 		pj_ctx_set_errno(ctx, ENOMEM);
+
 		return nullptr;
 	}
 
@@ -52,6 +53,7 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 	{
 		pj_dalloc(commonPoints);
 		pj_ctx_set_errno(ctx, ENOMEM);
+
 		return nullptr;
 	}
 
@@ -67,13 +69,30 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 		pj_dalloc(commonPoints->cp_name);
 		pj_dalloc(commonPoints);
 		pj_ctx_set_errno(ctx, ENOMEM);
+
 		return nullptr;
 	}
 
 	// TODO: Impl. here.
+	// Ala:   struct CTABLE *ct = nad_ctable2_init( ctx, (struct projFileAPI_t*)fp );
+
+
 
 	pj_ctx_fclose(ctx, fp);
 
 	return commonPoints;
 }
 
+// TODO: Move to another class
+struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
+{
+	PAFile fid = (PAFile)fileapi;
+	struct COMMONPOINTS *cp;
+	int id_end;
+
+
+	cp = (struct COMMONPOINTS *) pj_malloc(sizeof(struct COMMONPOINTS));
+
+	return cp;
+
+}

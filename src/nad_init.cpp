@@ -195,8 +195,8 @@ struct CTABLE *nad_ctable2_init( projCtx ctx, struct projFileAPI_t* fileapi )
 {
     PAFile fid = (PAFile)fileapi;
     struct CTABLE *ct;
-    int		id_end;
-    char        header[160];
+    int id_end;
+    char header[160];
 
     if( pj_ctx_fread( ctx, header, sizeof(header), 1, fid ) != 1 )
     {
