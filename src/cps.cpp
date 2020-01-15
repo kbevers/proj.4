@@ -47,6 +47,8 @@ struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 		return nullptr;
 	}
 
+	//cp ->cvs = nullptr; ?
+
 	return cp;
 
 }
@@ -64,7 +66,6 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 	if (!commonPoints)
 	{
 		pj_ctx_set_errno(ctx, ENOMEM);
-
 		return nullptr;
 	}
 
@@ -73,28 +74,31 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 	{
 		pj_dalloc(commonPoints);
 		pj_ctx_set_errno(ctx, ENOMEM);
-
 		return nullptr;
 	}
+	commonPoints->filename = pj_strdup(cp_name);
+	commonPoints->format = "missing";
+	commonPoints->cp = nullptr;
+	commonPoints->next = nullptr;
 
 	if (!(fp = pj_open_lib(ctx, cp_name, "rb")))
 	{
 		ctx->last_errno = 0;
 		return commonPoints;
-	}
-	commonPoints->filename = pj_strdup(cp_name);
+	}	
 
 	if (!commonPoints->filename)
 	{
 		pj_dalloc(commonPoints->cp_name);
 		pj_dalloc(commonPoints);
 		pj_ctx_set_errno(ctx, ENOMEM);
-
 		return nullptr;
 	}
 
+	// TODO: Sjekk header
 	struct COMMONPOINTS *cp = cp_init( ctx, (struct projFileAPI_t*)fp );
-	
+
+	commonPoints->format = "commonpoints";
 	commonPoints->cp = cp;
 
 	if (cp == nullptr)
@@ -119,4 +123,29 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 	pj_ctx_fclose(ctx, fp);
 
 	return commonPoints;
+}
+
+int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
+{
+	struct COMMONPOINTS cp_tmp;
+
+	if (gi == nullptr || gi->cp == nullptr)
+		return 0;
+
+	pj_acquire_lock();
+
+	if (gi->cp->pJ_LP_PairList != nullptr)
+	{
+		pj_release_lock();
+		return 1;
+	}
+
+	memcpy(&cp_tmp, gi->cp, sizeof(struct COMMONPOINTS));
+	 
+	//if (strcmp(gi->format, "ctable") == 0)
+
+
+
+
+	return 1;
 }

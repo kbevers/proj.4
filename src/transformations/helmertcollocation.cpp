@@ -516,14 +516,63 @@ PJ *TRANSFORMATION(helmertcollocation, 0)
 	return P;
 }
 
+struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPOINTS **cps)
+{
+	int icp;
+
+	for (icp = 0; icp < cp_count; icp++)
+	{
+		PJ_COMMONPOINTS *gi = cps[icp];
+		struct COMMONPOINTS *cp = gi->cp;	
+		
+		while (gi->child)
+		{
+			PJ_COMMONPOINTS *child;
+
+			for (child = gi->child; child != nullptr; child = child->next)
+			{
+				struct COMMONPOINTS *cp1 = child->cp;
+				break;
+			}
+			if (child == nullptr)
+				break; 
+
+			gi = child;
+			cp = child->cp;
+		}		
+		/*		
+		if (ct->cvs == nullptr)
+		{
+			if (!pj_gridinfo_load(ctx, gi)) {
+				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+				return nullptr;
+			}
+		}
+		*/
+		return cp;
+	}
+	return nullptr;
+}
+
 PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 {
 	struct COMMONPOINTS *cp;
 	int inverse;
 	PJ_LP out;
+	 
+	out.lam = HUGE_VAL; out.phi = HUGE_VAL;
+	
+	cp = find_cp(P->ctx, lp, P->cplist_count, P->cplist);
 
-
-
+	if (cp == nullptr) 
+	{
+		if (P->cplist_count == 1 && strcmp(P->cplist[0]->cp_name, "null") == 0)
+			out = lp;
+		else
+			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		 
+		return out;
+	}
 	return out;
 }
 
