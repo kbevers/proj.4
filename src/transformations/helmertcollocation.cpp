@@ -43,13 +43,13 @@ using json = nlohmann::json;
 PROJ_HEAD(helmertcollocation, "2D Helmert parameter estimation with collocation");
 
 // TODO: Under construction.. 
-/*
-struct COMMONPOINTS findCommonPointList()
+
+struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count, pj_cp **cps)
 {
-	 COMMONPOINTS commonPointList;
+	COMMONPOINTS *commonPointList;
 
 	return commonPointList;
-};*/
+};
 
 template<class UnaryFunction>
 void recursive_iterate(const json& j, UnaryFunction f)

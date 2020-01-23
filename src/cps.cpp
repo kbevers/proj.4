@@ -144,8 +144,28 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 	 
 	//if (strcmp(gi->format, "ctable") == 0)
 
+	PAFile fid;
+	int result;
+	
+	fid = pj_open_lib(ctx, gi->filename, "rb");
 
+	if (fid == nullptr)
+	{
+		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_release_lock();
+		return 0;
+	}
 
+	size_t a_size;	
+
+	if (pj_ctx_fread(ctx, &cp_tmp, sizeof(COMMONPOINTS), a_size, fid) != a_size)
+	{
+
+	};
+
+	pj_ctx_fclose(ctx, fid);
+
+	//if (gi->cp->pJ_LP_PairList != nullptr)
 
 	return 1;
 }
