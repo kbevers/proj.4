@@ -83,6 +83,7 @@ elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
     set(PROJ_CXX_WARN_FLAGS -Wall)
   endif()
 endif()
+
 set(PROJ_C_WARN_FLAGS "${PROJ_C_WARN_FLAGS}"
   CACHE STRING "C flags used to compile PROJ targets")
 set(PROJ_CXX_WARN_FLAGS "${PROJ_CXX_WARN_FLAGS}"
@@ -134,6 +135,39 @@ IF("${SQLITE3_VERSION}" VERSION_LESS "3.11")
 ENDIF()
 
 ################################################################################
+# Check for libtiff
+################################################################################
+
+option(DISABLE_TIFF "Disable TIFF support" OFF)
+mark_as_advanced(DISABLE_TIFF)
+if(DISABLE_TIFF)
+  message(WARNING "TIFF support has been disabled and will result in the inability to read some grids")
+else()
+  find_package(TIFF REQUIRED)
+  if(TIFF_FOUND)
+    boost_report_value(TIFF_FOUND)
+  else()
+    message(SEND_ERROR "libtiff dependency not found!")
+  endif()
+  add_definitions(-DTIFF_ENABLED)
+endif()
+
+################################################################################
+# Check for curl
+################################################################################
+
+option(ENABLE_CURL "Enable Curl support" ON)
+if(ENABLE_CURL)
+  find_package(CURL REQUIRED)
+  if(CURL_FOUND)
+    boost_report_value(CURL_FOUND)
+  else()
+    message(SEND_ERROR "curl dependency not found!")
+  endif()
+  add_definitions(-DCURL_ENABLED)
+endif()
+
+################################################################################
 # threading configuration
 ################################################################################
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -178,13 +212,6 @@ if(MSVC OR CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_DEBUG_POSTFIX _d)
 endif()
 
-option(PROJ_TESTS "Enable build of collection of PROJ tests" ON)
-boost_report_value(PROJ_TESTS)
-if(PROJ_TESTS)
-  enable_testing()
-endif()
-include(ProjTest)
-
 # Put the libraries and binaries that get built into directories at the
 # top of the build tree rather than in hard-to-find leaf
 # directories. This simplifies manual testing and the use of the build
@@ -212,6 +239,22 @@ set(CMAKECONFIGDIR "${DEFAULT_CMAKEDIR}"
   CACHE PATH "The directory to install cmake config files into.")
 
 ################################################################################
+# Tests
+################################################################################
+include(CTest)
+
+# Support older option, to be removed by PROJ 8.0
+if(DEFINED PROJ_TESTS)
+  message(DEPRECATION "PROJ_TESTS has been replaced with BUILD_TESTING")
+  set(BUILD_TESTING ${PROJ_TESTS})
+endif()
+
+boost_report_value(BUILD_TESTING)
+if(BUILD_TESTING)
+  include(ProjTest)
+endif()
+
+################################################################################
 # Build configured components
 ################################################################################
 include_directories(${PROJ4_SOURCE_DIR}/src)
@@ -222,6 +265,6 @@ add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(man)
 add_subdirectory(cmake)
-if(PROJ_TESTS)
+if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
