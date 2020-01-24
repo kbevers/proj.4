@@ -42,13 +42,61 @@ using json = nlohmann::json;
 
 PROJ_HEAD(helmertcollocation, "2D Helmert parameter estimation with collocation");
 
-// TODO: Under construction.. 
-
+// TODO: Under construction... 
 struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count, pj_cp **cps)
 {
-	COMMONPOINTS *commonPointList;
+	int iCp;
 
-	return commonPointList;
+	for (iCp = 0; iCp < cp_count; iCp++)
+	{
+		pj_cp *gi = cps[iCp];
+		
+		/* struct*/	COMMONPOINTS *cp = gi->cp;
+
+		
+		/*	if (ct->ll.phi - epsilon > input.phi
+			|| ct->ll.lam - epsilon > input.lam
+			|| (ct->ll.phi + (ct->lim.phi - 1) * ct->del.phi + epsilon < input.phi)
+			|| (ct->ll.lam + (ct->lim.lam - 1) * ct->del.lam + epsilon < input.lam)) {
+			continue;
+		}*/
+
+		while (gi->child)
+		{
+			pj_cp *child;
+
+			for (child = gi->child; child != nullptr; child = child->next)
+			{
+				/*struct*/ COMMONPOINTS *cp1 = child->cp;
+
+				/*
+				epsilon = (fabs(ct1->del.phi)+fabs(ct1->del.lam))/10000.0;
+
+				if( ct1->ll.phi - epsilon > input.phi
+					|| ct1->ll.lam - epsilon > input.lam
+					|| (ct1->ll.phi+(ct1->lim.phi-1)*ct1->del.phi + epsilon < input.phi)
+					|| (ct1->ll.lam+(ct1->lim.lam-1)*ct1->del.lam + epsilon < input.lam) ) {
+					continue;
+				}*/
+				break;
+				
+			} 
+			if (child == nullptr) 
+				break;
+
+			gi = child;
+			cp = child->cp;
+		} 
+		if (cp->pJ_LP_PairList == nullptr)
+		{
+			if (!pj_cp_load(ctx, gi))
+			{
+				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+				return nullptr;
+			}
+		}
+	}
+	return nullptr;
 };
 
 template<class UnaryFunction>
@@ -540,15 +588,16 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 			gi = child;
 			cp = child->cp;
 		}		
-		/*		
-		if (ct->cvs == nullptr)
+
+		if (cp->pJ_LP_PairList == nullptr)
 		{
-			if (!pj_gridinfo_load(ctx, gi)) {
+			if (!pj_cp_load(ctx, gi))
+			{
 				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
 				return nullptr;
 			}
 		}
-		*/
+
 		return cp;
 	}
 	return nullptr;
