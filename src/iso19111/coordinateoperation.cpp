@@ -788,13 +788,15 @@ void CoordinateOperation::setAccuracies(
  * available.
  */
 bool CoordinateOperation::isPROJInstantiable(
-    const io::DatabaseContextPtr &databaseContext) const {
+    const io::DatabaseContextPtr &databaseContext,
+    bool considerKnownGridsAsAvailable) const {
     try {
         exportToPROJString(io::PROJStringFormatter::create().get());
     } catch (const std::exception &) {
         return false;
     }
-    for (const auto &gridDesc : gridsNeeded(databaseContext)) {
+    for (const auto &gridDesc :
+         gridsNeeded(databaseContext, considerKnownGridsAsAvailable)) {
         if (!gridDesc.available) {
             return false;
         }
@@ -2020,8 +2022,9 @@ bool SingleOperation::_isEquivalentTo(const util::IComparable *other,
 
 // ---------------------------------------------------------------------------
 
-std::set<GridDescription> SingleOperation::gridsNeeded(
-    const io::DatabaseContextPtr &databaseContext) const {
+std::set<GridDescription>
+SingleOperation::gridsNeeded(const io::DatabaseContextPtr &databaseContext,
+                             bool considerKnownGridsAsAvailable) const {
     std::set<GridDescription> res;
     for (const auto &genOpParamvalue : parameterValues()) {
         auto opParamvalue = dynamic_cast<const OperationParameterValue *>(
@@ -2033,9 +2036,9 @@ std::set<GridDescription> SingleOperation::gridsNeeded(
                 desc.shortName = value->valueFile();
                 if (databaseContext) {
                     databaseContext->lookForGridInfo(
-                        desc.shortName, desc.fullName, desc.packageName,
-                        desc.url, desc.directDownload, desc.openLicense,
-                        desc.available);
+                        desc.shortName, considerKnownGridsAsAvailable,
+                        desc.fullName, desc.packageName, desc.url,
+                        desc.directDownload, desc.openLicense, desc.available);
                 }
                 res.insert(desc);
             }
@@ -8492,6 +8495,7 @@ isGeographic3DToGravityRelatedHeight(const OperationMethodNNPtr &method,
         "1060", // Geographic3D to GravityRelatedHeight (CGG2013)
         "1072", // Geographic3D to GravityRelatedHeight (OSGM15-Ire)
         "1073", // Geographic3D to GravityRelatedHeight (IGN2009)
+        "1081", // Geographic3D to GravityRelatedHeight (BEV AT)
         "9661", // Geographic3D to GravityRelatedHeight (EGM)
         "9662", // Geographic3D to GravityRelatedHeight (Ausgeoid98)
         "9663", // Geographic3D to GravityRelatedHeight (OSGM-GB)
@@ -8644,7 +8648,10 @@ TransformationNNPtr Transformation::substitutePROJAlternativeGridNames(
                                                 inverseDirection)) {
 
         if (horizontalGridName == projFilename) {
-            assert(!inverseDirection);
+            if (inverseDirection) {
+                throw util::UnsupportedOperationException(
+                    "Inverse direction for " + projFilename + " not supported");
+            }
             return self;
         }
 
@@ -8701,33 +8708,6 @@ TransformationNNPtr Transformation::substitutePROJAlternativeGridNames(
         }
     }
 
-    const auto &heightFilename = getHeightToGeographic3DFilename();
-    if (!heightFilename.empty() && !projFilename.empty()) {
-        if (databaseContext->lookForGridAlternative(
-                heightFilename, projFilename, projGridFormat,
-                inverseDirection)) {
-
-            if (heightFilename == projFilename) {
-                assert(!inverseDirection);
-                return self;
-            }
-
-            if (inverseDirection) {
-                return createGravityRelatedHeightToGeographic3D(
-                           createPropertiesForInverse(self.as_nullable().get(),
-                                                      true, false),
-                           targetCRS(), sourceCRS(), interpolationCRS(),
-                           projFilename, coordinateOperationAccuracies())
-                    ->inverseAsTransformation();
-            } else {
-                return createGravityRelatedHeightToGeographic3D(
-                    createSimilarPropertiesTransformation(self), sourceCRS(),
-                    targetCRS(), interpolationCRS(), projFilename,
-                    coordinateOperationAccuracies());
-            }
-        }
-    }
-
     if (isGeographic3DToGravityRelatedHeight(method(), false)) {
         const auto &fileParameter =
             parameterValue(EPSG_NAME_PARAMETER_GEOID_CORRECTION_FILENAME,
@@ -8738,14 +8718,20 @@ TransformationNNPtr Transformation::substitutePROJAlternativeGridNames(
             if (databaseContext->lookForGridAlternative(
                     filename, projFilename, projGridFormat, inverseDirection)) {
 
+                if (inverseDirection) {
+                    throw util::UnsupportedOperationException(
+                        "Inverse direction for "
+                        "Geographic3DToGravityRelatedHeight not supported");
+                }
+
                 if (filename == projFilename) {
-                    assert(!inverseDirection);
                     return self;
                 }
 
                 auto parameters = std::vector<OperationParameterNNPtr>{
                     createOpParamNameEPSGCode(
                         EPSG_CODE_PARAMETER_GEOID_CORRECTION_FILENAME)};
+#ifdef disabled_for_now
                 if (inverseDirection) {
                     return create(createPropertiesForInverse(
                                       self.as_nullable().get(), true, false),
@@ -8755,7 +8741,9 @@ TransformationNNPtr Transformation::substitutePROJAlternativeGridNames(
                                                   projFilename)},
                                   coordinateOperationAccuracies())
                         ->inverseAsTransformation();
-                } else {
+                } else
+#endif
+                {
                     return create(
                         createSimilarPropertiesTransformation(self),
                         sourceCRS(), targetCRS(), nullptr,
@@ -8768,7 +8756,8 @@ TransformationNNPtr Transformation::substitutePROJAlternativeGridNames(
     }
 
     if (methodEPSGCode == EPSG_CODE_METHOD_VERTCON ||
-        methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_NZLVD) {
+        methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_NZLVD ||
+        methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_GTX) {
         auto fileParameter =
             parameterValue(EPSG_NAME_PARAMETER_VERTICAL_OFFSET_FILE,
                            EPSG_CODE_PARAMETER_VERTICAL_OFFSET_FILE);
@@ -8780,7 +8769,11 @@ TransformationNNPtr Transformation::substitutePROJAlternativeGridNames(
                     filename, projFilename, projGridFormat, inverseDirection)) {
 
                 if (filename == projFilename) {
-                    assert(!inverseDirection);
+                    if (inverseDirection) {
+                        throw util::UnsupportedOperationException(
+                            "Inverse direction for " + projFilename +
+                            " not supported");
+                    }
                     return self;
                 }
 
@@ -9402,17 +9395,8 @@ void Transformation::_exportToPROJString(
             fileParameter->type() == ParameterValue::Type::FILENAME) {
             auto filename = fileParameter->valueFile();
             bool doInversion = isMethodInverseOf;
-            if (!identifiers().empty() &&
-                *identifiers().front()->codeSpace() ==
-                    metadata::Identifier::EPSG &&
-                method()->nameStr() ==
-                    "Geographic3D to GravityRelatedHeight (US .gtx)" &&
-                ends_with(filename, ".gtx")) {
-                // gtx files, from straight EPSG definition, must be applied in
-                // reverse order for "Geographic3D to GravityRelatedHeight"
-                // method
-                doInversion = !doInversion;
-            }
+            // The EPSG Geog3DToHeight is the reverse convention of PROJ !
+            doInversion = !doInversion;
             if (doInversion) {
                 formatter->startInversion();
             }
@@ -9442,7 +9426,8 @@ void Transformation::_exportToPROJString(
         }
     }
 
-    if (methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_NZLVD) {
+    if (methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_NZLVD ||
+        methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_GTX) {
         auto fileParameter =
             parameterValue(EPSG_NAME_PARAMETER_VERTICAL_OFFSET_FILE,
                            EPSG_CODE_PARAMETER_VERTICAL_OFFSET_FILE);
@@ -10233,10 +10218,12 @@ bool ConcatenatedOperation::_isEquivalentTo(
 // ---------------------------------------------------------------------------
 
 std::set<GridDescription> ConcatenatedOperation::gridsNeeded(
-    const io::DatabaseContextPtr &databaseContext) const {
+    const io::DatabaseContextPtr &databaseContext,
+    bool considerKnownGridsAsAvailable) const {
     std::set<GridDescription> res;
     for (const auto &operation : operations()) {
-        const auto l_gridsNeeded = operation->gridsNeeded(databaseContext);
+        const auto l_gridsNeeded = operation->gridsNeeded(
+            databaseContext, considerKnownGridsAsAvailable);
         for (const auto &gridDesc : l_gridsNeeded) {
             res.insert(gridDesc);
         }
@@ -11156,7 +11143,10 @@ struct FilterResults {
             bool gridsKnown = true;
             if (context->getAuthorityFactory()) {
                 const auto gridsNeeded = op->gridsNeeded(
-                    context->getAuthorityFactory()->databaseContext());
+                    context->getAuthorityFactory()->databaseContext(),
+                    gridAvailabilityUse ==
+                        CoordinateOperationContext::GridAvailabilityUse::
+                            KNOWN_AVAILABLE);
                 for (const auto &gridDesc : gridsNeeded) {
                     hasGrids = true;
                     if (gridAvailabilityUse ==
@@ -11278,6 +11268,7 @@ struct FilterResults {
         CoordinateOperationPtr lastOp;
 
         bool first = true;
+        const auto gridAvailabilityUse = context->getGridAvailabilityUse();
         for (const auto &op : res) {
             const auto curAccuracy = getAccuracy(op);
             bool dummy = false;
@@ -11290,7 +11281,10 @@ struct FilterResults {
 
             if (context->getAuthorityFactory()) {
                 const auto gridsNeeded = op->gridsNeeded(
-                    context->getAuthorityFactory()->databaseContext());
+                    context->getAuthorityFactory()->databaseContext(),
+                    gridAvailabilityUse ==
+                        CoordinateOperationContext::GridAvailabilityUse::
+                            KNOWN_AVAILABLE);
                 for (const auto &gridDesc : gridsNeeded) {
                     curHasGrids = true;
                     curSetOfGrids.insert(gridDesc.shortName);
@@ -11603,6 +11597,7 @@ CoordinateOperationFactory::Private::findOpsInRegistryDirect(
     buildCRSIds(sourceCRS, context, sourceIds);
     buildCRSIds(targetCRS, context, targetIds);
 
+    const auto gridAvailabilityUse = context.context->getGridAvailabilityUse();
     for (const auto &idSrc : sourceIds) {
         const auto &srcAuthName = idSrc.first;
         const auto &srcCode = idSrc.second;
@@ -11622,9 +11617,16 @@ CoordinateOperationFactory::Private::findOpsInRegistryDirect(
                     tmpAuthFactory->createFromCoordinateReferenceSystemCodes(
                         srcAuthName, srcCode, targetAuthName, targetCode,
                         context.context->getUsePROJAlternativeGridNames(),
-                        context.context->getGridAvailabilityUse() ==
+                        gridAvailabilityUse ==
+                                CoordinateOperationContext::
+                                    GridAvailabilityUse::
+                                        DISCARD_OPERATION_IF_MISSING_GRID ||
+                            gridAvailabilityUse ==
+                                CoordinateOperationContext::
+                                    GridAvailabilityUse::KNOWN_AVAILABLE,
+                        gridAvailabilityUse ==
                             CoordinateOperationContext::GridAvailabilityUse::
-                                DISCARD_OPERATION_IF_MISSING_GRID,
+                                KNOWN_AVAILABLE,
                         context.context->getDiscardSuperseded(), true, false,
                         context.extent1, context.extent2);
                 res.insert(res.end(), resTmp.begin(), resTmp.end());
@@ -11667,6 +11669,7 @@ CoordinateOperationFactory::Private::findOpsInRegistryDirectTo(
     std::list<std::pair<std::string, std::string>> ids;
     buildCRSIds(targetCRS, context, ids);
 
+    const auto gridAvailabilityUse = context.context->getGridAvailabilityUse();
     for (const auto &id : ids) {
         const auto &targetAuthName = id.first;
         const auto &targetCode = id.second;
@@ -11680,9 +11683,15 @@ CoordinateOperationFactory::Private::findOpsInRegistryDirectTo(
             auto res = tmpAuthFactory->createFromCoordinateReferenceSystemCodes(
                 std::string(), std::string(), targetAuthName, targetCode,
                 context.context->getUsePROJAlternativeGridNames(),
-                context.context->getGridAvailabilityUse() ==
-                    CoordinateOperationContext::GridAvailabilityUse::
-                        DISCARD_OPERATION_IF_MISSING_GRID,
+
+                gridAvailabilityUse ==
+                        CoordinateOperationContext::GridAvailabilityUse::
+                            DISCARD_OPERATION_IF_MISSING_GRID ||
+                    gridAvailabilityUse ==
+                        CoordinateOperationContext::GridAvailabilityUse::
+                            KNOWN_AVAILABLE,
+                gridAvailabilityUse == CoordinateOperationContext::
+                                           GridAvailabilityUse::KNOWN_AVAILABLE,
                 context.context->getDiscardSuperseded(), true, true,
                 context.extent1, context.extent2);
             if (!res.empty()) {
@@ -11730,6 +11739,7 @@ CoordinateOperationFactory::Private::findsOpsInRegistryWithIntermediate(
     buildCRSIds(sourceCRS, context, sourceIds);
     buildCRSIds(targetCRS, context, targetIds);
 
+    const auto gridAvailabilityUse = context.context->getGridAvailabilityUse();
     for (const auto &idSrc : sourceIds) {
         const auto &srcAuthName = idSrc.first;
         const auto &srcCode = idSrc.second;
@@ -11749,21 +11759,28 @@ CoordinateOperationFactory::Private::findsOpsInRegistryWithIntermediate(
 
             std::vector<CoordinateOperationNNPtr> res;
             if (useCreateBetweenGeodeticCRSWithDatumBasedIntermediates) {
-                res = tmpAuthFactory
-                          ->createBetweenGeodeticCRSWithDatumBasedIntermediates(
-                              sourceCRS, srcAuthName, srcCode, targetCRS,
-                              targetAuthName, targetCode,
-                              context.context->getUsePROJAlternativeGridNames(),
-                              context.context->getGridAvailabilityUse() ==
-                                  CoordinateOperationContext::
-                                      GridAvailabilityUse::
-                                          DISCARD_OPERATION_IF_MISSING_GRID,
-                              context.context->getDiscardSuperseded(),
-                              authFactory->getAuthority() != "any" &&
-                                      authorities.size() > 1
-                                  ? authorities
-                                  : std::vector<std::string>(),
-                              context.extent1, context.extent2);
+                res =
+                    tmpAuthFactory
+                        ->createBetweenGeodeticCRSWithDatumBasedIntermediates(
+                            sourceCRS, srcAuthName, srcCode, targetCRS,
+                            targetAuthName, targetCode,
+                            context.context->getUsePROJAlternativeGridNames(),
+                            gridAvailabilityUse ==
+                                    CoordinateOperationContext::
+                                        GridAvailabilityUse::
+                                            DISCARD_OPERATION_IF_MISSING_GRID ||
+                                gridAvailabilityUse ==
+                                    CoordinateOperationContext::
+                                        GridAvailabilityUse::KNOWN_AVAILABLE,
+                            gridAvailabilityUse ==
+                                CoordinateOperationContext::
+                                    GridAvailabilityUse::KNOWN_AVAILABLE,
+                            context.context->getDiscardSuperseded(),
+                            authFactory->getAuthority() != "any" &&
+                                    authorities.size() > 1
+                                ? authorities
+                                : std::vector<std::string>(),
+                            context.extent1, context.extent2);
             } else {
                 io::AuthorityFactory::ObjectType intermediateObjectType =
                     io::AuthorityFactory::ObjectType::CRS;
@@ -11781,9 +11798,15 @@ CoordinateOperationFactory::Private::findsOpsInRegistryWithIntermediate(
                 res = tmpAuthFactory->createFromCRSCodesWithIntermediates(
                     srcAuthName, srcCode, targetAuthName, targetCode,
                     context.context->getUsePROJAlternativeGridNames(),
-                    context.context->getGridAvailabilityUse() ==
+                    gridAvailabilityUse ==
+                            CoordinateOperationContext::GridAvailabilityUse::
+                                DISCARD_OPERATION_IF_MISSING_GRID ||
+                        gridAvailabilityUse ==
+                            CoordinateOperationContext::GridAvailabilityUse::
+                                KNOWN_AVAILABLE,
+                    gridAvailabilityUse ==
                         CoordinateOperationContext::GridAvailabilityUse::
-                            DISCARD_OPERATION_IF_MISSING_GRID,
+                            KNOWN_AVAILABLE,
                     context.context->getDiscardSuperseded(),
                     context.context->getIntermediateCRS(),
                     intermediateObjectType,
@@ -14211,15 +14234,21 @@ void CoordinateOperationFactory::Private::createOperationsCompoundToGeog(
                 componentsSrc[1],
                 targetCRS->promoteTo3D(std::string(), dbContext), context);
             bool foundRegisteredTransformWithAllGridsAvailable = false;
+            const auto gridAvailabilityUse =
+                context.context->getGridAvailabilityUse();
             const bool ignoreMissingGrids =
-                context.context->getGridAvailabilityUse() ==
+                gridAvailabilityUse ==
                 CoordinateOperationContext::GridAvailabilityUse::
                     IGNORE_GRID_AVAILABILITY;
             for (const auto &op : verticalTransforms) {
                 if (hasIdentifiers(op) && dbContext) {
                     bool missingGrid = false;
                     if (!ignoreMissingGrids) {
-                        const auto gridsNeeded = op->gridsNeeded(dbContext);
+                        const auto gridsNeeded = op->gridsNeeded(
+                            dbContext,
+                            gridAvailabilityUse ==
+                                CoordinateOperationContext::
+                                    GridAvailabilityUse::KNOWN_AVAILABLE);
                         for (const auto &gridDesc : gridsNeeded) {
                             if (!gridDesc.available) {
                                 missingGrid = true;
@@ -14248,7 +14277,11 @@ void CoordinateOperationFactory::Private::createOperationsCompoundToGeog(
                     if (hasIdentifiers(op) && dbContext) {
                         bool missingGrid = false;
                         if (!ignoreMissingGrids) {
-                            const auto gridsNeeded = op->gridsNeeded(dbContext);
+                            const auto gridsNeeded = op->gridsNeeded(
+                                dbContext,
+                                gridAvailabilityUse ==
+                                    CoordinateOperationContext::
+                                        GridAvailabilityUse::KNOWN_AVAILABLE);
                             for (const auto &gridDesc : gridsNeeded) {
                                 if (!gridDesc.available) {
                                     missingGrid = true;
@@ -15079,8 +15112,9 @@ CoordinateOperationNNPtr PROJBasedOperation::_shallowClone() const {
 
 // ---------------------------------------------------------------------------
 
-std::set<GridDescription> PROJBasedOperation::gridsNeeded(
-    const io::DatabaseContextPtr &databaseContext) const {
+std::set<GridDescription>
+PROJBasedOperation::gridsNeeded(const io::DatabaseContextPtr &databaseContext,
+                                bool considerKnownGridsAsAvailable) const {
     std::set<GridDescription> res;
 
     try {
@@ -15093,7 +15127,8 @@ std::set<GridDescription> PROJBasedOperation::gridsNeeded(
             desc.shortName = shortName;
             if (databaseContext) {
                 databaseContext->lookForGridInfo(
-                    desc.shortName, desc.fullName, desc.packageName, desc.url,
+                    desc.shortName, considerKnownGridsAsAvailable,
+                    desc.fullName, desc.packageName, desc.url,
                     desc.directDownload, desc.openLicense, desc.available);
             }
             res.insert(desc);

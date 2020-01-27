@@ -1153,7 +1153,8 @@ static const struct errno_vs_err_const lookup[] = {
     {"pjd_err_inconsistent_unit"        ,  -59},
     {"pjd_err_mutually_exclusive_args"  ,  -60},
     {"pjd_err_generic_error"            ,  -61},
-	{"pjd_err_failed_to_load_cpl"       ,  -62},
+    {"pjd_err_network_error"            ,  -62},
+    {"pjd_err_failed_to_load_cpl"       ,  -63},
     {"pjd_err_dont_skip"                ,  5555},
     {"pjd_err_unknown"                  ,  9999},
     {"pjd_err_enomem"                   ,  ENOMEM},
@@ -1161,6 +1162,7 @@ static const struct errno_vs_err_const lookup[] = {
 } // anonymous namespace
 
 static const struct errno_vs_err_const unknown = {"PJD_ERR_UNKNOWN", 9999};
+
 
 static int list_err_codes (void) {
     int i;

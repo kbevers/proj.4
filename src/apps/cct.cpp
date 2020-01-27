@@ -217,9 +217,7 @@ int main(int argc, char **argv) {
         "s=skip-lines",
         nullptr};
 
-    fout = stdout;
-
-    /* coverity[tainted_data] */
+    fout = stdout; 
 
 	o = opt_parse (argc, argv, "hvI", "cdozts", longflags, longkeys);
     if (nullptr==o)

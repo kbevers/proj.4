@@ -123,3 +123,25 @@ projinfo
 
 Before PROJ 6.3.0, WKT1:GDAL was implicitly calling --boundcrs-to-wgs84, to
 add a TOWGS84[] node in some cases. This is no longer the case.
+
+
+Version 7.0.0
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+proj
+--------
+
+Removed ``-ld`` option from application, since it promoted use of deprecated
+paramters like ``+towgs`` and ``+datum``.
+
+cs2cs
+--------
+
+Removed ``-ld`` option from application, since it promoted use of deprecated
+paramters like ``+towgs`` and ``+datum``.
+
+UTF-8 adoption
+--------------
+
+The value of all path, filenames passed to PROJ through function calls, PROJ
+strings or environment variables should be encoded in UTF-8.

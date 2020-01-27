@@ -34,6 +34,9 @@
 #include "proj.h"
 #include "proj_internal.h"
 #include "geocent.h"
+#include "grids.hpp"
+
+using namespace NS_PROJ;
 
 static int adjust_axis( projCtx ctx, const char *axis, int denormalize_flag,
                            long point_count, int point_offset,
@@ -85,6 +88,7 @@ static const int transient_error[70] = {
     /* 50 to 59 */ 1, 0, 1, 0, 1, 1, 1, 1, 0, 0,
     /* 60 to 69 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,};
 
+
 /* -------------------------------------------------------------------- */
 /*      Read transient_error[] in a safe way.                           */
 /* -------------------------------------------------------------------- */
@@ -98,6 +102,7 @@ static int get_transient_error_value(int pos_index)
     return transient_error[pos_index];
 }
 
+
 /* -------------------------------------------------------------------- */
 /*      Transform unusual input coordinate axis orientation to          */
 /*      standard form if needed.                                        */
@@ -110,6 +115,8 @@ static int adjust_axes (PJ *P, PJ_DIRECTION dir, long n, int dist, double *x, do
     return adjust_axis( P->ctx, P->axis,
                 dir==PJ_FWD ? 1: 0, n, dist, x, y, z );
 }
+
+
 
 /* ----------------------------------------------------------------------- */
 /*    Transform geographic (lat/long) source coordinates to                */
@@ -154,6 +161,15 @@ static int geographic_to_cartesian (PJ *P, PJ_DIRECTION dir, long n, int dist, d
         x, y, z
     );
 }
+
+
+
+
+
+
+
+
+
 
 /* -------------------------------------------------------------------- */
 /*      Transform destination points to projection coordinates, if      */
@@ -261,6 +277,10 @@ static int geographic_to_projected (PJ *P, long n, int dist, double *x, double *
     }
     return 0;
 }
+
+
+
+
 
 /* ----------------------------------------------------------------------- */
 /*    Transform projected source coordinates to lat/long, if needed        */
@@ -377,6 +397,8 @@ static int projected_to_geographic (PJ *P, long n, int dist, double *x, double *
     return 0;
 }
 
+
+
 /* -------------------------------------------------------------------- */
 /*            Adjust for the prime meridian if needed.                  */
 /* -------------------------------------------------------------------- */
@@ -399,6 +421,8 @@ static int prime_meridian (PJ *P, PJ_DIRECTION dir, long n, int dist, double *x)
 
     return 0;
 }
+
+
 
 /* -------------------------------------------------------------------- */
 /*            Adjust for vertical scale factor if needed                */
@@ -425,6 +449,80 @@ static int height_unit (PJ *P, PJ_DIRECTION dir, long n, int dist, double *z) {
     return 0;
 }
 
+
+/************************************************************************/
+/*                        pj_apply_vgridshift()                         */
+/*                                                                      */
+/*      This implementation takes uses the gridlist from a coordinate   */
+/*      system definition.  If the gridlist has not yet been            */
+/*      populated in the coordinate system definition we set it up      */
+/*      now.                                                            */
+/************************************************************************/
+static int pj_apply_vgridshift( PJ *defn,
+                         int inverse,
+                         long point_count, int point_offset,
+                         double *x, double *y, double *z )
+
+{
+    if( defn->vgrids_legacy == nullptr )
+    {
+        defn->vgrids_legacy = new ListOfVGrids;
+        auto vgrids = pj_vgrid_init(defn, "geoidgrids");
+        if( vgrids.empty() )
+            return 0;
+        *static_cast<ListOfVGrids*>(defn->vgrids_legacy) = std::move(vgrids);
+    }
+    if( static_cast<ListOfVGrids*>(defn->vgrids_legacy)->empty() )
+    {
+        return 0;
+    }
+
+    for( int i = 0; i < point_count; i++ )
+    {
+        double value;
+        long io = i * point_offset;
+        PJ_LP   input;
+
+        input.phi = y[io];
+        input.lam = x[io];
+
+        value = pj_vgrid_value(defn, *static_cast<ListOfVGrids*>(defn->vgrids_legacy), input, 1.0);
+
+        if( inverse )
+            z[io] -= value;
+        else
+            z[io] += value;
+
+        if( value == HUGE_VAL )
+        {
+            std::string gridlist;
+
+            proj_log_debug(defn,
+                "pj_apply_vgridshift(): failed to find a grid shift table for\n"
+                "                       location (%.7fdW,%.7fdN)",
+                x[io] * RAD_TO_DEG,
+                y[io] * RAD_TO_DEG );
+
+            for( const auto& gridset: *static_cast<ListOfVGrids*>(defn->vgrids_legacy) )
+            {
+                if( gridlist.empty() )
+                    gridlist += "   tried: ";
+                else
+                    gridlist += ',';
+                gridlist += gridset->name();
+            }
+
+            proj_log_debug(defn, "%s", gridlist.c_str());
+            pj_ctx_set_errno( defn->ctx, PJD_ERR_GRID_AREA );
+
+            return PJD_ERR_GRID_AREA;
+        }
+    }
+
+    return 0;
+}
+
+
 /* -------------------------------------------------------------------- */
 /*           Transform to ellipsoidal heights if needed                 */
 /* -------------------------------------------------------------------- */
@@ -434,14 +532,13 @@ static int geometric_to_orthometric (PJ *P, PJ_DIRECTION dir, long n, int dist, 
         return 0;
     if (z==nullptr)
         return PJD_ERR_GEOCENTRIC;
-    err = pj_apply_vgridshift (P, "sgeoidgrids",
-              &(P->vgridlist_geoid),
-              &(P->vgridlist_geoid_count),
-              dir==PJ_FWD ? 1 : 0, n, dist, x, y, z );
+    err = pj_apply_vgridshift (P, dir==PJ_FWD ? 1 : 0, n, dist, x, y, z );
     if (err)
         return pj_ctx_get_errno(P->ctx);
     return 0;
 }
+
+
 
 /* -------------------------------------------------------------------- */
 /*      Convert datums if needed, and possible.                         */
@@ -453,6 +550,10 @@ static int datum_transform (PJ *P, PJ *Q, long n, int dist, double *x, double *y
         return P->ctx->last_errno;
     return Q->ctx->last_errno;
 }
+
+
+
+
 
 /* -------------------------------------------------------------------- */
 /*      If a wrapping center other than 0 is provided, rewrap around    */
@@ -484,6 +585,8 @@ static int long_wrap (PJ *P, long n, int dist, double *x) {
     }
     return 0;
 }
+
+
 
 /************************************************************************/
 /*                            pj_transform()                            */
@@ -561,6 +664,8 @@ int pj_transform(
     return 0;
 }
 
+
+
 /************************************************************************/
 /*                     pj_geodetic_to_geocentric()                      */
 /************************************************************************/
@@ -568,6 +673,7 @@ int pj_transform(
 int pj_geodetic_to_geocentric( double a, double es,
                                long point_count, int point_offset,
                                double *x, double *y, double *z )
+
 {
     double b;
     int    i;
@@ -610,6 +716,7 @@ int pj_geodetic_to_geocentric( double a, double es,
 int pj_geocentric_to_geodetic( double a, double es,
                                long point_count, int point_offset,
                                double *x, double *y, double *z )
+
 {
     double b;
     int    i;
@@ -647,6 +754,7 @@ int pj_geocentric_to_geodetic( double a, double es,
 /************************************************************************/
 
 int pj_compare_datums( PJ *srcdefn, PJ *dstdefn )
+
 {
     if( srcdefn->datum_type != dstdefn->datum_type )
     {
@@ -785,6 +893,66 @@ int pj_geocentric_from_wgs84( PJ *defn,
 
     return 0;
 }
+
+
+/************************************************************************/
+/*                        pj_apply_gridshift_2()                        */
+/*                                                                      */
+/*      This implementation uses the gridlist from a coordinate         */
+/*      system definition.  If the gridlist has not yet been            */
+/*      populated in the coordinate system definition we set it up      */
+/*      now.                                                            */
+/************************************************************************/
+static
+int pj_apply_gridshift_2( PJ *defn, int inverse,
+                          long point_count, int point_offset,
+                          double *x, double *y, double * /*z*/ )
+
+{
+    if( defn->hgrids_legacy == nullptr )
+    {
+        defn->hgrids_legacy = new ListOfHGrids;
+        auto hgrids = pj_hgrid_init(defn, "nadgrids");
+        if( hgrids.empty() )
+            return 0;
+        *static_cast<ListOfHGrids*>(defn->hgrids_legacy) = std::move(hgrids);
+    }
+    if( static_cast<ListOfHGrids*>(defn->hgrids_legacy)->empty() )
+    {
+        return 0;
+    }
+
+    for( long i = 0; i < point_count; i++ )
+    {
+        PJ_LP   input;
+
+        long io = i * point_offset;
+        input.phi = y[io];
+        input.lam = x[io];
+
+        auto output = pj_hgrid_apply(defn->ctx, *static_cast<ListOfHGrids*>(defn->hgrids_legacy), input, inverse ? PJ_INV : PJ_FWD);
+
+        if ( output.lam != HUGE_VAL )
+        {
+            y[io] = output.phi;
+            x[io] = output.lam;
+        }
+        else
+        {
+            if( defn->ctx->debug_level >= PJ_LOG_DEBUG_MAJOR )
+            {
+                pj_log( defn->ctx, PJ_LOG_DEBUG_MAJOR,
+                    "pj_apply_gridshift(): failed to find a grid shift table for\n"
+                    "                      location (%.7fdW,%.7fdN)",
+                    x[io] * RAD_TO_DEG,
+                    y[io] * RAD_TO_DEG );
+            }
+        }
+    }
+
+    return 0;
+}
+
 
 /************************************************************************/
 /*                         pj_datum_transform()                         */
@@ -1025,4 +1193,9 @@ static int adjust_axis( projCtx ctx,
     }
 
     return 0;
+}
+// ---------------------------------------------------------------------------
+
+void pj_deallocate_grids()
+{
 }

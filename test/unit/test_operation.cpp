@@ -4832,7 +4832,7 @@ TEST(operation, geogCRS_to_geogCRS_context_concatenated_operation) {
 
     EXPECT_TRUE(nn_dynamic_pointer_cast<ConcatenatedOperation>(list[0]) !=
                 nullptr);
-    auto grids = list[0]->gridsNeeded(DatabaseContext::create());
+    auto grids = list[0]->gridsNeeded(DatabaseContext::create(), false);
     EXPECT_EQ(grids.size(), 1U);
 }
 
@@ -6508,7 +6508,7 @@ TEST(operation, transformation_height_to_PROJ_string) {
     EXPECT_EQ(transf->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=vgridshift +grids=egm08_25.gtx +multiplier=1");
 
-    auto grids = transf->gridsNeeded(DatabaseContext::create());
+    auto grids = transf->gridsNeeded(DatabaseContext::create(), false);
     ASSERT_EQ(grids.size(), 1U);
     auto gridDesc = *(grids.begin());
     EXPECT_EQ(gridDesc.shortName, "egm08_25.gtx");
@@ -6820,7 +6820,7 @@ TEST(operation, compoundCRS_with_boundGeogCRS_and_boundVerticalCRS_to_geogCRS) {
               "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
               "+step +proj=axisswap +order=2,1");
 
-    auto grids = op->gridsNeeded(DatabaseContext::create());
+    auto grids = op->gridsNeeded(DatabaseContext::create(), false);
     EXPECT_EQ(grids.size(), 1U);
 
     auto opInverse = CoordinateOperationFactory::create()->createOperation(
@@ -8062,7 +8062,6 @@ TEST(operation, compoundCRS_from_WKT2_no_id_to_geogCRS_3D_context) {
     ASSERT_GE(list.size(), 1U);
 
     {
-        // Important here is vgridshift before hgridshift
         auto op_proj =
             list[0]->exportToPROJString(PROJStringFormatter::create().get());
         EXPECT_EQ(
@@ -8070,8 +8069,8 @@ TEST(operation, compoundCRS_from_WKT2_no_id_to_geogCRS_3D_context) {
             "+proj=pipeline +step +inv +proj=sterea +lat_0=52.1561605555556 "
             "+lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 "
             "+ellps=bessel "
-            "+step +proj=vgridshift +grids=naptrans2008.gtx +multiplier=1 "
-            "+step +proj=hgridshift +grids=rdtrans2008.gsb "
+            "+step +proj=hgridshift +grids=rdtrans2018.gsb "
+            "+step +proj=vgridshift +grids=nlgeo2018.gtx +multiplier=1 "
             "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
             "+step +proj=axisswap +order=2,1");
     }
@@ -8262,8 +8261,8 @@ TEST(operation, isPROJInstantiable) {
         auto transformation = Transformation::createGeocentricTranslations(
             PropertyMap(), GeographicCRS::EPSG_4269, GeographicCRS::EPSG_4326,
             1.0, 2.0, 3.0, {});
-        EXPECT_TRUE(
-            transformation->isPROJInstantiable(DatabaseContext::create()));
+        EXPECT_TRUE(transformation->isPROJInstantiable(
+            DatabaseContext::create(), false));
     }
 
     // Missing grid
@@ -8271,8 +8270,8 @@ TEST(operation, isPROJInstantiable) {
         auto transformation = Transformation::createNTv2(
             PropertyMap(), GeographicCRS::EPSG_4807, GeographicCRS::EPSG_4326,
             "foo.gsb", std::vector<PositionalAccuracyNNPtr>());
-        EXPECT_FALSE(
-            transformation->isPROJInstantiable(DatabaseContext::create()));
+        EXPECT_FALSE(transformation->isPROJInstantiable(
+            DatabaseContext::create(), false));
     }
 
     // Unsupported method
@@ -8283,8 +8282,8 @@ TEST(operation, isPROJInstantiable) {
                          PropertyMap(), std::vector<OperationParameterNNPtr>{}),
             std::vector<GeneralParameterValueNNPtr>{},
             std::vector<PositionalAccuracyNNPtr>{});
-        EXPECT_FALSE(
-            transformation->isPROJInstantiable(DatabaseContext::create()));
+        EXPECT_FALSE(transformation->isPROJInstantiable(
+            DatabaseContext::create(), false));
     }
 }
 
@@ -9650,4 +9649,50 @@ TEST(operation, normalizeForVisualization) {
                   "+step +proj=pop +v_3 "
                   "+step +proj=unitconvert +xy_in=rad +xy_out=deg");
     }
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(operation,
+     export_of_Geographic3D_to_GravityRelatedHeight_gtx_unknown_grid) {
+
+    auto wkt =
+        "COORDINATEOPERATION[\"bla\",\n"
+        "    SOURCECRS[\n"
+        "        GEOGCRS[\"ETRS89\",\n"
+        "            DATUM[\"European Terrestrial Reference System 1989\",\n"
+        "                ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n"
+        "                    LENGTHUNIT[\"metre\",1]]],\n"
+        "            PRIMEM[\"Greenwich\",0,\n"
+        "                ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+        "            CS[ellipsoidal,3],\n"
+        "                AXIS[\"geodetic latitude (Lat)\",north,\n"
+        "                    ORDER[1],\n"
+        "                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+        "                AXIS[\"geodetic longitude (Lon)\",east,\n"
+        "                    ORDER[2],\n"
+        "                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+        "                AXIS[\"ellipsoidal height (h)\",up,\n"
+        "                    ORDER[3],\n"
+        "                    LENGTHUNIT[\"metre\",1]],\n"
+        "            ID[\"EPSG\",4937]]],\n"
+        "    TARGETCRS[\n"
+        "        VERTCRS[\"bar\",\n"
+        "            VDATUM[\"bar\"],\n"
+        "            CS[vertical,1],\n"
+        "                AXIS[\"gravity-related height (H)\",up,\n"
+        "                    LENGTHUNIT[\"metre\",1]]]],\n"
+        "    METHOD[\"Geographic3D to GravityRelatedHeight (gtx)\",\n"
+        "        ID[\"EPSG\",9665]],\n"
+        "    PARAMETERFILE[\"Geoid (height correction) model "
+        "file\",\"foo.gtx\"]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<Transformation>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    // Test that even if the .gtx file is unkown, we export in the correct
+    // direction
+    EXPECT_EQ(crs->exportToPROJString(PROJStringFormatter::create().get()),
+              "+proj=pipeline +step +inv +proj=vgridshift +grids=foo.gtx "
+              "+multiplier=1");
 }
