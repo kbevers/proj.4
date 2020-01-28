@@ -415,11 +415,8 @@ int AreaIdPoint(PJ_LP lp) // TODO: Endre namn og argument
 
 PJ_LP proj_commonPointInit(PJ_LP lp)
 {
-	std::vector<PJ_LP_Pair> commonPointList;	
-	
-	// char* fileName = "C:/Users/Administrator/source/repos/Skproj/Octave/lan1_fellesp_20081014.cpt";
-	// char* fileName = "../../proj-datumgrid/europe/EUREF89_NGO48_20081014.cpt";
-	// TODO: Init cpt fil
+	std::vector<PJ_LP_Pair> commonPointList;
+
 	char* fileName = "C:/Users/Administrator/source/repos/proj-datumgrid/europe/EUREF89_NGO48_20081014.cpt";
 
 	std::ifstream file(fileName, std::ios::in | std::ios::binary | std::ios::ate);
@@ -430,7 +427,7 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 	{
 		int bufferSize8 = 8;
 		int bufferSize4 = 4;
-		std::string name = "";
+		char name[8];
 
 		char *charBuffer8 = new char[bufferSize8];
 		char *charBuffer4 = new char[bufferSize4];
@@ -442,13 +439,9 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 			PJ_LP_Pair commonPoint;
 
 			file.read(charBuffer8, bufferSize8);
-			name = "";
 
 			for (int i = 0; i < bufferSize8; i++)
-				name += charBuffer8[i];
-
-			// TODO: Fix this:
-		    // commonPoint.name = name;
+				commonPoint.name[i] = charBuffer8[i];
 
 			file.read(charBuffer8, bufferSize8);
 			commonPoint.fromPoint.phi = *(reinterpret_cast<double*>(charBuffer8));
@@ -575,9 +568,6 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
 	proj_helmert_apply(P, point.lp, PJ_FWD);
 
-	// DETTE FUNKAR!!! :-)
-	// TODO: Transformasjon inn her
-
 	return point.xyz;
 }
 
@@ -586,7 +576,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.xyz = xyz;
 
-	// TODO: Transformasjon inn her
+	proj_helmert_apply(P, point.lp, PJ_INV);	
 
 	return point.lpz;
 }

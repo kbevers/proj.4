@@ -47,10 +47,10 @@ struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 		return nullptr;
 	}
 
-	//cp ->cvs = nullptr; ?
+	cp->noOfPoints = 0;
+	cp->pJ_LP_PairList = nullptr; 
 
 	return cp;
-
 }
 
 PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
@@ -129,20 +129,22 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 {
 	struct COMMONPOINTS cp_tmp;
-	//struct COMMONPOINTS *cp_tmptest;
 
-	std::vector<PJ_LP_Pair> pJLPList;
+	//struct COMMONPOINTS *cp_tmptest;
+	//cp_tmp = (COMMONPOINTS *)pj_calloc(1, sizeof(struct COMMONPOINTS));
 
 	if (gi == nullptr || gi->cp == nullptr)
 		return 0;
 
 	pj_acquire_lock();
 
-	if (gi->cp->pJ_LP_PairList != nullptr)
+	if (gi->cp->pJ_LP_PairList != nullptr || gi->cp->noOfPoints > 0)
 	{
 		pj_release_lock();
 		return 1;
 	}
+
+	memcpy(&cp_tmp, gi->cp, sizeof(struct COMMONPOINTS));
 
 	PAFile fid;
 	int result;
@@ -155,6 +157,11 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 		pj_release_lock();
 		return 0;
 	}
+
+	std::vector<PJ_LP_Pair> *pJLPList = cp_tmp.pJ_LP_PairList;   // gi->cp->pJ_LP_PairList;
+
+	pJLPList = (std::vector<PJ_LP_Pair> *)pj_calloc(1, sizeof(struct std::vector<PJ_LP_Pair>));
+
 	int noOfPoints = 0;
 	size_t a_size = sizeof(struct PJ_LP_Pair) - 4;
 
@@ -166,15 +173,13 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 		PJ_LP_Pair *pair = (PJ_LP_Pair *)pj_calloc(1, sizeof(struct PJ_LP_Pair));		
 		pj_ctx_fread(ctx, pair, sizeof(struct PJ_LP_Pair), 1, fid);	
 
-		pJLPList.push_back(*pair);
+		pJLPList->push_back(*pair);
 	}
 
-	gi->cp->pJ_LP_PairList = &pJLPList;
+	gi->cp->noOfPoints = noOfPoints;
+	gi->cp->pJ_LP_PairList = pJLPList;
 
 	pj_ctx_fclose(ctx, fid);
-
-
-	//if (gi->cp->pJ_LP_PairList != nullptr)
 
 	return 1;
 }

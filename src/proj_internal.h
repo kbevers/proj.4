@@ -829,7 +829,8 @@ struct PJ_LP_Pair
 };
 
 struct COMMONPOINTS
-{	
+{
+	int noOfPoints = 0;
 	std::vector<PJ_LP_Pair>* pJ_LP_PairList = nullptr;
 };
 
