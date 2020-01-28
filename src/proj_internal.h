@@ -797,7 +797,6 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 
 #endif /* def PJ_LIB__ */
 
-
 // Area boundary struct
 struct AreaBoundary
 {
@@ -822,17 +821,16 @@ struct MultiPolygon
 
 struct PJ_LP_Pair
 {
-	std::string name;
+	char name[8];
 	PJ_LP fromPoint;
 	PJ_LP toPoint;
 	__int32 area;
 	double dist;
-}; 
+};
 
 struct COMMONPOINTS
-{
-	char* filename;
-	std::vector<PJ_LP_Pair>* pJ_LP_PairList;
+{	
+	std::vector<PJ_LP_Pair>* pJ_LP_PairList = nullptr;
 };
 
 typedef struct pj_cp
@@ -846,6 +844,7 @@ typedef struct pj_cp
 	struct pj_cp *next;
 	struct pj_cp *child;
 } PJ_COMMONPOINTS;
+
 /* procedure prototypes */
 double PROJ_DLL dmstor(const char *, char **);
 double dmstor_ctx(projCtx_t *ctx, const char *, char **);

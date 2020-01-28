@@ -326,7 +326,7 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 }
 
 bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
-{
+{ 
 	return lhs.dist < rhs.dist;
 }
 
@@ -447,7 +447,8 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 			for (int i = 0; i < bufferSize8; i++)
 				name += charBuffer8[i];
 
-			commonPoint.name = name;
+			// TODO: Fix this:
+		    // commonPoint.name = name;
 
 			file.read(charBuffer8, bufferSize8);
 			commonPoint.fromPoint.phi = *(reinterpret_cast<double*>(charBuffer8));
@@ -483,27 +484,6 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 	return lp;
 }
 
-static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
-{
-	PJ_COORD point = { {0,0,0,0} };
-	point.lpz = lpz;
-
-	// DETTE FUNKAR!!! :-)
-	// TODO: Transformasjon inn her
-
-	return point.xyz;
-}
-
-static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
-{
-	PJ_COORD point = { {0,0,0,0} };
-	point.xyz = xyz;
-
-	// TODO: Transformasjon inn her
-
-	return point.lpz;
-}
-
 int proj_cp_init(PJ* P, const char *cps)
 {
 	char *scps = (char *)pj_malloc((strlen(cps) + 1 + 1) * sizeof(char));
@@ -525,43 +505,6 @@ int proj_cp_init(PJ* P, const char *cps)
 
 	pj_dealloc(scps);
 	return P->cplist_count;
-}
-
-PJ *TRANSFORMATION(helmertcollocation, 0)
-{	 
-	// Do not need a opaque struct
-	/*	struct pj_opaque_hgridshift *Q = static_cast<struct pj_opaque_hgridshift*>(pj_calloc(1, sizeof(struct pj_opaque_hgridshift)));
-	
-	if (nullptr == Q)
-		return pj_default_destructor(P, ENOMEM);	
-	P->opaque = (void *)Q;
-	*/
-
-	P->fwd4d = nullptr;
-	P->inv4d = nullptr;
-	P->fwd3d = forward_3d;
-	P->inv3d = reverse_3d;
-	P->fwd = nullptr;
-	P->inv = nullptr;
-
-	// ?
-	P->left = PJ_IO_UNITS_RADIANS; 
-	P->right = PJ_IO_UNITS_RADIANS;
-
-	if (0 == pj_param(P->ctx, P->params, "tcp_trans").i) 
-	{
-		proj_log_error(P, "hgridshift: +cp_trans parameter missing.");
-		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
-	}
-	
-	proj_cp_init(P, "cp_trans");
-
-	if (proj_errno(P))
-	{
-		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
-		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPL);
-	}
-	return P;
 }
 
 struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPOINTS **cps)
@@ -625,3 +568,61 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 	return out;
 }
 
+static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
+{
+	PJ_COORD point = { {0,0,0,0} };
+	point.lpz = lpz;
+
+	proj_helmert_apply(P, point.lp, PJ_FWD);
+
+	// DETTE FUNKAR!!! :-)
+	// TODO: Transformasjon inn her
+
+	return point.xyz;
+}
+
+static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
+{
+	PJ_COORD point = { {0,0,0,0} };
+	point.xyz = xyz;
+
+	// TODO: Transformasjon inn her
+
+	return point.lpz;
+}
+
+PJ *TRANSFORMATION(helmertcollocation, 0)
+{	 
+	// Do not need a opaque struct
+	/*	struct pj_opaque_hgridshift *Q = static_cast<struct pj_opaque_hgridshift*>(pj_calloc(1, sizeof(struct pj_opaque_hgridshift)));
+	if (nullptr == Q)
+		return pj_default_destructor(P, ENOMEM);	
+	P->opaque = (void *)Q;
+	*/
+
+	P->fwd4d = nullptr;
+	P->inv4d = nullptr;
+	P->fwd3d = forward_3d;
+	P->inv3d = reverse_3d;
+	P->fwd = nullptr;
+	P->inv = nullptr;
+
+	// ?
+	P->left = PJ_IO_UNITS_RADIANS; 
+	P->right = PJ_IO_UNITS_RADIANS;
+
+	if (0 == pj_param(P->ctx, P->params, "tcp_trans").i) 
+	{
+		proj_log_error(P, "hgridshift: +cp_trans parameter missing.");
+		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
+	}
+	
+	proj_cp_init(P, "cp_trans");
+
+	if (proj_errno(P))
+	{
+		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
+		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPL);
+	}
+	return P;
+}
