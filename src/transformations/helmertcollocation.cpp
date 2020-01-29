@@ -205,17 +205,17 @@ static void testReadGeojson(/*char* fileName*/)
 *
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP lp)
+static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP *lp)
 {
 	auto n = commonPointList->size();
 
 	double k = 0.00039;
-	double c = 0.06900;
+	double c = 0.06900 * M_PI / 180.0;
 
-	double coslat = cos(lp.phi * M_PI / 180.0);
+	double coslat = cos(lp->phi);
 
-	double x = lp.phi;
-	double y = lp.lam * coslat;
+	double x = lp->phi;
+	double y = lp->lam * coslat;
 
 	MatrixXd cnn(n, n);
 	MatrixXd cmn(n, 1);
@@ -323,6 +323,9 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 
 	double xEst = xTrans + smx(0);
 	double yEst = yTrans + smy(0);
+
+	lp->phi = xEst;
+	lp->lam = yEst / coslat;
 }
 
 bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
@@ -333,43 +336,22 @@ bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-std::vector<PJ_LP_Pair> findClosestPoints(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP lp, int n, int areaId)
+std::vector<PJ_LP_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, int n, int areaId)
 {
 	std::vector<PJ_LP_Pair> distances;
 	std::vector<PJ_LP_Pair> closestDistances;
-	double coslat = cos(lp.phi * M_PI / 180.0);
- 
-	for each (PJ_LP_Pair pair in *(commonPointList))
-	{
-		double deltaPhi = pair.fromPoint.phi - lp.phi;
-		double deltaLam = (pair.fromPoint.lam - lp.lam) * coslat;
 
-		pair.dist = sqrt((deltaPhi * deltaPhi) + (deltaLam * deltaLam));
-		distances.push_back(pair);
-	}
-
-	std::sort(distances.begin(), distances.end(), DistanceLess);
-
-	for (int i = 0; i < n; i++)
-		closestDistances.push_back(distances[i]);
-
-	return closestDistances;
-}
-
-std::vector<PJ_LP_Pair> findClosestPoints2(COMMONPOINTS *commonPointList, PJ_LP lp, int n, int areaId)
-{
-	std::vector<PJ_LP_Pair> distances;
-	std::vector<PJ_LP_Pair> closestDistances;
-	double coslat = cos(lp.phi * M_PI / 180.0);	
+	double coslat = cos(lp.phi);   
 
 	for (int i = 0; i < commonPointList->noOfPoints; i++)
 	{
-
 		PJ_LP_Pair pair = commonPointList->pJ_LP_PairList->at(i);
+
 		double deltaPhi = pair.fromPoint.phi - lp.phi;
 		double deltaLam = (pair.fromPoint.lam - lp.lam) * coslat;
 
-		pair.dist = sqrt((deltaPhi * deltaPhi) + (deltaLam * deltaLam));
+		pair.dist = hypot(deltaPhi, deltaLam);
+		 
 		distances.push_back(pair);
 	}
 
@@ -495,10 +477,10 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 	int numberOfSelectedPoints = 20;
 
 	// TODO: Flytte kalla	
-	auto closestPoints = findClosestPoints(&commonPointList, lp, numberOfSelectedPoints, areaId);
+	//auto closestPoints = findClosestPoints(&commonPointList, lp, numberOfSelectedPoints, areaId);
 
 	// TODO: Leggje inn Helmert her.
-	calculateHelmertParameters(&closestPoints, lp);
+	//calculateHelmertParameters(&closestPoints, lp);
 
 	return lp;
 }
@@ -593,9 +575,12 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 	// TODO: New switch in proj string
 	int numberOfSelectedPoints = 20;
 
-	auto closestPoints = findClosestPoints2(cp, lp, numberOfSelectedPoints, areaId);
+	// TODO: Feil. Returnerer usortert liste
+	auto closestPoints = findClosestPoints(cp, lp, numberOfSelectedPoints, areaId);
 
-	calculateHelmertParameters(&closestPoints, lp);
+	// TODO: Splitting up...
+	calculateHelmertParameters(&closestPoints, &lp);
+	out = lp;
 
 	return out;
 }
@@ -605,7 +590,9 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
 	
-	auto newpoint =	proj_helmert_apply(P, point.lp, PJ_FWD);
+	//auto newpoint = proj_helmert_apply(P, point.lp, PJ_FWD);
+
+	point.lp = proj_helmert_apply(P, point.lp, PJ_FWD);
 
 	return point.xyz;
 }
