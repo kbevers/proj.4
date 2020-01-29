@@ -338,9 +338,34 @@ std::vector<PJ_LP_Pair> findClosestPoints(std::vector<PJ_LP_Pair> *commonPointLi
 	std::vector<PJ_LP_Pair> distances;
 	std::vector<PJ_LP_Pair> closestDistances;
 	double coslat = cos(lp.phi * M_PI / 180.0);
-
+ 
 	for each (PJ_LP_Pair pair in *(commonPointList))
 	{
+		double deltaPhi = pair.fromPoint.phi - lp.phi;
+		double deltaLam = (pair.fromPoint.lam - lp.lam) * coslat;
+
+		pair.dist = sqrt((deltaPhi * deltaPhi) + (deltaLam * deltaLam));
+		distances.push_back(pair);
+	}
+
+	std::sort(distances.begin(), distances.end(), DistanceLess);
+
+	for (int i = 0; i < n; i++)
+		closestDistances.push_back(distances[i]);
+
+	return closestDistances;
+}
+
+std::vector<PJ_LP_Pair> findClosestPoints2(COMMONPOINTS *commonPointList, PJ_LP lp, int n, int areaId)
+{
+	std::vector<PJ_LP_Pair> distances;
+	std::vector<PJ_LP_Pair> closestDistances;
+	double coslat = cos(lp.phi * M_PI / 180.0);	
+
+	for (int i = 0; i < commonPointList->noOfPoints; i++)
+	{
+
+		PJ_LP_Pair pair = commonPointList->pJ_LP_PairList->at(i);
 		double deltaPhi = pair.fromPoint.phi - lp.phi;
 		double deltaLam = (pair.fromPoint.lam - lp.lam) * coslat;
 
@@ -466,6 +491,7 @@ PJ_LP proj_commonPointInit(PJ_LP lp)
 		file.close();
 	};
 
+	// TODO: New switch in proj string
 	int numberOfSelectedPoints = 20;
 
 	// TODO: Flytte kalla	
@@ -558,6 +584,19 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 		 
 		return out;
 	}
+
+	// TODO: Reverse transformation...
+
+	// Testing:
+	int areaId = AreaIdPoint(lp);
+
+	// TODO: New switch in proj string
+	int numberOfSelectedPoints = 20;
+
+	auto closestPoints = findClosestPoints2(cp, lp, numberOfSelectedPoints, areaId);
+
+	calculateHelmertParameters(&closestPoints, lp);
+
 	return out;
 }
 
@@ -565,8 +604,8 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 {
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
-
-	proj_helmert_apply(P, point.lp, PJ_FWD);
+	
+	auto newpoint =	proj_helmert_apply(P, point.lp, PJ_FWD);
 
 	return point.xyz;
 }
@@ -576,7 +615,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.xyz = xyz;
 
-	proj_helmert_apply(P, point.lp, PJ_INV);	
+	auto newpoint = proj_helmert_apply(P, point.lp, PJ_INV);
 
 	return point.lpz;
 }
