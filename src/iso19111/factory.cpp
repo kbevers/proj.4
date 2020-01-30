@@ -987,7 +987,8 @@ bool DatabaseContext::lookForGridInfo(
         openLicense = (row[3].empty() ? row[4] : row[3]) == "1";
         directDownload = (row[5].empty() ? row[6] : row[5]) == "1";
 
-        if (considerKnownGridsAsAvailable && !packageName.empty()) {
+        if (considerKnownGridsAsAvailable &&
+            (!packageName.empty() || (!url.empty() && openLicense))) {
             gridAvailable = true;
         }
 
@@ -1011,6 +1012,30 @@ bool DatabaseContext::isKnownName(const std::string &name,
     sql += replaceAll(tableName, "\"", "\"\"");
     sql += "\" WHERE name = ? LIMIT 1";
     return !d->run(sql, {name}).empty();
+}
+// ---------------------------------------------------------------------------
+
+std::string
+DatabaseContext::getProjGridName(const std::string &oldProjGridName) {
+    auto res = d->run("SELECT proj_grid_name FROM grid_alternatives WHERE "
+                      "old_proj_grid_name = ?",
+                      {oldProjGridName});
+    if (res.empty()) {
+        return std::string();
+    }
+    return res.front()[0];
+}
+
+// ---------------------------------------------------------------------------
+
+std::string DatabaseContext::getOldProjGridName(const std::string &gridName) {
+    auto res = d->run("SELECT old_proj_grid_name FROM grid_alternatives WHERE "
+                      "proj_grid_name = ?",
+                      {gridName});
+    if (res.empty()) {
+        return std::string();
+    }
+    return res.front()[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -5214,9 +5239,9 @@ AuthorityFactory::createObjectsFromName(
     }
 
     std::string sql(
-        "SELECT table_name, auth_name, code, name, deprecated FROM ("
-        "SELECT table_name, auth_name, code, name, deprecated FROM object_view "
-        "WHERE ");
+        "SELECT table_name, auth_name, code, name, deprecated, is_alias FROM ("
+        "SELECT table_name, auth_name, code, name, deprecated, 0 as is_alias "
+        "FROM object_view WHERE ");
     if (deprecated) {
         sql += "deprecated = 1 AND ";
     }
@@ -5348,7 +5373,7 @@ AuthorityFactory::createObjectsFromName(
     sql += " UNION SELECT ov.table_name AS table_name, "
            "ov.auth_name AS auth_name, "
            "ov.code AS code, a.alt_name AS name, "
-           "ov.deprecated AS deprecated FROM object_view ov "
+           "ov.deprecated AS deprecated, 1 as is_alias FROM object_view ov "
            "JOIN alias_name a ON ov.table_name = a.table_name AND "
            "ov.auth_name = a.auth_name AND ov.code = a.code WHERE ";
     if (deprecated) {
@@ -5364,7 +5389,7 @@ AuthorityFactory::createObjectsFromName(
     }
     sql += getTableNameConstraint("ov.table_name");
 
-    sql += ") ORDER BY deprecated, length(name), name";
+    sql += ") ORDER BY deprecated, is_alias, length(name), name";
     if (limitResultCount > 0 &&
         limitResultCount <
             static_cast<size_t>(std::numeric_limits<int>::max()) &&
