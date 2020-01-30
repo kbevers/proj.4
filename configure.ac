@@ -89,7 +89,6 @@ dnl C++ specific stuff
 
 AC_LANG_PUSH([C++])
 AX_CHECK_COMPILE_FLAG([-Wunused-private-field], [CXX_WFLAGS="$CXX_WFLAGS -Wunused-private-field"],,[$ERROR_ON_UNKNOWN_OPTIONS])
-AX_CHECK_COMPILE_FLAG([-Wmissing-prototypes], [CXX_WFLAGS="$CXX_WFLAGS -Wmissing-prototypes"],,[$ERROR_ON_UNKNOWN_OPTIONS])
 AX_CHECK_COMPILE_FLAG([-Wmissing-declarations], [CXX_WFLAGS="$CXX_WFLAGS -Wmissing-declarations"],,[$ERROR_ON_UNKNOWN_OPTIONS])
 AX_CHECK_COMPILE_FLAG([-Wnon-virtual-dtor], [CXX_WFLAGS="$CXX_WFLAGS -Wnon-virtual-dtor" NO_NON_VIRTUAL_DTOR_FLAG="-Wno-non-virtual-dtor"],,[$ERROR_ON_UNKNOWN_OPTIONS])
 AX_CHECK_COMPILE_FLAG([-Wold-style-cast], [WARN_OLD_STYLE_CAST="-Wold-style-cast"],,[$ERROR_ON_UNKNOWN_OPTIONS])
@@ -255,8 +254,8 @@ dnl ---------------------------------------------------------------------------
 dnl Check for libtiff
 dnl ---------------------------------------------------------------------------
 
-AC_ARG_ENABLE([tiff-is-strongly-discouraged],
-              AS_HELP_STRING([--disable-tiff-is-strongly-discouraged],
+AC_ARG_ENABLE([tiff],
+              AS_HELP_STRING([--disable-tiff],
                     [Disable TIFF support. Strongly discouraged !]),
               [enable_tiff=no],
               [enable_tiff=yes])
@@ -284,7 +283,7 @@ CURL_CFLAGS=
 CURL_LIB=
 
 AC_ARG_WITH(curl,
-    [  --with-curl[=ARG]       Enable curl support (ARG=path to curl-config.)],,,)
+    [  --with-curl[=ARG]         Enable curl support (ARG=path to curl-config.)],,,)
 
 dnl Clear some cache variables
 unset ac_cv_path_LIBCURL

@@ -29,6 +29,8 @@
 #define FILEMANAGER_HPP_INCLUDED
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "proj.h"
 #include "proj/util.hpp"
@@ -74,6 +76,8 @@ class FileManager {
 class File {
   protected:
     std::string name_;
+    std::string readLineBuffer_{};
+    bool eofReadLine_ = false;
     explicit File(const std::string &name);
 
   public:
@@ -84,6 +88,7 @@ class File {
     virtual unsigned long long tell() = 0;
     virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
     virtual bool hasChanged() const = 0;
+    std::string read_line(size_t maxLen, bool &maxLenReached, bool &eofReached);
 
     const std::string &name() const { return name_; }
 };
@@ -92,8 +97,9 @@ class File {
 
 std::unique_ptr<File> pj_network_file_open(PJ_CONTEXT *ctx,
                                            const char *filename);
-
 NS_PROJ_END
+
+std::vector<std::string> pj_get_default_searchpaths(PJ_CONTEXT *ctx);
 
 //! @endcond Doxygen_Suppress
 

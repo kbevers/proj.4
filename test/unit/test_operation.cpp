@@ -4460,7 +4460,8 @@ TEST(operation, geogCRS_to_geogCRS_context_inverse_needed) {
                           .get()),
                   "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
                   "+proj=unitconvert +xy_in=deg +xy_out=rad +step "
-                  "+proj=hgridshift +grids=ntf_r93.gsb +step +proj=unitconvert "
+                  "+proj=hgridshift +grids=fr_ign_ntf_r93.tif +step "
+                  "+proj=unitconvert "
                   "+xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1");
     }
     {
@@ -4478,7 +4479,8 @@ TEST(operation, geogCRS_to_geogCRS_context_inverse_needed) {
             list[0]->exportToPROJString(PROJStringFormatter::create().get()),
             "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
             "+proj=unitconvert +xy_in=deg +xy_out=rad +step "
-            "+proj=hgridshift +grids=ntf_r93.gsb +step +proj=unitconvert "
+            "+proj=hgridshift +grids=fr_ign_ntf_r93.tif +step "
+            "+proj=unitconvert "
             "+xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1");
     }
     {
@@ -4496,7 +4498,8 @@ TEST(operation, geogCRS_to_geogCRS_context_inverse_needed) {
             list[0]->exportToPROJString(PROJStringFormatter::create().get()),
             "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
             "+proj=unitconvert +xy_in=deg +xy_out=rad +step +inv "
-            "+proj=hgridshift +grids=ntf_r93.gsb +step +proj=unitconvert "
+            "+proj=hgridshift +grids=fr_ign_ntf_r93.tif +step "
+            "+proj=unitconvert "
             "+xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1");
     }
 }
@@ -4521,17 +4524,18 @@ TEST(operation, geogCRS_to_geogCRS_context_ntv1_ntv2_ctable2) {
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=hgridshift "
-              "+grids=ntv1_can.dat +step +proj=unitconvert +xy_in=rad "
+              "+grids=ca_nrc_ntv1_can.tif +step +proj=unitconvert +xy_in=rad "
               "+xy_out=deg +step +proj=axisswap +order=2,1");
     EXPECT_EQ(list[1]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=hgridshift "
-              "+grids=ntv2_0.gsb +step +proj=unitconvert +xy_in=rad "
+              "+grids=ca_nrc_ntv2_0.tif +step +proj=unitconvert +xy_in=rad "
               "+xy_out=deg +step +proj=axisswap +order=2,1");
     EXPECT_EQ(list[2]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=hgridshift "
-              "+grids=conus +step +proj=unitconvert +xy_in=rad +xy_out=deg "
+              "+grids=us_noaa_conus.tif +step +proj=unitconvert +xy_in=rad "
+              "+xy_out=deg "
               "+step +proj=axisswap +order=2,1");
 }
 
@@ -4587,7 +4591,7 @@ TEST(operation, geogCRS_to_geogCRS_context_NAD27_to_WGS84_G1762) {
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 "
               "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
-              "+step +proj=hgridshift +grids=ntv2_0.gsb "
+              "+step +proj=hgridshift +grids=ca_nrc_ntv2_0.tif "
               "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
               "+step +proj=axisswap +order=2,1");
     EXPECT_EQ(list[1]->nameStr(),
@@ -4676,7 +4680,7 @@ TEST(operation, vertCRS_to_geogCRS_context) {
                           PROJStringFormatter::Convention::PROJ_5,
                           authFactory->databaseContext())
                           .get()),
-                  "+proj=vgridshift +grids=egm08_25.gtx +multiplier=1");
+                  "+proj=vgridshift +grids=us_nga_egm08_25.tif +multiplier=1");
     }
     {
         auto ctxt =
@@ -4689,7 +4693,7 @@ TEST(operation, vertCRS_to_geogCRS_context) {
         ASSERT_EQ(list.size(), 2U);
         EXPECT_EQ(
             list[0]->exportToPROJString(PROJStringFormatter::create().get()),
-            "+proj=vgridshift +grids=egm08_25.gtx +multiplier=1");
+            "+proj=vgridshift +grids=us_nga_egm08_25.tif +multiplier=1");
     }
     {
         auto ctxt =
@@ -4702,7 +4706,8 @@ TEST(operation, vertCRS_to_geogCRS_context) {
         ASSERT_EQ(list.size(), 2U);
         EXPECT_EQ(
             list[0]->exportToPROJString(PROJStringFormatter::create().get()),
-            "+proj=pipeline +step +inv +proj=vgridshift +grids=egm08_25.gtx "
+            "+proj=pipeline +step +inv +proj=vgridshift "
+            "+grids=us_nga_egm08_25.tif "
             "+multiplier=1");
     }
     {
@@ -4728,7 +4733,7 @@ TEST(operation, vertCRS_to_geogCRS_context) {
         ASSERT_EQ(list.size(), 1U);
         EXPECT_EQ(
             list[0]->exportToPROJString(PROJStringFormatter::create().get()),
-            "+proj=vgridshift +grids=nzgeoid2016.gtx +multiplier=1");
+            "+proj=vgridshift +grids=nz_linz_nzgeoid2016.tif +multiplier=1");
     }
 }
 
@@ -4821,14 +4826,29 @@ TEST(operation, geogCRS_to_geogCRS_context_concatenated_operation) {
         authFactory->createCoordinateReferenceSystem("4807"), // NTF(Paris)
         authFactory->createCoordinateReferenceSystem("4171"), // RGF93
         ctxt);
-    ASSERT_EQ(list.size(), 3U);
+    ASSERT_EQ(list.size(), 5U);
     EXPECT_EQ(list[0]->nameStr(), "NTF (Paris) to RGF93 (2)");
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=grad +xy_out=rad +step +inv "
               "+proj=longlat +ellps=clrk80ign +pm=paris +step +proj=hgridshift "
-              "+grids=ntf_r93.gsb +step +proj=unitconvert +xy_in=rad "
+              "+grids=fr_ign_ntf_r93.tif +step +proj=unitconvert +xy_in=rad "
               "+xy_out=deg +step +proj=axisswap +order=2,1");
+
+    EXPECT_EQ(list[1]->nameStr(), "NTF (Paris) to NTF (1) + NTF to RGF93 (1)");
+    EXPECT_EQ(list[1]->exportToPROJString(PROJStringFormatter::create().get()),
+              "+proj=pipeline "
+              "+step +proj=axisswap +order=2,1 "
+              "+step +proj=unitconvert +xy_in=grad +xy_out=rad "
+              "+step +inv +proj=longlat +ellps=clrk80ign +pm=paris "
+              "+step +proj=push +v_3 "
+              "+step +proj=cart +ellps=clrk80ign "
+              "+step +proj=xyzgridshift +grids=fr_ign_gr3df97a.tif "
+              "+grid_ref=output_crs +ellps=GRS80 "
+              "+step +inv +proj=cart +ellps=GRS80 "
+              "+step +proj=pop +v_3 "
+              "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
+              "+step +proj=axisswap +order=2,1");
 
     EXPECT_TRUE(nn_dynamic_pointer_cast<ConcatenatedOperation>(list[0]) !=
                 nullptr);
@@ -4875,7 +4895,7 @@ TEST(operation, geogCRS_to_geogCRS_context_same_grid_name) {
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=hgridshift "
-              "+grids=BETA2007.gsb +step +proj=unitconvert +xy_in=rad "
+              "+grids=de_adv_BETA2007.tif +step +proj=unitconvert +xy_in=rad "
               "+xy_out=deg +step +proj=axisswap +order=2,1");
 }
 
@@ -4919,7 +4939,7 @@ TEST(operation, geogCRS_to_geogCRS_CH1903_to_CH1903plus_context) {
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 "
               "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
-              "+step +proj=hgridshift +grids=CHENyx06a.gsb "
+              "+step +proj=hgridshift +grids=ch_swisstopo_CHENyx06a.tif "
               "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
               "+step +proj=axisswap +order=2,1");
 
@@ -4973,7 +4993,7 @@ TEST(operation, geogCRS_to_geogCRS_init_IGNF_to_init_IGNF_context) {
               "NOUVELLE TRIANGULATION DE LA FRANCE (NTF) vers RGF93 (ETRS89)");
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad "
-              "+step +proj=hgridshift +grids=ntf_r93.gsb +step "
+              "+step +proj=hgridshift +grids=fr_ign_ntf_r93.tif +step "
               "+proj=unitconvert +xy_in=rad +xy_out=deg");
 }
 
@@ -5541,11 +5561,12 @@ TEST(operation,
         "NTF (Paris) to NTF (1) + Inverse of WGS 84 to NTF (3) + UTM zone 31N");
     ASSERT_EQ(list[0]->coordinateOperationAccuracies().size(), 1U);
     EXPECT_EQ(list[0]->coordinateOperationAccuracies()[0]->value(), "1");
-    EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
-              "+proj=unitconvert +xy_in=grad +xy_out=rad +step +inv "
-              "+proj=longlat +ellps=clrk80ign +pm=paris +step +proj=hgridshift "
-              "+grids=ntf_r93.gsb +step +proj=utm +zone=31 +ellps=WGS84");
+    EXPECT_EQ(
+        list[0]->exportToPROJString(PROJStringFormatter::create().get()),
+        "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
+        "+proj=unitconvert +xy_in=grad +xy_out=rad +step +inv "
+        "+proj=longlat +ellps=clrk80ign +pm=paris +step +proj=hgridshift "
+        "+grids=fr_ign_ntf_r93.tif +step +proj=utm +zone=31 +ellps=WGS84");
 }
 
 // ---------------------------------------------------------------------------
@@ -6497,7 +6518,7 @@ static BoundCRSNNPtr createBoundVerticalCRS() {
     auto transformation =
         Transformation::createGravityRelatedHeightToGeographic3D(
             PropertyMap(), vertCRS, GeographicCRS::EPSG_4979, nullptr,
-            "egm08_25.gtx", std::vector<PositionalAccuracyNNPtr>());
+            "us_nga_egm08_25.tif", std::vector<PositionalAccuracyNNPtr>());
     return BoundCRS::create(vertCRS, GeographicCRS::EPSG_4979, transformation);
 }
 
@@ -6506,17 +6527,14 @@ static BoundCRSNNPtr createBoundVerticalCRS() {
 TEST(operation, transformation_height_to_PROJ_string) {
     auto transf = createBoundVerticalCRS()->transformation();
     EXPECT_EQ(transf->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=vgridshift +grids=egm08_25.gtx +multiplier=1");
+              "+proj=vgridshift +grids=us_nga_egm08_25.tif +multiplier=1");
 
     auto grids = transf->gridsNeeded(DatabaseContext::create(), false);
     ASSERT_EQ(grids.size(), 1U);
     auto gridDesc = *(grids.begin());
-    EXPECT_EQ(gridDesc.shortName, "egm08_25.gtx");
-    EXPECT_EQ(gridDesc.packageName, "proj-datumgrid-world");
-    EXPECT_TRUE(gridDesc.url.find(
-                    "https://download.osgeo.org/proj/proj-datumgrid-world-") ==
-                0)
-        << gridDesc.url;
+    EXPECT_EQ(gridDesc.shortName, "us_nga_egm08_25.tif");
+    EXPECT_TRUE(gridDesc.packageName.empty());
+    EXPECT_EQ(gridDesc.url, "https://cdn.proj.org/us_nga_egm08_25.tif");
     if (gridDesc.available) {
         EXPECT_TRUE(!gridDesc.fullName.empty()) << gridDesc.fullName;
         EXPECT_TRUE(gridDesc.fullName.find(gridDesc.shortName) !=
@@ -6625,7 +6643,8 @@ TEST(operation, transformation_NZLVD_to_PROJ_string) {
                   PROJStringFormatter::create(
                       PROJStringFormatter::Convention::PROJ_5, dbContext)
                       .get()),
-              "+proj=vgridshift +grids=auckht1946-nzvd2016.gtx +multiplier=1");
+              "+proj=vgridshift +grids=nz_linz_auckht1946-nzvd2016.tif "
+              "+multiplier=1");
 }
 
 // ---------------------------------------------------------------------------
@@ -6757,11 +6776,12 @@ TEST(operation, compoundCRS_with_boundVerticalCRS_to_geogCRS) {
     auto op = CoordinateOperationFactory::create()->createOperation(
         compound, GeographicCRS::EPSG_4979);
     ASSERT_TRUE(op != nullptr);
-    EXPECT_EQ(op->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
-              "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift "
-              "+grids=egm08_25.gtx +multiplier=1 +step +proj=unitconvert "
-              "+xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1");
+    EXPECT_EQ(
+        op->exportToPROJString(PROJStringFormatter::create().get()),
+        "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
+        "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift "
+        "+grids=us_nga_egm08_25.tif +multiplier=1 +step +proj=unitconvert "
+        "+xy_in=rad +xy_out=deg +step +proj=axisswap +order=2,1");
 }
 
 // ---------------------------------------------------------------------------
@@ -6816,7 +6836,7 @@ TEST(operation, compoundCRS_with_boundGeogCRS_and_boundVerticalCRS_to_geogCRS) {
               "+convention=position_vector "
               "+step +inv +proj=cart +ellps=WGS84 "
               "+step +proj=pop +v_3 "
-              "+step +proj=vgridshift +grids=egm08_25.gtx +multiplier=1 "
+              "+step +proj=vgridshift +grids=us_nga_egm08_25.tif +multiplier=1 "
               "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
               "+step +proj=axisswap +order=2,1");
 
@@ -6856,7 +6876,7 @@ TEST(operation, compoundCRS_with_boundProjCRS_and_boundVerticalCRS_to_geogCRS) {
               "+convention=position_vector "
               "+step +inv +proj=cart +ellps=WGS84 "
               "+step +proj=pop +v_3 "
-              "+step +proj=vgridshift +grids=egm08_25.gtx +multiplier=1 "
+              "+step +proj=vgridshift +grids=us_nga_egm08_25.tif +multiplier=1 "
               "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
               "+step +proj=axisswap +order=2,1");
 
@@ -7095,13 +7115,14 @@ TEST(operation, compoundCRS_to_compoundCRS_context) {
     EXPECT_EQ(list[0]->nameStr(), "NGVD29 height (ftUS) to NAVD88 height (3) + "
                                   "NAD27 to WGS 84 (79) + Inverse of "
                                   "NAD83(NSRS2007) to WGS 84 (1)");
-    EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
-              "+proj=unitconvert +xy_in=deg +z_in=us-ft +xy_out=rad +z_out=m "
-              "+step +proj=vgridshift +grids=vertcone.gtx +multiplier=0.001 "
-              "+step +proj=hgridshift +grids=conus +step "
-              "+proj=unitconvert +xy_in=rad +xy_out=deg +step +proj=axisswap "
-              "+order=2,1");
+    EXPECT_EQ(
+        list[0]->exportToPROJString(PROJStringFormatter::create().get()),
+        "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
+        "+proj=unitconvert +xy_in=deg +z_in=us-ft +xy_out=rad +z_out=m "
+        "+step +proj=vgridshift +grids=us_noaa_vertcone.tif +multiplier=1 "
+        "+step +proj=hgridshift +grids=us_noaa_conus.tif +step "
+        "+proj=unitconvert +xy_in=rad +xy_out=deg +step +proj=axisswap "
+        "+order=2,1");
     {
         // Test that we can round-trip this through WKT and still get the same
         // PROJ string.
@@ -7132,12 +7153,13 @@ TEST(operation, compoundCRS_to_compoundCRS_context) {
                       "Transformation from NGVD29 height (ftUS) to NAVD88 "
                       "height (ballpark vertical transformation) + NAD27 to "
                       "WGS 84 (79) + Inverse of NAD83(NSRS2007) to WGS 84 (1)");
-            EXPECT_EQ(projString,
-                      "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
-                      "+proj=unitconvert +xy_in=deg +z_in=us-ft +xy_out=rad "
-                      "+z_out=m +step +proj=hgridshift +grids=conus "
-                      "+step +proj=unitconvert +xy_in=rad "
-                      "+xy_out=deg +step +proj=axisswap +order=2,1");
+            EXPECT_EQ(
+                projString,
+                "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
+                "+proj=unitconvert +xy_in=deg +z_in=us-ft +xy_out=rad "
+                "+z_out=m +step +proj=hgridshift +grids=us_noaa_conus.tif "
+                "+step +proj=unitconvert +xy_in=rad "
+                "+xy_out=deg +step +proj=axisswap +order=2,1");
             foundApprox = true;
             break;
         }
@@ -7247,7 +7269,7 @@ TEST(operation, vertCRS_to_vertCRS_context) {
     ASSERT_EQ(list.size(), 3U);
     EXPECT_EQ(list[0]->nameStr(), "NGVD29 height (m) to NAVD88 height (3)");
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=vgridshift +grids=vertcone.gtx +multiplier=0.001");
+              "+proj=vgridshift +grids=us_noaa_vertcone.tif +multiplier=1");
 }
 
 // ---------------------------------------------------------------------------
@@ -7263,7 +7285,8 @@ TEST(operation, vertCRS_to_vertCRS_New_Zealand_context) {
         authFactory->createCoordinateReferenceSystem("5759"), ctxt);
     ASSERT_EQ(list.size(), 1U);
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=vgridshift +grids=auckht1946-nzvd2016.gtx +multiplier=1");
+              "+proj=vgridshift +grids=nz_linz_auckht1946-nzvd2016.tif "
+              "+multiplier=1");
 }
 
 // ---------------------------------------------------------------------------
@@ -7334,7 +7357,8 @@ TEST(operation, compoundCRS_to_geogCRS_3D_context) {
                           .get()),
                   "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
                   "+proj=unitconvert +xy_in=deg +xy_out=rad +step "
-                  "+proj=hgridshift +grids=conus +step +proj=unitconvert "
+                  "+proj=hgridshift +grids=us_noaa_conus.tif "
+                  "+step +proj=unitconvert "
                   "+xy_in=rad +z_in=us-ft +xy_out=deg +z_out=m +step "
                   "+proj=axisswap +order=2,1");
     }
@@ -7365,7 +7389,7 @@ TEST(operation, compoundCRS_to_geogCRS_3D_context) {
                   "+proj=pipeline "
                   "+step +proj=axisswap +order=2,1 "
                   "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
-                  "+step +proj=vgridshift +grids=geoid09_conus.gtx "
+                  "+step +proj=vgridshift +grids=us_noaa_geoid09_conus.tif "
                   "+multiplier=1 "
                   "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
                   "+step +proj=axisswap +order=2,1");
@@ -7406,7 +7430,7 @@ TEST(operation, compoundCRS_to_geogCRS_3D_context) {
                   "+proj=pipeline "
                   "+step +proj=axisswap +order=2,1 "
                   "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
-                  "+step +proj=vgridshift +grids=geoid09_conus.gtx "
+                  "+step +proj=vgridshift +grids=us_noaa_geoid09_conus.tif "
                   "+multiplier=1 "
                   "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
                   "+step +proj=axisswap +order=2,1");
@@ -7446,7 +7470,7 @@ TEST(operation, compoundCRS_to_geogCRS_3D_context) {
                   "+proj=pipeline "
                   "+step +proj=axisswap +order=2,1 "
                   "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
-                  "+step +proj=vgridshift +grids=g2018u0.gtx "
+                  "+step +proj=vgridshift +grids=us_noaa_g2018u0.tif "
                   "+multiplier=1 "
                   "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
                   "+step +proj=axisswap +order=2,1");
@@ -7464,9 +7488,9 @@ TEST(operation, compoundCRS_to_geogCRS_3D_context) {
                   "+proj=pipeline "
                   "+step +proj=axisswap +order=2,1 "
                   "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
-                  "+step +proj=vgridshift +grids=g2018u0.gtx "
+                  "+step +proj=vgridshift +grids=us_noaa_g2018u0.tif "
                   "+multiplier=1 "
-                  "+step +proj=hgridshift +grids=FL "
+                  "+step +proj=hgridshift +grids=us_noaa_FL.tif "
                   "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
                   "+step +proj=axisswap +order=2,1");
     }
@@ -7550,7 +7574,8 @@ TEST(operation, compoundCRS_of_projCRS_to_geogCRS_2D_context) {
               "+lat_1=41.6666666666667 +lat_2=40 +x_0=2000000.0001016 "
               "+y_0=500000.0001016 +ellps=GRS80 "
               "+step +proj=unitconvert +z_in=us-ft +z_out=m "
-              "+step +proj=vgridshift +grids=geoid09_conus.gtx +multiplier=1 "
+              "+step +proj=vgridshift +grids=us_noaa_geoid09_conus.tif "
+              "+multiplier=1 "
               "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
               "+step +proj=axisswap +order=2,1");
 }
@@ -8006,14 +8031,15 @@ TEST(operation, compoundCRS_of_vertCRS_with_geoid_model_to_geogCRS) {
               "Ballpark geographic offset from NAD83(2011) to NAD83");
     auto op_proj =
         list[0]->exportToPROJString(PROJStringFormatter::create().get());
-    EXPECT_EQ(op_proj,
-              "+proj=pipeline "
-              "+step +inv +proj=lcc +lat_0=39.3333333333333 +lon_0=-77.75 "
-              "+lat_1=40.9666666666667 +lat_2=39.9333333333333 +x_0=600000 "
-              "+y_0=0 +ellps=GRS80 "
-              "+step +proj=vgridshift +grids=g2012bu0.gtx +multiplier=1 "
-              "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
-              "+step +proj=axisswap +order=2,1");
+    EXPECT_EQ(
+        op_proj,
+        "+proj=pipeline "
+        "+step +inv +proj=lcc +lat_0=39.3333333333333 +lon_0=-77.75 "
+        "+lat_1=40.9666666666667 +lat_2=39.9333333333333 +x_0=600000 "
+        "+y_0=0 +ellps=GRS80 "
+        "+step +proj=vgridshift +grids=us_noaa_g2012bu0.tif +multiplier=1 "
+        "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
+        "+step +proj=axisswap +order=2,1");
 }
 
 // ---------------------------------------------------------------------------
@@ -8069,8 +8095,8 @@ TEST(operation, compoundCRS_from_WKT2_no_id_to_geogCRS_3D_context) {
             "+proj=pipeline +step +inv +proj=sterea +lat_0=52.1561605555556 "
             "+lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 "
             "+ellps=bessel "
-            "+step +proj=hgridshift +grids=rdtrans2018.gsb "
-            "+step +proj=vgridshift +grids=nlgeo2018.gtx +multiplier=1 "
+            "+step +proj=hgridshift +grids=nl_nsgi_rdtrans2018.tif "
+            "+step +proj=vgridshift +grids=nl_nsgi_nlgeo2018.tif +multiplier=1 "
             "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
             "+step +proj=axisswap +order=2,1");
     }
@@ -8194,7 +8220,7 @@ TEST(operation, IGNF_LAMB1_TO_EPSG_4326) {
               "+proj=pipeline +step +inv +proj=lcc +lat_1=49.5 +lat_0=49.5 "
               "+lon_0=0 +k_0=0.99987734 +x_0=600000 +y_0=200000 "
               "+ellps=clrk80ign +pm=paris +step +proj=hgridshift "
-              "+grids=ntf_r93.gsb +step +proj=unitconvert +xy_in=rad "
+              "+grids=fr_ign_ntf_r93.tif +step +proj=unitconvert +xy_in=rad "
               "+xy_out=deg +step +proj=axisswap +order=2,1");
 
     EXPECT_FALSE(list[1]->hasBallparkTransformation());
@@ -9616,15 +9642,16 @@ TEST(operation, normalizeForVisualization) {
         auto op = list[1];
         auto opNormalized = op->normalizeForVisualization();
         EXPECT_FALSE(opNormalized->_isEquivalentTo(op.get()));
-        EXPECT_EQ(opNormalized->exportToPROJString(
-                      PROJStringFormatter::create(
-                          PROJStringFormatter::Convention::PROJ_5,
-                          authFactory->databaseContext())
-                          .get()),
-                  "+proj=pipeline "
-                  "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
-                  "+step +proj=vgridshift +grids=egm08_25.gtx +multiplier=1 "
-                  "+step +proj=unitconvert +xy_in=rad +xy_out=deg");
+        EXPECT_EQ(
+            opNormalized->exportToPROJString(
+                PROJStringFormatter::create(
+                    PROJStringFormatter::Convention::PROJ_5,
+                    authFactory->databaseContext())
+                    .get()),
+            "+proj=pipeline "
+            "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
+            "+step +proj=vgridshift +grids=us_nga_egm08_25.tif +multiplier=1 "
+            "+step +proj=unitconvert +xy_in=rad +xy_out=deg");
     }
 
     // Source(boundCRS) and target(geographic) must be inverted
