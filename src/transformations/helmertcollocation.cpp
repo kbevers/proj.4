@@ -41,8 +41,7 @@ using namespace Eigen;
 using json = nlohmann::json;
 
 PROJ_HEAD(helmertcollocation, "2D Helmert parameter estimation with collocation");
-
-// TODO: Under construction... 
+ 
 struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count, pj_cp **cps)
 {
 	int iCp;
@@ -51,9 +50,7 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 	{
 		pj_cp *gi = cps[iCp];
 		
-		/* struct*/	COMMONPOINTS *cp = gi->cp;
-
-		
+		COMMONPOINTS *cp = gi->cp;
 		/*	if (ct->ll.phi - epsilon > input.phi
 			|| ct->ll.lam - epsilon > input.lam
 			|| (ct->ll.phi + (ct->lim.phi - 1) * ct->del.phi + epsilon < input.phi)
@@ -67,7 +64,7 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 
 			for (child = gi->child; child != nullptr; child = child->next)
 			{
-				/*struct*/ COMMONPOINTS *cp1 = child->cp;
+				COMMONPOINTS *cp1 = child->cp;
 
 				/*
 				epsilon = (fabs(ct1->del.phi)+fabs(ct1->del.lam))/10000.0;
@@ -86,8 +83,8 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 
 			gi = child;
 			cp = child->cp;
-		} 
-		if (cp->pJ_LP_PairList == nullptr)
+		}
+		if (cp->pJ_LP_PairList == nullptr || cp->noOfPoints == 0)
 		{
 			if (!pj_cp_load(ctx, gi))
 			{
@@ -202,10 +199,9 @@ static void testReadGeojson(/*char* fileName*/)
 
 /******************************************************************************************
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
-*
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP *lp)
+static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP *lp, PJ_DIRECTION direction)
 {
 	auto n = commonPointList->size();
 
@@ -230,13 +226,16 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 
 	for (int i = 0; i < n; i++)
 	{
-		PJ_LP_Pair point1 = commonPointList->at(i);
+		PJ_LP_Pair pointPair = commonPointList->at(i);
+				 
+		PJ_LP pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
+		PJ_LP toFrom = (direction == PJ_FWD) ? pointPair.toPoint : pointPair.fromPoint;
 
-		xF(i, 0) = point1.fromPoint.phi;
-		yF(i, 0) = point1.fromPoint.lam * coslat;
+		xF(i, 0) = pointFrom.phi;
+		yF(i, 0) = pointFrom.lam * coslat;
 
-		xT(i, 0) = point1.toPoint.phi;
-		yT(i, 0) = point1.toPoint.lam * coslat;
+		xT(i, 0) = toFrom.phi;
+		yT(i, 0) = toFrom.lam * coslat;
 	}
 	// cout << "xF:" << endl << xF << endl;
 	//cout << "yF:" << endl << yF << endl;
@@ -336,19 +335,20 @@ bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-std::vector<PJ_LP_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, int n, int areaId)
+std::vector<PJ_LP_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, int n, int areaId, PJ_DIRECTION direction)
 {
 	std::vector<PJ_LP_Pair> distances;
 	std::vector<PJ_LP_Pair> closestDistances;
 
-	double coslat = cos(lp.phi);   
+	double coslat = cos(lp.phi);
 
 	for (int i = 0; i < commonPointList->noOfPoints; i++)
 	{
 		PJ_LP_Pair pair = commonPointList->pJ_LP_PairList->at(i);
+		PJ_LP point = (direction == PJ_FWD) ? pair.fromPoint : pair.toPoint;
 
-		double deltaPhi = pair.fromPoint.phi - lp.phi;
-		double deltaLam = (pair.fromPoint.lam - lp.lam) * coslat;
+		double deltaPhi = point.phi - lp.phi;
+		double deltaLam = (point.lam - lp.lam) * coslat;
 
 		pair.dist = hypot(deltaPhi, deltaLam);
 		 
@@ -418,72 +418,7 @@ int AreaIdPoint(PJ_LP lp) // TODO: Endre namn og argument
 		return 4;
 
 	return 1;
-}
-
-PJ_LP proj_commonPointInit(PJ_LP lp)
-{
-	std::vector<PJ_LP_Pair> commonPointList;
-
-	char* fileName = "C:/Users/Administrator/source/repos/proj-datumgrid/europe/EUREF89_NGO48_20081014.cpt";
-
-	std::ifstream file(fileName, std::ios::in | std::ios::binary | std::ios::ate);
-
-	int areaId = AreaIdPoint(lp);
-
-	if (file.is_open())
-	{
-		int bufferSize8 = 8;
-		int bufferSize4 = 4;
-		char name[8];
-
-		char *charBuffer8 = new char[bufferSize8];
-		char *charBuffer4 = new char[bufferSize4];
-
-		file.seekg(0, std::ios::beg);
-
-		while (!file.eof())
-		{
-			PJ_LP_Pair commonPoint;
-
-			file.read(charBuffer8, bufferSize8);
-
-			for (int i = 0; i < bufferSize8; i++)
-				commonPoint.name[i] = charBuffer8[i];
-
-			file.read(charBuffer8, bufferSize8);
-			commonPoint.fromPoint.phi = *(reinterpret_cast<double*>(charBuffer8));
-
-			file.read(charBuffer8, bufferSize8);
-			commonPoint.fromPoint.lam = *(reinterpret_cast<double*>(charBuffer8));
-
-			file.read(charBuffer8, bufferSize8);
-			commonPoint.toPoint.phi = *(reinterpret_cast<double*>(charBuffer8));
-
-			file.read(charBuffer8, bufferSize8);
-			commonPoint.toPoint.lam = *(reinterpret_cast<double*>(charBuffer8));
-
-			file.read(charBuffer4, bufferSize4);
-			commonPoint.area = *(reinterpret_cast<__int32*>(charBuffer4));
-
-			if (areaId != commonPoint.area)
-				continue;
-
-			commonPointList.push_back(commonPoint);
-		}
-		file.close();
-	};
-
-	// TODO: New switch in proj string
-	int numberOfSelectedPoints = 20;
-
-	// TODO: Flytte kalla	
-	//auto closestPoints = findClosestPoints(&commonPointList, lp, numberOfSelectedPoints, areaId);
-
-	// TODO: Leggje inn Helmert her.
-	//calculateHelmertParameters(&closestPoints, lp);
-
-	return lp;
-}
+} 
 
 int proj_cp_init(PJ* P, const char *cps)
 {
@@ -527,7 +462,7 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 				break;
 			}
 			if (child == nullptr)
-				break; 
+				break;
 
 			gi = child;
 			cp = child->cp;
@@ -541,7 +476,6 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 				return nullptr;
 			}
 		}
-
 		return cp;
 	}
 	return nullptr;
@@ -557,29 +491,31 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 	
 	cp = find_cp(P->ctx, lp, P->cplist_count, P->cplist);
 
-	if (cp == nullptr) 
+	if (cp == nullptr)
 	{
 		if (P->cplist_count == 1 && strcmp(P->cplist[0]->cp_name, "null") == 0)
+		{
 			out = lp;
+		}	
 		else
-			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
-		 
+		{
+			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);			
+		}		 
 		return out;
 	}
 
 	// TODO: Reverse transformation...
-
-	// Testing:
+	
+    // Testing:
 	int areaId = AreaIdPoint(lp);
 
 	// TODO: New switch in proj string
 	int numberOfSelectedPoints = 20;
 
-	// TODO: Feil. Returnerer usortert liste
-	auto closestPoints = findClosestPoints(cp, lp, numberOfSelectedPoints, areaId);
+	auto closestPoints = findClosestPoints(cp, lp, numberOfSelectedPoints, areaId, direction);
 
 	// TODO: Splitting up...
-	calculateHelmertParameters(&closestPoints, &lp);
+	calculateHelmertParameters(&closestPoints, &lp, direction);
 	out = lp;
 
 	return out;
@@ -601,8 +537,10 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 {
 	PJ_COORD point = { {0,0,0,0} };
 	point.xyz = xyz;
+	
+	// auto newpoint = proj_helmert_apply(P, point.lp, PJ_INV);
 
-	auto newpoint = proj_helmert_apply(P, point.lp, PJ_INV);
+	point.lp = proj_helmert_apply(P, point.lp, PJ_INV);
 
 	return point.lpz;
 }

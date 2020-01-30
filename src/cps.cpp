@@ -30,7 +30,7 @@
 #include <string.h>
 
 #include "proj_internal.h"
-
+ 
 // TODO: Move to another class
 struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 {
@@ -48,7 +48,7 @@ struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 	}
 
 	cp->noOfPoints = 0;
-	cp->pJ_LP_PairList = nullptr; 
+	cp->pJ_LP_PairList = nullptr;
 
 	return cp;
 }
@@ -86,7 +86,7 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 	{
 		ctx->last_errno = 0;
 		return commonPoints;
-	}	
+	}
 
 	if (!commonPoints->filename)
 	{
@@ -97,7 +97,7 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 	}
 
 	// TODO: Sjekk header
-	struct COMMONPOINTS *cp = cp_init( ctx, (struct projFileAPI_t*)fp );
+	struct COMMONPOINTS *cp = cp_init( ctx, (struct projFileAPI_t*)fp );	
 
 	commonPoints->format = "commonpoints";
 	commonPoints->cp = cp;
@@ -130,9 +130,6 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 {
 	struct COMMONPOINTS cp_tmp;
 
-	//struct COMMONPOINTS *cp_tmptest;
-	//cp_tmp = (COMMONPOINTS *)pj_calloc(1, sizeof(struct COMMONPOINTS));
-
 	if (gi == nullptr || gi->cp == nullptr)
 		return 0;
 
@@ -155,11 +152,11 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 	{
 		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		pj_release_lock();
+
 		return 0;
 	}
 
-	std::vector<PJ_LP_Pair> *pJLPList = cp_tmp.pJ_LP_PairList;   // gi->cp->pJ_LP_PairList;
-
+	std::vector<PJ_LP_Pair> *pJLPList = cp_tmp.pJ_LP_PairList;
 	pJLPList = (std::vector<PJ_LP_Pair> *)pj_calloc(1, sizeof(struct std::vector<PJ_LP_Pair>));
 
 	int noOfPoints = 0;
@@ -183,3 +180,4 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 
 	return 1;
 }
+

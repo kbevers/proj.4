@@ -760,9 +760,6 @@ C_NAMESPACE_VAR struct PJ_DATUMS pj_datums[];
 #endif
 
 
-
-
-
 #ifdef PJ_LIB__
 #define PROJ_HEAD(name, desc) static const char des_##name [] = desc
 
@@ -930,7 +927,6 @@ std::string PROJ_DLL pj_context_get_user_writable_directory(PJ_CONTEXT *ctx, boo
 int pj_cp_load(projCtx_t *, PJ_COMMONPOINTS *);
 PJ_COMMONPOINTS **pj_cplist(projCtx_t *, const char *, int *);
 PJ_COMMONPOINTS *pj_commonpoints_init(projCtx_t *, const char *);
-
 
 
 /* classic public API */
