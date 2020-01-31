@@ -213,6 +213,10 @@ static void calculateHelmertParameters(PJ *P, std::vector<PJ_LP_Pair> *commonPoi
 	double x = lp->phi;
 	double y = lp->lam * coslat;
 
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+	{
+	}
+
 	// Covariance matrices:
 	MatrixXd cnn(n, n); 
 	MatrixXd cmn(n, 1);
@@ -317,7 +321,7 @@ static void calculateHelmertParameters(PJ *P, std::vector<PJ_LP_Pair> *commonPoi
 	double yTrans = yT0(0) + b * (xF0(0) - x) - a * (yF0(0) - y);
 
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-		proj_log_trace(P, "Transformated phi, lam: (%10.8f, %10.8f)", xTrans, yTrans/ coslat);
+		proj_log_trace(P, "Transformated phi, lam: (%12.10f, %12.10f)", xTrans, yTrans/ coslat);
 
 	MatrixXd smx = cmn.transpose() * p * snx;
 	MatrixXd smy = cmn.transpose() * p * sny;
@@ -328,7 +332,7 @@ static void calculateHelmertParameters(PJ *P, std::vector<PJ_LP_Pair> *commonPoi
 	double yEst = (yTrans + smy(0)) / coslat;
 
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-		proj_log_trace(P, "LSC predicted phi, lam: (%10.8f, %10.8f)", xEst, yEst);
+		proj_log_trace(P, "LSC predicted phi, lam: (%12.10f, %12.10f)", xEst, yEst);
 
 	lp->phi = xEst;
 	lp->lam = yEst / coslat;
