@@ -40,7 +40,7 @@
 using namespace Eigen;
 using json = nlohmann::json;
 
-PROJ_HEAD(helmertcollocation, "2D Helmert parameter estimation with collocation");
+PROJ_HEAD(lschelmert, "2D Helmert parameter estimation with collocation");
  
 struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count, pj_cp **cps)
 {
@@ -551,7 +551,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	return point.lpz;
 }
 
-PJ *TRANSFORMATION(helmertcollocation, 0)
+PJ *TRANSFORMATION(lschelmert, 0)
 {	 
 	// Do not need a opaque struct
 	/*	struct pj_opaque_hgridshift *Q = static_cast<struct pj_opaque_hgridshift*>(pj_calloc(1, sizeof(struct pj_opaque_hgridshift)));

@@ -243,7 +243,7 @@ PJ *pj_default_destructor (PJ *P, int errlev) {   /* Destructor */
     pj_free (P->cart_wgs84);
     pj_free (P->hgridshift);
     pj_free (P->vgridshift);
-	pj_free (P->helmertcollocation);
+	pj_free (P->lschelmert);
 
     pj_dealloc (static_cast<struct pj_opaque*>(P->opaque));
     delete P;

@@ -195,7 +195,7 @@ set(SRC_LIBPROJ_TRANSFORMATIONS
   transformations/affine.cpp
   transformations/deformation.cpp
   transformations/helmert.cpp
-  transformations/helmertcollocation.cpp
+  transformations/lschelmert.cpp
   transformations/hgridshift.cpp
   transformations/horner.cpp
   transformations/molodensky.cpp

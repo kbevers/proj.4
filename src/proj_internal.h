@@ -429,7 +429,7 @@ struct PJconsts {
     PJ *helmert = nullptr;
     PJ *hgridshift = nullptr;
     PJ *vgridshift = nullptr;
-	PJ *helmertcollocation = nullptr;
+	PJ *lschelmert = nullptr;
 
 
     /*************************************************************************************
