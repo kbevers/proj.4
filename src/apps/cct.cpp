@@ -354,11 +354,8 @@ int main(int argc, char **argv) {
             print (PJ_LOG_ERROR, "%s: Could not parse file '%s' line %d", o->progname, opt_filename (o), opt_record (o));
             continue;
         }
-
-		// Testing Helmert:
-	  //  proj_commonPointInit(point.lp);
- 
-        if (proj_angular_input (P, direction)) {
+		
+		if (proj_angular_input (P, direction)) {
             point.lpzt.lam = proj_torad (point.lpzt.lam);
             point.lpzt.phi = proj_torad (point.lpzt.phi);
         }

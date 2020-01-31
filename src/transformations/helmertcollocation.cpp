@@ -201,7 +201,7 @@ static void testReadGeojson(/*char* fileName*/)
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList, PJ_LP *lp, PJ_DIRECTION direction)
+static void calculateHelmertParameters(PJ *P, std::vector<PJ_LP_Pair> *commonPointList, PJ_LP *lp, PJ_DIRECTION direction)
 {
 	auto n = commonPointList->size();
 
@@ -213,17 +213,16 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 	double x = lp->phi;
 	double y = lp->lam * coslat;
 
-	MatrixXd cnn(n, n);
+	// Covariance matrices:
+	MatrixXd cnn(n, n); 
 	MatrixXd cmn(n, 1);
 
-	// Vector From System
-	MatrixXd xF(n, 1);
-	MatrixXd yF(n, 1);
+	// Vector From System:
+	MatrixXd xF(n, 1); MatrixXd yF(n, 1);
 
-	// Vector To System
-	MatrixXd xT(n, 1);
-	MatrixXd yT(n, 1);
-
+	// Vector To System:
+	MatrixXd xT(n, 1); MatrixXd yT(n, 1);
+	 
 	for (int i = 0; i < n; i++)
 	{
 		PJ_LP_Pair pointPair = commonPointList->at(i);
@@ -236,12 +235,11 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 
 		xT(i, 0) = toFrom.phi;
 		yT(i, 0) = toFrom.lam * coslat;
-	}
-	// cout << "xF:" << endl << xF << endl;
-	//cout << "yF:" << endl << yF << endl;
-	//cout << "xT:" << endl << xT << endl;
-	//cout << "yT:" << endl << yT << endl;
 
+		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+			proj_log_trace(P, "From phi, lam: (%10.8f, %10.8f) To phi, lam: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, toFrom.phi, toFrom.lam);
+	}
+	 
 	for (int i = 0; i < n; i++)
 	{
 		double dist = hypot(xF(i, 0) - x, yF(i, 0) - y);
@@ -255,16 +253,15 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 			cnn(i, j) = k * exp(-a) * cos(a);
 		}
 	}
-	//	cout << "cmn:" << endl << cmn << endl;
-	//	cout << "cnn:" << endl << cnn << endl;
+	// cout << "cmn:" << endl << cmn << endl;
+	// cout << "cnn:" << endl << cnn << endl;
 
 	MatrixXd p = cnn.inverse();
 	//cout << "p:" << endl << p << endl;
 
 	// N, diagonal sum of p:
 	MatrixXd sep = p * MatrixXd::Ones(n, 1);
-	MatrixXd N = MatrixXd::Ones(1, n) * sep;
-	//cout << "N:" << endl << N << endl;
+	MatrixXd N = MatrixXd::Ones(1, n) * sep;	
 
 	// Mean values
 	MatrixXd xFT = MatrixXd::Ones(1, n) * p * xF;
@@ -278,12 +275,13 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 	MatrixXd xT0 = xTT * N.inverse();
 	MatrixXd yT0 = yTT * N.inverse();
 
-	// Coordinates with Mass center origin
+	// Coordinates with Mass center origin:
 	MatrixXd dxF = xF - MatrixXd::Ones(n, 1) * xF0;
 	MatrixXd dyF = yF - MatrixXd::Ones(n, 1) * yF0;
 	MatrixXd dxT = xT - MatrixXd::Ones(n, 1) * xT0;
 	MatrixXd dyT = yT - MatrixXd::Ones(n, 1) * yT0;
 
+	// Normal equation:
 	double n11 = 0.0;
 	double t1 = 0.0;
 	double t2 = 0.0;
@@ -300,6 +298,9 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 	double tx = xT0(0) - a * xF0(0) - b * yF0(0);
 	double ty = yT0(0) + b * xF0(0) - a * yF0(0);
 
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)	
+		proj_log_trace(P, "Estimated Helmert parameters (a, b, Tx, Ty): (%10.8f, %10.8f, %10.8f, %10.8f)", a, b, tx, ty);	
+
 	// Sigma noise
 	MatrixXd snx(n, 1);
 	MatrixXd sny(n, 1);
@@ -309,19 +310,25 @@ static void calculateHelmertParameters(std::vector<PJ_LP_Pair> *commonPointList,
 		snx(i) = dxT(i) - a * dxF(i) - b * dyF(i);
 		sny(i) = dyT(i) + b * dxF(i) - a * dyF(i);
 	}
-	//cout << "snx:" << endl << snx << endl;
-	//cout << "sny:" << endl << sny << endl;
+	// cout << "snx:" << endl << snx << endl;
+	// cout << "sny:" << endl << sny << endl;
 
 	double xTrans = xT0(0) - a * (xF0(0) - x) - b * (yF0(0) - y);
 	double yTrans = yT0(0) + b * (xF0(0) - x) - a * (yF0(0) - y);
 
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+		proj_log_trace(P, "Transformated phi, lam: (%10.8f, %10.8f)", xTrans, yTrans/ coslat);
+
 	MatrixXd smx = cmn.transpose() * p * snx;
 	MatrixXd smy = cmn.transpose() * p * sny;
-	//cout << "smx:" << endl << smx << endl;
-	//cout << "smy:" << endl << smy << endl;
+	// cout << "smx:" << endl << smx << endl;
+	// cout << "smy:" << endl << smy << endl;
 
 	double xEst = xTrans + smx(0);
-	double yEst = yTrans + smy(0);
+	double yEst = (yTrans + smy(0)) / coslat;
+
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+		proj_log_trace(P, "LSC predicted phi, lam: (%10.8f, %10.8f)", xEst, yEst);
 
 	lp->phi = xEst;
 	lp->lam = yEst / coslat;
@@ -503,8 +510,6 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 		}		 
 		return out;
 	}
-
-	// TODO: Reverse transformation...
 	
     // Testing:
 	int areaId = AreaIdPoint(lp);
@@ -515,9 +520,10 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 	auto closestPoints = findClosestPoints(cp, lp, numberOfSelectedPoints, areaId, direction);
 
 	// TODO: Splitting up...
-	calculateHelmertParameters(&closestPoints, &lp, direction);
-	out = lp;
+	calculateHelmertParameters(P, &closestPoints, &lp, direction);
 
+	out = lp;
+	 
 	return out;
 }
 
@@ -525,8 +531,6 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 {
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
-	
-	//auto newpoint = proj_helmert_apply(P, point.lp, PJ_FWD);
 
 	point.lp = proj_helmert_apply(P, point.lp, PJ_FWD);
 
@@ -537,8 +541,6 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 {
 	PJ_COORD point = { {0,0,0,0} };
 	point.xyz = xyz;
-	
-	// auto newpoint = proj_helmert_apply(P, point.lp, PJ_INV);
 
 	point.lp = proj_helmert_apply(P, point.lp, PJ_INV);
 
