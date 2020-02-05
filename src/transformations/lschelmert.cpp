@@ -36,6 +36,7 @@
 #include "point_in_polygon.h"
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
+#include "transformations/helmert.cpp"
 
 using namespace Eigen;
 using json = nlohmann::json;
@@ -123,7 +124,7 @@ void recursive_iterate(const json& j, UnaryFunction f)
 	}
 }
 
-// TODO: Flytte all GeoJson til eigen klasse.
+// TODO: Move to a persistant class
 /***********************************************************************
 *
 /***********************************************************************/
@@ -197,6 +198,83 @@ static void testReadGeojson(/*char* fileName*/)
 	auto json_string = j_complete.dump();
 }
 
+MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+{
+	auto n = commonPointList->size();
+
+	double coslat = cos(lp->phi);
+
+	MatrixXd cnn(n, n);
+	
+	for (int i = 0; i < n; i++)
+	{
+		PJ_LP_Pair pp1 = commonPointList->at(i);
+
+		PJ_LP p1 = (direction == PJ_FWD) ? pp1.fromPoint : pp1.toPoint;
+
+		for (int j = 0; j < n; j++)
+		{
+			PJ_LP_Pair pp2 = commonPointList->at(j);
+			PJ_LP p2 = (direction == PJ_FWD) ? pp2.fromPoint : pp2.toPoint;
+
+			double dist = hypot(p1.phi - p2.phi, (p1.lam * coslat) - (p2.lam * coslat));
+			double a = (M_PI / 2.0) * (dist / c);
+			cnn(i, j) = k * exp(-a) * cos(a);
+		}
+	}
+	return cnn;
+}
+
+MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+{
+	auto n = commonPointList->size();
+	
+	double coslat = cos(lp->phi);
+
+	double x = lp->phi;
+	double y = lp->lam * coslat;
+
+	MatrixXd cmn(n, 1);
+	 
+	for (int i = 0; i < n; i++)
+	{
+		PJ_LP_Pair pointPair = commonPointList->at(i);
+
+		PJ_LP pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
+
+		double dist = hypot(pointFrom.phi - x, (pointFrom.lam * coslat) - y);
+		double a = (M_PI / 2.0) * (dist / c);
+		cmn(i, 0) = k * exp(-a) * cos(a);
+	}
+	return cmn;
+} 
+
+static bool calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction)
+{
+	struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
+
+	auto n = commonPointList->size();
+
+	if (n < 3)
+	{
+		// TODO: Error handling
+		return false;
+	}
+
+
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+	{
+		proj_log_trace(P, "Input phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);
+	}
+
+	// Covariance matrices:
+	MatrixXd cnn = CovarianceNN(lp, commonPointList, direction);
+	MatrixXd cmn = CovarianceMN(lp, commonPointList, direction);
+
+	 
+	return true;
+} 
+
 // TODO: Estimate only parameters...
 // TODO: Covariance matrix methods...
 // TODO: 
@@ -204,8 +282,10 @@ static void testReadGeojson(/*char* fileName*/)
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static void calculateLscHelmert(PJ *P, std::vector<PJ_LP_Pair> *commonPointList, PJ_LP *lp, PJ_DIRECTION direction)
+static void calculateLscHelmert(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction)
 {
+	struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
+
 	auto n = commonPointList->size();
 
 	double k = 0.00039;
@@ -237,18 +317,17 @@ static void calculateLscHelmert(PJ *P, std::vector<PJ_LP_Pair> *commonPointList,
 		PJ_LP_Pair pointPair = commonPointList->at(i);
 				 
 		PJ_LP pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
-		PJ_LP toFrom = (direction == PJ_FWD) ? pointPair.toPoint : pointPair.fromPoint;
+		PJ_LP pointTo = (direction == PJ_FWD) ? pointPair.toPoint : pointPair.fromPoint;
 
 		xF(i, 0) = pointFrom.phi;
 		yF(i, 0) = pointFrom.lam * coslat;
 
-		xT(i, 0) = toFrom.phi;
-		yT(i, 0) = toFrom.lam * coslat;
+		xT(i, 0) = pointTo.phi;
+		yT(i, 0) = pointTo.lam * coslat;
 
 		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-			proj_log_trace(P, "From phi, lam: (%10.8f, %10.8f) To phi, lam: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, toFrom.phi, toFrom.lam);
-	}
-	 
+			proj_log_trace(P, "From phi, lam: (%10.8f, %10.8f) To phi, lam: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, pointTo.phi, pointTo.lam);
+	}	 
 	for (int i = 0; i < n; i++)
 	{
 		double dist = hypot(xF(i, 0) - x, yF(i, 0) - y);
@@ -262,27 +341,28 @@ static void calculateLscHelmert(PJ *P, std::vector<PJ_LP_Pair> *commonPointList,
 			cnn(i, j) = k * exp(-a) * cos(a);
 		}
 	}
-	// cout << "cmn:" << endl << cmn << endl;
-	// cout << "cnn:" << endl << cnn << endl;
+
+	// Testing:
+	/*MatrixXd cnnTest = CovarianceNN(commonPointList, lp, direction);
+	MatrixXd cmnTest = CovarianceMN(commonPointList, lp, direction);
+	
+	cout << "cmnTest:" << endl << cmnTest << endl;
+	cout << "cmn:" << endl << cmn << endl;
+	cout << "cnnTest:" << endl << cnnTest << endl;
+	cout << "cnn:" << endl << cnn << endl;*/
 
 	MatrixXd p = cnn.inverse();
 	//cout << "p:" << endl << p << endl;
 
 	// N, diagonal sum of p:
 	MatrixXd sep = p * MatrixXd::Ones(n, 1);
-	MatrixXd N = MatrixXd::Ones(1, n) * sep;
+	MatrixXd N = MatrixXd::Ones(1, n) * sep; 
 
-	// Mean values
-	MatrixXd xFT = MatrixXd::Ones(1, n) * p * xF;
-	MatrixXd yFT = MatrixXd::Ones(1, n) * p * yF;
-	MatrixXd xTT = MatrixXd::Ones(1, n) * p * xT;
-	MatrixXd yTT = MatrixXd::Ones(1, n) * p * yT;
-
-	// Mass center: 
-	MatrixXd xF0 = xFT * N.inverse();
-	MatrixXd yF0 = yFT * N.inverse();
-	MatrixXd xT0 = xTT * N.inverse();
-	MatrixXd yT0 = yTT * N.inverse();
+	// Mass center:
+	double xF0 = (MatrixXd::Ones(1, n) * p * xF * N.inverse()).value();
+	double yF0 = (MatrixXd::Ones(1, n) * p * yF * N.inverse()).value();
+	double xT0 = (MatrixXd::Ones(1, n) * p * xT * N.inverse()).value();
+	double yT0 = (MatrixXd::Ones(1, n) * p * yT * N.inverse()).value();
 
 	// Coordinates in Mass center origin:
 	MatrixXd dxF = xF - MatrixXd::Ones(n, 1) * xF0;
@@ -304,11 +384,17 @@ static void calculateLscHelmert(PJ *P, std::vector<PJ_LP_Pair> *commonPointList,
 	double a = t1 / n11;
 	double b = t2 / n11;
 
-	double tx = xT0(0) - a * xF0(0) - b * yF0(0);
-	double ty = yT0(0) + b * xF0(0) - a * yF0(0);
+	double tx = xT0 - a * xF0 - b * yF0;
+	double ty = yT0 + b * xF0 - a * yF0;	
 
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)	
 		proj_log_trace(P, "Estimated Helmert parameters a, b, Tx, Ty: (%12.10f, %12.10f, %12.10f, %12.10f)", a, b, tx, ty);
+	
+	Q->fourparam = 1;
+	Q->scale = hypot(a,b);
+	Q->theta = atan(b / a);
+	Q->xyz_0.x = tx;
+	Q->xyz_0.y = ty;
 
 	// Sigma noise
 	MatrixXd snx(n, 1); MatrixXd sny(n, 1);
@@ -321,8 +407,8 @@ static void calculateLscHelmert(PJ *P, std::vector<PJ_LP_Pair> *commonPointList,
 	// cout << "snx:" << endl << snx << endl;
 	// cout << "sny:" << endl << sny << endl;
 
-	double xTrans = xT0(0) - a * (xF0(0) - x) - b * (yF0(0) - y);
-	double yTrans = yT0(0) + b * (xF0(0) - x) - a * (yF0(0) - y);
+	double xTrans = xT0 - a * (xF0 - x) - b * (yF0 - y);
+	double yTrans = yT0 + b * (xF0 - x) - a * (yF0 - y);
 
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Transformated phi, lam: (%12.10f, %12.10f)", xTrans, yTrans / coslat);
@@ -338,13 +424,6 @@ static void calculateLscHelmert(PJ *P, std::vector<PJ_LP_Pair> *commonPointList,
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "LSC predicted phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);
 }
-
-/*
-double* TestTest()
-{
-	
-
-}*/
 
 bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
 { 
@@ -382,7 +461,7 @@ std::vector<PJ_LP_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP l
 	return closestDistances;
 }
 
-bool PointIsInArea(PJ_LP pointPJ_LP, char* fileName)
+bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 {
 	std::ifstream file(fileName, std::ios::in);
 
@@ -419,7 +498,7 @@ bool PointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 	return isInside(vectorPointer, n, point);
 }
 
-int AreaIdPoint(PJ_LP lp) // TODO: Endre namn og argument 
+int areaIdPoint(PJ_LP lp) // TODO: Endre namn og argument 
 {
 	// TODO: Flytte områdefilene
 	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
@@ -429,11 +508,11 @@ int AreaIdPoint(PJ_LP lp) // TODO: Endre namn og argument
 	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
 	//testReadGeojson();
 
-	if (PointIsInArea(lp, fileName2))
+	if (pointIsInArea(lp, fileName2))
 		return 2;
-	else if (PointIsInArea(lp, fileName3))
+	else if (pointIsInArea(lp, fileName3))
 		return 3;
-	else if (PointIsInArea(lp, fileName4))
+	else if (pointIsInArea(lp, fileName4))
 		return 4;
 
 	return 1;
@@ -524,7 +603,7 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 	}
 	
     // Testing:
-	int areaId = AreaIdPoint(lp);
+	int areaId = areaIdPoint(lp);
 
 	// TODO: New switch in proj string
 	int numberOfSelectedPoints = 20;
@@ -532,7 +611,7 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 	auto closestPoints = findClosestPoints(cp, lp, numberOfSelectedPoints, areaId, direction);
 
 	// TODO: Splitting up...
-	calculateLscHelmert(P, &closestPoints, &lp, direction);
+	calculateLscHelmert(P, &lp, &closestPoints, direction);
 
 	out = lp;
 	 
@@ -541,16 +620,21 @@ PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 
 static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 {
+	struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
+
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
 
 	point.lp = proj_helmert_apply(P, point.lp, PJ_FWD);
+	point.xyz = helmert_forward_3d(point.lpz, P);
 
 	return point.xyz;
 }
 
 static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 {
+	struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
+
 	PJ_COORD point = { {0,0,0,0} };
 	point.xyz = xyz;
 
@@ -560,16 +644,15 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 }
 
 PJ *TRANSFORMATION(lschelmert, 0)
-{	 
-	struct pj_opaque_helmert *Q;
+{	
+	struct pj_opaque_helmert *Q = static_cast<struct pj_opaque_helmert*>(pj_calloc(1, sizeof(struct pj_opaque_helmert)));
 
-	// Do not need a opaque struct
-	/*	struct pj_opaque_hgridshift *Q = static_cast<struct pj_opaque_hgridshift*>(pj_calloc(1, sizeof(struct pj_opaque_hgridshift)));
-	if (nullptr == Q)
-		return pj_default_destructor(P, ENOMEM);	
+	if (Q == nullptr )
+	{
+		return pj_default_destructor(P, ENOMEM);
+	}
+
 	P->opaque = (void *)Q;
-	*/
-
 	P->fwd4d = nullptr;
 	P->inv4d = nullptr;
 	P->fwd3d = forward_3d;
