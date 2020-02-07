@@ -929,7 +929,6 @@ int pj_cp_load(projCtx_t *, PJ_COMMONPOINTS *);
 PJ_COMMONPOINTS **pj_cplist(projCtx_t *, const char *, int *);
 PJ_COMMONPOINTS *pj_commonpoints_init(projCtx_t *, const char *);
 
-
 /* classic public API */
 #include "proj_api.h"
 
