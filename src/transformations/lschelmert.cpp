@@ -277,17 +277,16 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DI
 	return cmn;
 } 
 
-static bool calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction)
-{	
+static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction)
+{
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
 	auto np = commonPointList->size();
-	bool retvalue = false;
 
 	if (np < 3)
 	{
-		proj_log_error(P, "lschelemert: common points are less than 3.");
-		return retvalue;
+		proj_log_error(P, "lschelemert: common points are less than 3.");		 
+		return nullptr;
 	}
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 	{
@@ -387,9 +386,7 @@ static bool calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> 
 	Q->signalx = smx;
 	Q->signaly = smy;
 
-	retvalue = true;
-	
-	return retvalue;
+	return P;
 } 
  
 /******************************************************************************************
@@ -797,8 +794,8 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 		{
 			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
 			return point.xyz;
-		}		
-		if (calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD) == 0);
+		}
+		if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD))
 		{
 			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
 			return point.xyz;
