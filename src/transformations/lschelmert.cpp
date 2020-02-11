@@ -158,41 +158,32 @@ template<class UnaryFunction>
 void recursive_iterate(const json& j, vector<Point> &vlist, UnaryFunction f)
 {
 	for (auto it = j.begin(); it != j.end(); ++it)
-	{
-		// auto typenam = it->type_name();
+	{	
 		auto v = it.value();
 
-		if (it->is_array() || it->is_object())
-		{ 
-			recursive_iterate(*it, vlist, f);
-		}
-		else if (it->is_null())
-		{
-			f(it);
-		}
+		if (it->is_array() || it->is_object())		
+			recursive_iterate(*it, vlist, f);		
+		else if (it->is_null())		
+			f(it);		
 		else if (it->is_number_float())
 		{	
-			//vector<Point> list;
-			//pointList.push_back(p);
 			float x = it.value();
-			++it;
-			float y = it.value();
-			Point p{ x,  y };
-			//list.push_back(p);
-			vlist.push_back(p);
-			//return x;
+			if (it != j.end())
+			{
+				++it;
+				if (it->is_number_float())
+				{
+					float y = it.value();
+					Point p{ x,  y };
+					vlist.push_back(p);
+				}
+			}
 		}
-		else
-		{
-			f(it);
-		}
+		else		
+			f(it);		
 	}
 }
 
-// TODO: Move to a persistant class
-/***********************************************************************
-*
-/***********************************************************************/
 static void testReadGeojson(/*char* fileName*/)
 {
 	char* fileName = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Ngo_areas.geojson";
@@ -293,7 +284,12 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DI
 		cmn(i, 0) = k * exp(-a) * cos(a);
 	}
 	return cmn;
-} 
+}
+
+/******************************************************************************************
+* http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
+* https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
+/******************************************************************************************/
 
 static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction)
 {
@@ -406,162 +402,6 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *
 
 	return P;
 } 
- 
-/******************************************************************************************
-* http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
-* https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
-/******************************************************************************************/
-static void calculateLscHelmert(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction)
-{
-	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
-
-	auto np = commonPointList->size();
-
-	double k = 0.00039;
-	double c = 0.06900 * M_PI / 180.0;
-
-	double coslat = cos(lp->phi);
-
-	double x = lp->phi;
-	double y = lp->lam * coslat;
-
-	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-	{
-		proj_log_trace(P, "Covariance function coefficients: k = %10.8f, c = %10.8f", k, c);
-		proj_log_trace(P, "Input phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);
-	}
-
-	// Covariance matrices:
-	MatrixXd cnn(np, np);
-	MatrixXd cmn(np, 1);
-
-	//cout << "cmn:" << endl << cmn << endl;
-	//cout << "cnn:" << endl << cnn << endl;
-
-	// Vector From System:
-	MatrixXd xF(np, 1); MatrixXd yF(np, 1);
-
-	// Vector To System:
-	MatrixXd xT(np, 1); MatrixXd yT(np, 1);
-	 
-	for (int i = 0; i < np; i++)
-	{
-		PJ_LP_Pair pointPair = commonPointList->at(i);
-				 
-		PJ_LP pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
-		PJ_LP pointTo = (direction == PJ_FWD) ? pointPair.toPoint : pointPair.fromPoint;
-
-		xF(i, 0) = pointFrom.phi;
-		yF(i, 0) = pointFrom.lam * coslat;
-
-		xT(i, 0) = pointTo.phi;
-		yT(i, 0) = pointTo.lam * coslat;
-		
-		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-		 	proj_log_trace(P, "From phi, lam: (%10.8f, %10.8f) To phi, lam: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, pointTo.phi, pointTo.lam);
-	}	 
-	for (int i = 0; i < np; i++)
-	{
-		double dist = hypot(xF(i, 0) - x, yF(i, 0) - y);
-		double a = (M_PI / 2.0) * (dist / c);
-		cmn(i, 0) = k * exp(-a) * cos(a);
-
-		for (int j = 0; j < np; j++)
-		{
-			dist = hypot(xF(i, 0) - xF(j, 0), yF(i, 0) - yF(j, 0));
-			a = (M_PI / 2.0) * (dist / c);
-			cnn(i, j) = k * exp(-a) * cos(a);
-		}
-	}
-
-	MatrixXd p = cnn.inverse();
-	//cout << "p:" << endl << p << endl;
-
-	// N, sum of p:	
-	auto sump = p.sum();
-
-	// sep, row sum of p:	
-	ArrayXXd sep = p * MatrixXd::Ones(np, 1);
-	//cout << sep.square() << endl;
-
-	// Mass center:
-	double xF0 = (MatrixXd::Ones(1, np) * p * xF / sump).value();
-	double yF0 = (MatrixXd::Ones(1, np) * p * yF / sump).value();
-	double xT0 = (MatrixXd::Ones(1, np) * p * xT / sump).value();
-	double yT0 = (MatrixXd::Ones(1, np) * p * yT / sump).value();
-	   
-	// Coordinates in Mass center origin:
-	ArrayXXd dxF = xF - MatrixXd::Ones(np, 1) * xF0;
-	ArrayXXd dyF = yF - MatrixXd::Ones(np, 1) * yF0;
-	ArrayXXd dxT = xT - MatrixXd::Ones(np, 1) * xT0;
-	ArrayXXd dyT = yT - MatrixXd::Ones(np, 1) * yT0;
-	
-	// Normal equation:
-	double n = 0.0;
-	double t1 = 0.0;
-	double t2 = 0.0;
-
-	for (int i = 0; i < np; i++)
-	{
-		n += (pow(dxF(i), 2) * sep(i)) + (pow(dyF(i), 2) * sep(i));
-		t1 += (dxF(i) * dxT(i) + dyF(i) * dyT(i)) * sep(i);
-		t2 += (dyF(i) * dxT(i) - dxF(i) * dyT(i)) * sep(i);
-	}
-	
-	//cout << "n:" << endl << n << endl;
-
-	double a = t1 / n;
-	double b = t2 / n;
-
-	double tx = xT0 - a * xF0 - b * yF0;
-	double ty = yT0 + b * xF0 - a * yF0;
-
-	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)	
-		proj_log_trace(P, "Estimated Helmert parameters a, b, Tx, Ty: (%12.10f, %12.10f, %12.10f, %12.10f)", a, b, tx, ty);
-	 
-	Q->a = a;
-	Q->b = b;
-	Q->tx = tx;
-	Q->ty = ty;	
-	Q->xF0 = xF0;
-	Q->yF0 = yF0;
-	Q->xT0 = xT0;
-	Q->yT0 = yT0;
-
-	// Sigma noise
-	MatrixXd snx(np, 1); MatrixXd sny(np, 1);
-
-	for (int i = 0; i < np; i++)
-	{
-		snx(i) = dxT(i) - a * dxF(i) - b * dyF(i);
-		sny(i) = dyT(i) + b * dxF(i) - a * dyF(i);
-	}
-	// cout << "snx:" << endl << snx << endl;
-	// cout << "sny:" << endl << sny << endl;
-
-	// (xT0-xT(0, 0))-a*(xF0-xF(0, 0))-b*(yF0-yF(0,0));
-	// (yT0-yT(0, 0))+b*(xF0-xF(0, 0))-a*(yF0-yF(0,0));
-
-	double xTrans = xT0 - a * (xF0 - x) - b * (yF0 - y);
-	double yTrans = yT0 + b * (xF0 - x) - a * (yF0 - y);
-
-	lp->phi = xTrans;
-	lp->lam = yTrans / coslat;
-
-	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-		proj_log_trace(P, "Transformated phi, lam: (%12.10f, %12.10f)", xTrans, yTrans / coslat);
-
-	double smx = (cmn.transpose() * p * snx).value();
-	double smy = (cmn.transpose() * p * sny).value();
-	// cout << "smx:" << endl << smx << endl;
-	// cout << "smy:" << endl << smy << endl;
-
-	lp->phi = xTrans + smx;
-	lp->lam = (yTrans + smy) / coslat;
-
-	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-		proj_log_trace(P, "LSC predicted phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);
-}
 
 bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
 { 
@@ -719,36 +559,6 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 	return nullptr;
 }
 
-PJ_LP proj_helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
-{
-	struct COMMONPOINTS *cp;
-	int inverse;
-	PJ_LP out;
-	 
-	out.lam = HUGE_VAL; out.phi = HUGE_VAL;
-	
-	cp = find_cp(P->ctx, lp, P->cplist_count, P->cplist);
-
-	if (cp == nullptr)
-	{
-		if (P->cplist_count == 1 && strcmp(P->cplist[0]->cp_name, "null") == 0)		 
-			out = lp;		 	
-		else		 
-			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);			
-		 	 
-		return out;
-	}
-	    
-	int areaId = areaIdPoint(&lp);
-	auto closestPoints = findClosestPoints(cp, lp, areaId, direction);
-
-	calculateLscHelmert(P, &lp, &closestPoints, direction);
-
-	out = lp;
-	 
-	return out;
-}
-
 PJ_LP helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 {
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
@@ -832,7 +642,30 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.xyz = xyz;
 
-	point.lp = proj_helmert_apply(P, point.lp, PJ_INV);
+	struct COMMONPOINTS *cp;
+	cp = find_cp(P->ctx, point.lp, P->cplist_count, P->cplist);
+
+	if (cp == nullptr)
+	{
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		return point.lpz;
+	} 
+
+	int areaId = areaIdPoint(&point.lp);
+	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV);
+
+	if (closestPoints.size() == 0)
+	{
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		return point.lpz;
+	}
+	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_INV))
+	{
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		return point.lpz;
+	}
+	point.lp = helmert_apply(P, point.lp, PJ_INV);
+	point.lp = collocation_apply(P, point.lp, PJ_INV);
 
 	return point.lpz;
 }
