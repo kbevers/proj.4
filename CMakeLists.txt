@@ -11,9 +11,7 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
-# For historic reasons, the CMake PROJECT-NAME is PROJ4
-project(PROJ4 LANGUAGES C CXX)
-set(PROJECT_INTERN_NAME PROJ)
+project(PROJ LANGUAGES C CXX)
 
 # Only interpret if() arguments as variables or keywords when unquoted
 cmake_policy(SET CMP0054 NEW)
@@ -91,7 +89,7 @@ set(PROJ_CXX_WARN_FLAGS "${PROJ_CXX_WARN_FLAGS}"
 # PROJ CMake modules
 ################################################################################
 # Path to additional CMake modules
-set(CMAKE_MODULE_PATH ${PROJ4_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${PROJ_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 include(ProjUtilities)
 
@@ -208,12 +206,12 @@ set(DOCDIR "${DEFAULT_DOCDIR}"
 set(INCLUDEDIR "${DEFAULT_INCLUDEDIR}"
   CACHE PATH "The directory to install includes into.")
 set(CMAKECONFIGDIR "${DEFAULT_CMAKEDIR}"
-  CACHE PATH "The directory to install cmake config files into.")
+  CACHE PATH "Parent of the directory to install cmake config files into.")
 
 ################################################################################
 # Build configured components
 ################################################################################
-include_directories(${PROJ4_SOURCE_DIR}/src)
+include_directories(${PROJ_SOURCE_DIR}/src)
 
 message(STATUS "")
 add_subdirectory(data)

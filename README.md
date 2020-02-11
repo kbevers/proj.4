@@ -2,6 +2,8 @@
 
 [![Travis Status](https://travis-ci.com/OSGeo/PROJ.svg?branch=master)](https://travis-ci.com/OSGeo/PROJ)
 [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/github/OSGeo/PROJ?branch=master&svg=true)](https://ci.appveyor.com/project/OSGeo/PROJ?branch=master)
+[![Cirrus Status](https://img.shields.io/cirrus/github/OSGeo/PROJ)](https://cirrus-ci.com/github/OSGeo/PROJ/master)
+[![Docker build Status](https://img.shields.io/docker/cloud/build/osgeo/proj)](https://hub.docker.com/r/osgeo/proj/builds)
 [![Coveralls Status](https://coveralls.io/repos/github/OSGeo/PROJ/badge.svg?branch=master)](https://coveralls.io/github/OSGeo/PROJ?branch=master)
 [![Gitter](https://badges.gitter.im/OSGeo/proj.4.svg)](https://gitter.im/OSGeo/proj.4)
 [![Mailing List](https://img.shields.io/badge/PROJ-mailing%20list-4eb899.svg)](http://lists.osgeo.org/mailman/listinfo/proj)
@@ -23,12 +25,13 @@ See the NEWS file for changes between versions.
 
 The following command line utilities are included in the PROJ package:
 
-- `proj`: for cartographic projection of geodetic coordinates
+- `proj`: for cartographic projection of geodetic coordinates.
 - `cs2cs`: for transformation from one CRS to another CRS.
 - `geod`: for geodesic (great circle) computations.
 - `cct`: for generic Coordinate Conversions and Transformations.
 - `gie`: the Geospatial Integrity Investigation Environment.
-- `projinfo`: for geodetic object and coordinate operation queries
+- `projinfo`: for geodetic object and coordinate operation queries.
+- `projsync`: for synchronizing PROJ datum and transformation support data.
 
 > More information on the utilities can be found on the [PROJ website](https://proj.org/apps).
 
