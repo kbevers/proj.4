@@ -69,6 +69,34 @@ namespace
 		double yT0;
 		double signalx;
 		double signaly;
+	};	
+}
+
+namespace ns
+{// TODO: Move to common class
+
+	struct GeoJProperties
+	{
+		std::string name;
+	};
+
+	struct GeoJType
+	{
+		std::string name;
+		GeoJProperties properties;
+	};
+
+	struct GeoJCrs
+	{
+		GeoJType type;
+	};
+
+	struct GeoJson
+	{
+		std::string type;
+		std::string name;
+		GeoJCrs crs;
+		//std::string features;
 	};
 }
  
@@ -127,7 +155,7 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 };
 
 template<class UnaryFunction>
-void recursive_iterate(const json& j, UnaryFunction f)
+void recursive_iterate(const json& j, vector<Point> &vlist, UnaryFunction f)
 {
 	for (auto it = j.begin(); it != j.end(); ++it)
 	{
@@ -135,16 +163,24 @@ void recursive_iterate(const json& j, UnaryFunction f)
 		auto v = it.value();
 
 		if (it->is_array() || it->is_object())
-		{
-			recursive_iterate(*it, f);
+		{ 
+			recursive_iterate(*it, vlist, f);
 		}
 		else if (it->is_null())
 		{
 			f(it);
 		}
 		else if (it->is_number_float())
-		{
-			auto value = it.value();
+		{	
+			//vector<Point> list;
+			//pointList.push_back(p);
+			float x = it.value();
+			++it;
+			float y = it.value();
+			Point p{ x,  y };
+			//list.push_back(p);
+			vlist.push_back(p);
+			//return x;
 		}
 		else
 		{
@@ -171,59 +207,41 @@ static void testReadGeojson(/*char* fileName*/)
 	fclose(f);
 
 	string[fsize] = 0;
-
+	
 	// parse and serialize JSON
 	json j_complete = json::parse(string);
-	// std::cout << std::setw(4) << j_complete << "\n\n";
+	//std::cout << std::setw(4) << j_complete << "\n\n";
 
-	recursive_iterate(j_complete, [](json::const_iterator it)
-	{});
+	//recursive_iterate(j_complete, [](json::const_iterator it)
+	//{});
 
 	// Test
 	auto feat = j_complete.at("features");
-	//auto c = j_complete.find("coordinates");
+ 
+	for (auto it1 = feat.begin(); it1 != feat.end(); ++it1)
+	{ 	 
+		bool isMultiPolygon = false;
+		vector<Point> pointVector;
 
-	for (auto it = feat.begin(); it != feat.end(); ++it)
-	{
-		//auto hh =	it1.key["geometry"];
+		auto geo = (*it1)["geometry"];
 
-		auto geo = (*it)["geometry"];
-		auto coords = geo.at("coordinates");
-
-		//recursive_iterateToFloat(*it, coords.value);
-
-		//if (it1->is_number_float)
-		/*
-		for (auto it2 = geo.begin(); it2 != geo.end(); ++it2)
+		for (auto& el : geo.items())
 		{
-			auto coord = (*it2)["coordinates"];
-		}*/
+			if (el.key() == "type")
+			{
+				if (el.value() == "MultiPolygon")			 
+					isMultiPolygon = true;
+			}
+			if (el.key() == "coordinates")
+			{ 
+			    recursive_iterate(el, pointVector, [](json::const_iterator it) {});
+			}
+			if (isMultiPolygon)
+			{
+
+			}
+		}
 	}
-
-	for (auto& x : feat.items())
-	{
-		//std::cout << "key: " << x.key() << ", value: " << x.value() << '\n';
-	}
-	/*
-	 json::iterator it = feat.begin();
-
-	 std::for_each(feat.begin(), feat.end(), [](std::string &string)
-	 {
-		 std::cout << string << "\n";
-	 }
-	 );
-*/
-//feat.at()
-	auto feat1 = feat.at(0);
-	auto geo = feat1.at("geometry");
-	auto coords1 = geo.at("coordinates");
-	auto coords2 = coords1.at(0);
-	auto coords3 = coords2.at(0);
-	auto coords4 = coords3.at(0);
-	auto coords5 = coords4.at(0);
-
-	//auto multiPolygon = j_complete.array("MultiPolygon");
-	//auto items = j_complete.items();
 	auto json_string = j_complete.dump();
 }
 
@@ -628,7 +646,7 @@ int areaIdPoint(PJ_LP *lp) // TODO: Endre namn og argument
 	char* fileName4 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area4.csv";
 
 	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
-	//testReadGeojson();
+	// testReadGeojson();
 
 	if (pointIsInArea(*lp, fileName2))
 		return 2;
@@ -777,35 +795,33 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
 
-	if (true)
+	struct COMMONPOINTS *cp;
+	cp = find_cp(P->ctx, point.lp, P->cplist_count, P->cplist);
+
+	if (cp == nullptr)
 	{
-		struct COMMONPOINTS *cp;
-		cp = find_cp(P->ctx, point.lp, P->cplist_count, P->cplist);
-
-		if (cp == nullptr)
-		{
-			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
-			return point.xyz;
-		}
-
-		int areaId = areaIdPoint(&point.lp);
-		auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD);
-		if (closestPoints.size() == 0)
-		{
-			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
-			return point.xyz;
-		}
-		if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD))
-		{
-			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
-			return point.xyz;
-		}
-		point.lp = helmert_apply(P, point.lp, PJ_FWD);
-		point.lp = collocation_apply(P, point.lp, PJ_FWD);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		return point.xyz;
 	}
-	else
-		point.lp = proj_helmert_apply(P, point.lp, PJ_FWD);
+	// Testing
+	testReadGeojson();
 
+	int areaId = areaIdPoint(&point.lp);
+	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD);
+	
+	if (closestPoints.size() == 0)
+	{
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		return point.xyz;
+	}
+	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD))
+	{
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		return point.xyz;
+	}
+	point.lp = helmert_apply(P, point.lp, PJ_FWD);
+	point.lp = collocation_apply(P, point.lp, PJ_FWD);
+	 
 	return point.xyz;
 }
 
