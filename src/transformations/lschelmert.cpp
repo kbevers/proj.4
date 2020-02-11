@@ -69,9 +69,19 @@ namespace
 		double yT0;
 		double signalx;
 		double signaly;
-	};	
+	};
+
+	struct geoJsonMultiPolygon
+	{
+		std::string name;
+		vector<Point> *pointList;
+	};
 }
 
+typedef std::vector<std::unique_ptr<geoJsonMultiPolygon>> ListOfMultiPolygon;
+
+ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygons);
+ 
 namespace ns
 {// TODO: Move to common class
 
