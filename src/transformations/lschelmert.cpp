@@ -1,4 +1,9 @@
-/************************************************************************
+/*****************************************************************************
+* Project:	PROJ
+* Purpose:	Helmert Least Squared Collocation
+* Author:	Sveinung Himle <sveinung.himle at statkart.no>
+*
+******************************************************************************
 * Copyright (c) 2020, Sveinung Himle <sveinung.himle at statkart.no>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
@@ -19,7 +24,7 @@
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 * DEALINGS IN THE SOFTWARE.
 *
-***********************************************************************/
+******************************************************************************/
 #define PJ_LIB__
 
 #include <errno.h>
