@@ -560,7 +560,7 @@ struct PJconsts {
 struct ARG_list {
     paralist *next;
     char used;
-#if defined(__GNUC__) && __GNUC__ >= 8
+#if (defined(__GNUC__) && __GNUC__ >= 8) || (defined(__clang__) && __clang_major__ >= 9)
     char param[]; /* variable-length member */
     /* Safer to use [] for gcc 8. See https://github.com/OSGeo/proj.4/pull/1087 */
     /* and https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86914 */
@@ -870,7 +870,10 @@ void pj_load_ini(PJ_CONTEXT* ctx);
 
 // Exported for testing purposes only
 std::string PROJ_DLL pj_context_get_grid_cache_filename(PJ_CONTEXT *ctx);
+
+// For use by projsync
 std::string PROJ_DLL pj_context_get_user_writable_directory(PJ_CONTEXT *ctx, bool create);
+void PROJ_DLL pj_context_set_user_writable_directory(PJ_CONTEXT* ctx, const std::string& path);
 
 /* classic public API */
 #include "proj_api.h"
