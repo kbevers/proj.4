@@ -827,6 +827,7 @@ struct PJ_LP_Pair
 
 struct COMMONPOINTS
 {
+	// TODO: C4099 warning
 	int noOfPoints = 0;
 	std::vector<PJ_LP_Pair>* pJ_LP_PairList = nullptr;
 };

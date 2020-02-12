@@ -240,6 +240,8 @@ set(SRC_LIBPROJ_CORE
   geocent.cpp
   geocent.h
   geodesic.c
+  geojsonPolygon.cpp
+  geojsonPolygon.hpp
   init.cpp
   initcache.cpp
   internal.cpp

@@ -25,3 +25,28 @@
 * DEALINGS IN THE SOFTWARE.
 *
 ******************************************************************************/
+
+#include <memory>
+#include <vector>
+
+//#include "proj.h"
+//#include "proj_internal.h"
+//#include "proj/util.hpp"
+#include "point_in_polygon.h"
+
+namespace
+{
+	struct geoJsonMultiPolygon
+	{
+		std::string name;
+		vector<PolygonPoint> *pointList;
+	};
+}
+
+typedef std::vector<std::unique_ptr<geoJsonMultiPolygon>> ListOfMultiPolygon;
+
+ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygons);
+ 
+void testReadGeojson(/*char* fileName*/);
+bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName);
+int areaIdPoint(PJ_LP *lp);
