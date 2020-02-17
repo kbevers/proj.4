@@ -25,14 +25,103 @@
 * DEALINGS IN THE SOFTWARE.
 *
 ******************************************************************************/
+
+#ifndef FROM_PROJ_CPP
+#define FROM_PROJ_CPP
+#endif
+#define LRU11_DO_NOT_DEFINE_OUT_OF_CLASS_METHODS
+ 
+#include <fstream> // std::ifstream
 #include <iostream>
-#include <fstream>
 
-#include "proj_internal.h"
 #include "geojsonPolygon.hpp"
-#include "proj\internal\nlohmann\json.hpp"
-
+#include "proj/internal/lru_cache.hpp"
+#include "proj/internal/nlohmann/json.hpp"
+#include "proj_internal.h"
+#include "proj/internal/internal.hpp" // for split
+ 
 using json = nlohmann::json;
+ 
+NS_PROJ_START
+
+using namespace NS_PROJ::internal;
+ 
+std::unique_ptr<GeoJsonMultiPolygonSet>
+GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
+{
+	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
+	set->m_name = filename;
+	set->m_format = "null";
+ 
+	return set;
+};
+
+bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx) 
+{
+	pj_log(ctx, PJ_LOG_DEBUG_MAJOR, "Grid %s has changed. Re-loading it",
+		m_name.c_str());
+	auto newGS = open(ctx, m_name);
+	m_format.clear();
+	if (newGS) {
+	//	m_grids = std::move(newGS->m_grids);
+	}
+	return !m_format.empty();
+}
+
+void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx) {
+	for (const auto &poly : m_polygons)
+	{
+		poly->reassign_context(ctx);
+	}
+} 
+
+GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
+
+GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
+
+ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygonkey)
+{
+	std::string key("s");
+	key += polygonkey;
+	const char *polygonnames = pj_param(P->ctx, P->params, key.c_str()).s;
+
+	if (polygonnames == nullptr)
+		return {};
+
+	auto listOfPolygonNames = split(std::string(polygonnames), ',');
+	ListOfMultiPolygon polygons;
+
+	for (const auto &polygonStr : listOfPolygonNames)
+	{
+		const char *polygonname = polygonStr.c_str();
+		bool canFail = false;
+		if (polygonname[0] == '@')
+		{
+			canFail = true;
+			polygonname++;
+		}
+	
+	 /*   auto polySet = GeoJsonMultiPolygonSet::open(P->ctx, polygonname);
+			if (!polySet)
+		{
+			if (!canFail) 
+			{
+			    if (proj_context_errno(P->ctx) != PJD_ERR_NETWORK_ERROR)
+				{
+					pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+				}
+				return {};
+			}
+			pj_ctx_set_errno(P->ctx, 0);
+		}
+		else 
+		{
+			polygons.emplace_back(std::move(polySet));
+		} */
+	} 
+	return polygons;
+}
+NS_PROJ_END
 
 bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 {
@@ -71,26 +160,6 @@ bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 	return isInside(vectorPointer, n, point);
 }
 
-int areaIdPoint(PJ_LP *lp)
-{
-	// TODO: Flytte områdefilene
-	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
-	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
-	char* fileName4 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area4.csv";
-
-	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
-	// testReadGeojson();
-
-	if (pointIsInArea(*lp, fileName2))
-		return 2;
-	else if (pointIsInArea(*lp, fileName3))
-		return 3;
-	else if (pointIsInArea(*lp, fileName4))
-		return 4;
-
-	return 1;
-}
-
 template<class UnaryFunction>
 void recursive_iterate(const json& j, vector<PolygonPoint> &vlist, UnaryFunction f)
 {
@@ -119,6 +188,26 @@ void recursive_iterate(const json& j, vector<PolygonPoint> &vlist, UnaryFunction
 		else
 			f(it);
 	}
+}
+ 
+int areaIdPoint(PJ_LP *lp)
+{
+	// TODO: Flytte områdefilene
+	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
+	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
+	char* fileName4 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area4.csv";
+
+	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
+	// testReadGeojson();
+
+	if (pointIsInArea(*lp, fileName2))
+		return 2;
+	else if (pointIsInArea(*lp, fileName3))
+		return 3;
+	else if (pointIsInArea(*lp, fileName4))
+		return 4;
+
+	return 1;
 }
 
 void testReadGeojson(/*char* fileName*/)
@@ -166,7 +255,6 @@ void testReadGeojson(/*char* fileName*/)
 			}
 			if (isMultiPolygon)
 			{
-
 			}
 		}
 	}

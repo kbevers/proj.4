@@ -43,6 +43,7 @@
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
 
+//using namespace GeoJson Testing;
 using namespace Eigen;
 using json = nlohmann::json;
 
@@ -408,8 +409,7 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 
 			gi = child;
 			cp = child->cp;
-		}		
-
+		}
 		if (cp->pJ_LP_PairList == nullptr)
 		{
 			if (!pj_cp_load(ctx, gi))
@@ -423,7 +423,7 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 	return nullptr;
 }
 
-PJ_LP helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
+PJ_LP helmert_apply(PJ *P, PJ_LP lp)
 {
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
@@ -444,7 +444,7 @@ PJ_LP helmert_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
 	return out;
 }
 
-PJ_LP collocation_apply(PJ *P, PJ_LP lp, PJ_DIRECTION direction)
+PJ_LP collocation_apply(PJ *P, PJ_LP lp)
 {
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
@@ -493,8 +493,8 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
 		return point.xyz;
 	}
-	point.lp = helmert_apply(P, point.lp, PJ_FWD);
-	point.lp = collocation_apply(P, point.lp, PJ_FWD);
+	point.lp = helmert_apply(P, point.lp);
+	point.lp = collocation_apply(P, point.lp);
 	 
 	return point.xyz;
 }
@@ -528,8 +528,8 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
 		return point.lpz;
 	}
-	point.lp = helmert_apply(P, point.lp, PJ_INV);
-	point.lp = collocation_apply(P, point.lp, PJ_INV);
+	point.lp = helmert_apply(P, point.lp);
+	point.lp = collocation_apply(P, point.lp);
 
 	return point.lpz;
 }

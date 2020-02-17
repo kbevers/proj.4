@@ -26,27 +26,71 @@
 *
 ******************************************************************************/
 
-#include <memory>
 #include <vector>
 
-//#include "proj.h"
-//#include "proj_internal.h"
-//#include "proj/util.hpp"
+#include "proj.h"
+#include "proj/util.hpp"
 #include "point_in_polygon.h"
 
-namespace
-{
-	struct geoJsonMultiPolygon
-	{
-		std::string name;
-		vector<PolygonPoint> *pointList;
-	};
-}
-
-typedef std::vector<std::unique_ptr<geoJsonMultiPolygon>> ListOfMultiPolygon;
-
-ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygons);
+NS_PROJ_START
  
-void testReadGeojson(/*char* fileName*/);
+class PROJ_GCC_DLL Polygon
+{
+protected:
+	std::string m_name;
+	vector<PolygonPoint> *m_pointList;
+	Polygon(const std::string &nameIn);
+
+public:
+	PROJ_FOR_TEST virtual ~Polygon();
+	PROJ_FOR_TEST const std::string &name() const { return m_name; }
+};
+
+class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon
+{
+protected:
+	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
+
+public:
+	PROJ_FOR_TEST GeoJsonMultiPolygon(const std::string &nameIn);
+	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override;
+ 
+	PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
+};
+
+class PROJ_GCC_DLL GeoJsonMultiPolygonSet
+{
+protected:
+	std::string m_name{};
+	std::string m_format{};
+	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_polygons{};
+
+	GeoJsonMultiPolygonSet();
+
+public:
+    PROJ_FOR_TEST virtual ~GeoJsonMultiPolygonSet();
+
+	PROJ_FOR_TEST static std::unique_ptr<GeoJsonMultiPolygonSet>
+		open(PJ_CONTEXT *ctx, const std::string &filename);
+
+	PROJ_FOR_TEST const std::string &name() const { return m_name; }
+ 	PROJ_FOR_TEST const std::string &format() const { return m_format; }
+	PROJ_FOR_TEST const std::vector<std::unique_ptr<GeoJsonMultiPolygon>> & polygons() const
+	{
+		return m_polygons;
+	}
+ 
+	PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx);
+	PROJ_FOR_TEST virtual bool reopen(PJ_CONTEXT *ctx);
+};
+
+typedef std::vector<std::unique_ptr<GeoJsonMultiPolygon>> ListOfMultiPolygon;
+
+ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygonkey);
+
+NS_PROJ_END	
+
 bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName);
+void testReadGeojson(/*char* fileName*/);
 int areaIdPoint(PJ_LP *lp);
+ 

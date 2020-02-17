@@ -239,9 +239,9 @@ set(SRC_LIBPROJ_CORE
   gauss.cpp
   geocent.cpp
   geocent.h
-  geodesic.c
-  geojsonPolygon.cpp
+  geodesic.c 
   geojsonPolygon.hpp
+  geojsonPolygon.cpp
   init.cpp
   initcache.cpp
   internal.cpp
