@@ -58,12 +58,14 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 
 bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx) 
 {
-	pj_log(ctx, PJ_LOG_DEBUG_MAJOR, "Grid %s has changed. Re-loading it",
-		m_name.c_str());
+	pj_log(ctx, PJ_LOG_DEBUG_MAJOR, "Polygon %s has changed. Re-loading it", m_name.c_str());
+
 	auto newGS = open(ctx, m_name);
 	m_format.clear();
-	if (newGS) {
-	//	m_grids = std::move(newGS->m_grids);
+	
+	if (newGS)
+	{
+		//	m_grids = std::move(newGS->m_grids);
 	}
 	return !m_format.empty();
 }
@@ -79,7 +81,7 @@ GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
 
 GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
 
-ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygonkey)
+ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 {
 	std::string key("s");
 	key += polygonkey;
@@ -89,7 +91,7 @@ ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygonkey)
 		return {};
 
 	auto listOfPolygonNames = split(std::string(polygonnames), ',');
-	ListOfMultiPolygon polygons;
+	ListOfMultiPolygons polygons;
 
 	for (const auto &polygonStr : listOfPolygonNames)
 	{
@@ -228,9 +230,6 @@ void testReadGeojson(/*char* fileName*/)
 	// parse and serialize JSON
 	json j_complete = json::parse(string);
 	//std::cout << std::setw(4) << j_complete << "\n\n";
-
-	//recursive_iterate(j_complete, [](json::const_iterator it)
-	//{});
 
 	// Test
 	auto feat = j_complete.at("features");

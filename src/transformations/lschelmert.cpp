@@ -36,14 +36,17 @@
 #include <cstddef>
 #include <algorithm>
 
+#include "proj.h"
 #include "proj_internal.h"
 #include "geocent.h"
 #include "point_in_polygon.h"
 #include "geojsonPolygon.hpp"
+//#include "geojsonPolygon.cpp"
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
 
-//using namespace GeoJson Testing;
+//using namespace GeoJsonMultiPolygon;
+using namespace NS_PROJ;
 using namespace Eigen;
 using json = nlohmann::json;
 
@@ -73,12 +76,13 @@ namespace
 		double yT0;
 		double signalx;
 		double signaly;
+		ListOfMultiPolygons polygons{};
 	};
 }
 
 namespace ns
-{// TODO: Move to common class
-
+{
+	// TODO: Move to common class
 	struct GeoJProperties
 	{
 		std::string name;
@@ -127,7 +131,6 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 			for (child = gi->child; child != nullptr; child = child->next)
 			{
 				COMMONPOINTS *cp1 = child->cp;
-
 				/*
 				epsilon = (fabs(ct1->del.phi)+fabs(ct1->del.lam))/10000.0;
 
@@ -534,13 +537,41 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	return point.lpz;
 }
 
+static PJ *destructor(PJ *P, int errlev) {
+	if (nullptr == P)
+		return nullptr;
+
+	auto Q = static_cast<struct pj_opaque_lschelmert*>(P->opaque);
+	if (Q)
+	{
+		//if (Q->->cart)
+		//	Q->cart->destructor(Q->cart, errlev);
+
+		delete Q;
+	}
+	P->opaque = nullptr;
+
+	return pj_default_destructor(P, errlev);
+}
+
 PJ *TRANSFORMATION(lschelmert, 0)
 {	
-	struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
+	//struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
+	
+	auto Q = new pj_opaque_lschelmert;
+	P->opaque = (void *)Q;
+	P->destructor = destructor;
 
 	if (Q == nullptr )
 	{
 		return pj_default_destructor(P, ENOMEM);
+	}
+
+	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
+	if (has_polygons == 0)
+	{
+		proj_log_error(P, "cp_trans: +polygon parameter missing.");
+		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 
 	P->opaque = (void *)Q;
@@ -557,7 +588,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 
 	if (0 == pj_param(P->ctx, P->params, "tcp_trans").i) 
 	{
-		proj_log_error(P, "hgridshift: +cp_trans parameter missing.");
+		proj_log_error(P, "cp_trans: +cp_trans parameter missing.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 	
@@ -568,5 +599,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
 		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPL);
 	}
+	pj_polygon_init(P, "polygons");
+ 
 	return P;
 }

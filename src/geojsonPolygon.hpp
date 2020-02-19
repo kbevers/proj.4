@@ -53,8 +53,7 @@ protected:
 
 public:
 	PROJ_FOR_TEST GeoJsonMultiPolygon(const std::string &nameIn);
-	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override;
- 
+	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
 	PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
 
@@ -84,9 +83,8 @@ public:
 	PROJ_FOR_TEST virtual bool reopen(PJ_CONTEXT *ctx);
 };
 
-typedef std::vector<std::unique_ptr<GeoJsonMultiPolygon>> ListOfMultiPolygon;
-
-ListOfMultiPolygon pj_polygon_init(PJ *P, const char *polygonkey);
+typedef std::vector<std::unique_ptr<GeoJsonMultiPolygon>> ListOfMultiPolygons;
+ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey);
 
 NS_PROJ_END	
 
