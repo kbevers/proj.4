@@ -816,11 +816,11 @@ struct MultiPolygon
 	PJ_LP vtgf;
 };
 
-struct PJ_LP_Pair
+struct PJ_LPZ_Pair
 {
 	char name[8];
-	PJ_LP fromPoint;
-	PJ_LP toPoint;
+	PJ_LPZ fromPoint;
+	PJ_LPZ toPoint;
 	__int32 area;
 	double dist;
 };
@@ -829,7 +829,7 @@ struct COMMONPOINTS
 {
 	// TODO: C4099 warning
 	int noOfPoints = 0;
-	std::vector<PJ_LP_Pair>* pJ_LP_PairList = nullptr;
+	std::vector<PJ_LPZ_Pair>* pJ_LPZ_PairList = nullptr;
 };
 
 typedef struct pj_cp

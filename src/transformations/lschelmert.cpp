@@ -41,7 +41,6 @@
 #include "geocent.h"
 #include "point_in_polygon.h"
 #include "geojsonPolygon.hpp"
-//#include "geojsonPolygon.cpp"
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
 
@@ -149,7 +148,7 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 			gi = child;
 			cp = child->cp;
 		}
-		if (cp->pJ_LP_PairList == nullptr || cp->noOfPoints == 0)
+		if (cp->pJ_LPZ_PairList == nullptr || cp->noOfPoints == 0)
 		{
 			if (!pj_cp_load(ctx, gi))
 			{
@@ -161,7 +160,7 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 	return nullptr;
 };
 
-MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 {
 	auto np = commonPointList->size();
 
@@ -171,14 +170,14 @@ MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DI
 	
 	for (int i = 0; i < np; i++)
 	{
-		PJ_LP_Pair pp1 = commonPointList->at(i);
+		PJ_LPZ_Pair pp1 = commonPointList->at(i);
 
-		PJ_LP p1 = (direction == PJ_FWD) ? pp1.fromPoint : pp1.toPoint;
+		PJ_LPZ p1 = (direction == PJ_FWD) ? pp1.fromPoint : pp1.toPoint;
 
 		for (int j = 0; j < np; j++)
 		{
-			PJ_LP_Pair pp2 = commonPointList->at(j);
-			PJ_LP p2 = (direction == PJ_FWD) ? pp2.fromPoint : pp2.toPoint;
+			PJ_LPZ_Pair pp2 = commonPointList->at(j);
+			PJ_LPZ p2 = (direction == PJ_FWD) ? pp2.fromPoint : pp2.toPoint;
 
 			double dist = hypot(p1.phi - p2.phi, (p1.lam * coslat) - (p2.lam * coslat));
 			double a = (M_PI / 2.0) * (dist / c);
@@ -188,7 +187,7 @@ MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DI
 	return cnn;
 }
 
-MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 {
 	auto np = commonPointList->size();
 	
@@ -201,8 +200,8 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DI
 	 
 	for (int i = 0; i < np; i++)
 	{
-		PJ_LP_Pair pointPair = commonPointList->at(i);
-		PJ_LP pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
+		PJ_LPZ_Pair pointPair = commonPointList->at(i);
+		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
 
 		double dist = hypot(pointFrom.phi - x, (pointFrom.lam * coslat) - y);
 		double a = (M_PI / 2.0) * (dist / c);
@@ -216,7 +215,7 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DI
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
 
-static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *commonPointList, PJ_DIRECTION direction)
+static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction)
 {
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
@@ -246,10 +245,10 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *
 
 	for (int i = 0; i < np; i++)
 	{
-		PJ_LP_Pair pointPair = commonPointList->at(i);
+		PJ_LPZ_Pair pointPair = commonPointList->at(i);
 
-		PJ_LP pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
-		PJ_LP pointTo = (direction == PJ_FWD) ? pointPair.toPoint : pointPair.fromPoint;
+		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
+		PJ_LPZ pointTo = (direction == PJ_FWD) ? pointPair.toPoint : pointPair.fromPoint;
 
 		xF(i, 0) = pointFrom.phi;
 		yF(i, 0) = pointFrom.lam * coslat;
@@ -328,7 +327,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LP_Pair> *
 	return P;
 } 
 
-bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
+bool DistanceLess(const PJ_LPZ_Pair& lhs, const PJ_LPZ_Pair& rhs)
 { 
 	return lhs.dist < rhs.dist;
 }
@@ -336,19 +335,19 @@ bool DistanceLess(const PJ_LP_Pair& lhs, const PJ_LP_Pair& rhs)
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-std::vector<PJ_LP_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, int areaId, PJ_DIRECTION direction, int n = 20)
+std::vector<PJ_LPZ_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, int areaId, PJ_DIRECTION direction, int n = 20)
 {
-	std::vector<PJ_LP_Pair> distances;
-	std::vector<PJ_LP_Pair> closestDistances;
+	std::vector<PJ_LPZ_Pair> distances;
+	std::vector<PJ_LPZ_Pair> closestDistances;
 
-	auto np = commonPointList->pJ_LP_PairList->size();
+	auto np = commonPointList->pJ_LPZ_PairList->size();
 
 	double coslat = cos(lp.phi);
 
 	for (int i = 0; i < np; i++)
 	{
-		PJ_LP_Pair pair = commonPointList->pJ_LP_PairList->at(i);
-		PJ_LP point = (direction == PJ_FWD) ? pair.fromPoint : pair.toPoint;
+		PJ_LPZ_Pair pair = commonPointList->pJ_LPZ_PairList->at(i);
+		PJ_LPZ point = (direction == PJ_FWD) ? pair.fromPoint : pair.toPoint;
 
 		double deltaPhi = point.phi - lp.phi;
 		double deltaLam = (point.lam - lp.lam) * coslat;
@@ -413,7 +412,7 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 			gi = child;
 			cp = child->cp;
 		}
-		if (cp->pJ_LP_PairList == nullptr)
+		if (cp->pJ_LPZ_PairList == nullptr)
 		{
 			if (!pj_cp_load(ctx, gi))
 			{

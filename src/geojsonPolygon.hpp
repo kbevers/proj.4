@@ -31,6 +31,7 @@
 #include "proj.h"
 #include "proj/util.hpp"
 #include "point_in_polygon.h"
+#include "filemanager.hpp"
 
 NS_PROJ_START
  
@@ -39,9 +40,9 @@ class PROJ_GCC_DLL Polygon
 protected:
 	std::string m_name;
 	vector<PolygonPoint> *m_pointList;
-	Polygon(const std::string &nameIn);
-
+	//Polygon();	
 public:
+	PROJ_FOR_TEST Polygon(const std::string &nameIn);
 	PROJ_FOR_TEST virtual ~Polygon();
 	PROJ_FOR_TEST const std::string &name() const { return m_name; }
 };
@@ -50,11 +51,14 @@ class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon
 {
 protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
+	
+	//	GeoJsonMultiPolygon();
 
 public:
 	PROJ_FOR_TEST GeoJsonMultiPolygon(const std::string &nameIn);
+	PROJ_FOR_TEST static GeoJsonMultiPolygon *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
-	PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
+	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
 
 class PROJ_GCC_DLL GeoJsonMultiPolygonSet
@@ -79,7 +83,7 @@ public:
 		return m_polygons;
 	}
  
-	PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx);
+	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx);
 	PROJ_FOR_TEST virtual bool reopen(PJ_CONTEXT *ctx);
 };
 
