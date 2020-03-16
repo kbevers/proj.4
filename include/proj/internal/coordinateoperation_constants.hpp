@@ -513,7 +513,7 @@ static const ParamMapping paramViewpointHeight = {
 static const ParamMapping *const paramsVerticalPerspective[] = {
     &paramLatTopoOrigin,
     &paramLonTopoOrigin,
-    &paramHeightTopoOrigin,
+    &paramHeightTopoOrigin, // unsupported by PROJ right now
     &paramViewpointHeight,
     &paramFalseEasting,  // PROJ addition
     &paramFalseNorthing, // PROJ addition
@@ -585,6 +585,9 @@ static const MethodMapping projectionMethodMappings[] = {
     {EPSG_NAME_METHOD_BONNE, EPSG_CODE_METHOD_BONNE, "Bonne", "bonne", nullptr,
      paramsBonne},
 
+    {PROJ_WKT2_NAME_METHOD_COMPACT_MILLER, 0, "Compact_Miller", "comill",
+     nullptr, paramsLonNatOrigin},
+
     {EPSG_NAME_METHOD_LAMBERT_CYLINDRICAL_EQUAL_AREA_SPHERICAL,
      EPSG_CODE_METHOD_LAMBERT_CYLINDRICAL_EQUAL_AREA_SPHERICAL,
      "Cylindrical_Equal_Area", "cea", nullptr, paramsCEA},
@@ -624,6 +627,9 @@ static const MethodMapping projectionMethodMappings[] = {
     {EPSG_NAME_METHOD_EQUIDISTANT_CYLINDRICAL_SPHERICAL,
      EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL_SPHERICAL, "Equirectangular",
      "eqc", nullptr, paramsEqc},
+
+    {PROJ_WKT2_NAME_METHOD_FLAT_POLAR_QUARTIC, 0, "Flat_Polar_Quartic",
+     "mbtfpq", nullptr, paramsLonNatOrigin},
 
     {PROJ_WKT2_NAME_METHOD_GALL_STEREOGRAPHIC, 0, "Gall_Stereographic", "gall",
      nullptr, paramsLonNatOrigin},
@@ -697,6 +703,12 @@ static const MethodMapping projectionMethodMappings[] = {
     {PROJ_WKT2_NAME_METHOD_MOLLWEIDE, 0, "Mollweide", "moll", nullptr,
      paramsLonNatOrigin},
 
+    {PROJ_WKT2_NAME_METHOD_NATURAL_EARTH, 0, "Natural_Earth", "natearth",
+     nullptr, paramsLonNatOrigin},
+
+    {PROJ_WKT2_NAME_METHOD_NATURAL_EARTH_II, 0, "Natural_Earth_II", "natearth2",
+     nullptr, paramsLonNatOrigin},
+
     {EPSG_NAME_METHOD_NZMG, EPSG_CODE_METHOD_NZMG, "New_Zealand_Map_Grid",
      "nzmg", nullptr, paramsNatOrigin},
 
@@ -708,6 +720,9 @@ static const MethodMapping projectionMethodMappings[] = {
 
     {EPSG_NAME_METHOD_ORTHOGRAPHIC, EPSG_CODE_METHOD_ORTHOGRAPHIC,
      "Orthographic", "ortho", nullptr, paramsNatOrigin},
+
+    {PROJ_WKT2_NAME_METHOD_PATTERSON, 0, "Patterson", "patterson", nullptr,
+     paramsLonNatOrigin},
 
     {EPSG_NAME_METHOD_AMERICAN_POLYCONIC, EPSG_CODE_METHOD_AMERICAN_POLYCONIC,
      "Polyconic", "poly", nullptr, paramsNatOrigin},
@@ -728,6 +743,9 @@ static const MethodMapping projectionMethodMappings[] = {
 
     {PROJ_WKT2_NAME_METHOD_STEREOGRAPHIC, 0, "Stereographic", "stere", nullptr,
      paramsObliqueStereo},
+
+    {PROJ_WKT2_NAME_METHOD_TIMES, 0, "Times", "times", nullptr,
+     paramsLonNatOrigin},
 
     {PROJ_WKT2_NAME_METHOD_VAN_DER_GRINTEN, 0, "VanDerGrinten", "vandg", "R_A",
      paramsLonNatOrigin},
@@ -777,6 +795,9 @@ static const MethodMapping projectionMethodMappings[] = {
 
     {"Quartic Authalic", 0, "Quartic_Authalic", "qua_aut", nullptr,
      paramsLonNatOrigin},
+
+    {"Transverse Cylindrical Equal Area", 0,
+     "Transverse_Cylindrical_Equal_Area", "tcea", nullptr, paramsObliqueStereo},
 
     {EPSG_NAME_METHOD_EQUAL_EARTH, EPSG_CODE_METHOD_EQUAL_EARTH, nullptr,
      "eqearth", nullptr, paramsLonNatOrigin},

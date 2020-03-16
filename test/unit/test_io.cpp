@@ -2061,6 +2061,45 @@ TEST(wkt_parse, vertcrs_WKT1_GDAL_minimum) {
 
 // ---------------------------------------------------------------------------
 
+TEST(wkt_parse, VERTCS_WKT1_ESRI) {
+    auto wkt = "VERTCS[\"EGM2008_Geoid\",VDATUM[\"EGM2008_Geoid\"],"
+               "PARAMETER[\"Vertical_Shift\",0.0],"
+               "PARAMETER[\"Direction\",1.0],UNIT[\"Meter\",1.0]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<VerticalCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(crs->nameStr(), "EGM2008_Geoid");
+
+    auto datum = crs->datum();
+    EXPECT_EQ(datum->nameStr(), "EGM2008_Geoid");
+
+    auto cs = crs->coordinateSystem();
+    ASSERT_EQ(cs->axisList().size(), 1U);
+    EXPECT_EQ(cs->axisList()[0]->direction(), AxisDirection::UP);
+
+    EXPECT_EQ(WKTParser().guessDialect(wkt),
+              WKTParser::WKTGuessedDialect::WKT1_ESRI);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, VERTCS_WKT1_ESRI_down) {
+    auto wkt = "VERTCS[\"Caspian\",VDATUM[\"Caspian_Sea\"],"
+               "PARAMETER[\"Vertical_Shift\",0.0],"
+               "PARAMETER[\"Direction\",-1.0],UNIT[\"Meter\",1.0]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<VerticalCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto cs = crs->coordinateSystem();
+    ASSERT_EQ(cs->axisList().size(), 1U);
+    EXPECT_EQ(cs->axisList()[0]->direction(), AxisDirection::DOWN);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(wkt_parse, vertcrs_WKT1_LAS_ftUS) {
     auto wkt = "VERT_CS[\"NAVD88 - Geoid03 (Feet)\","
                "    VERT_DATUM[\"unknown\",2005],"
@@ -4305,6 +4344,21 @@ static const struct {
          {"False northing", 2},
      }},
 
+    {"Transverse_Mercator_Complex",
+     {{"False_Easting", 1},
+      {"False_Northing", 2},
+      {"Central_Meridian", 3},
+      {"Scale_Factor", 4},
+      {"Latitude_Of_Origin", 5}},
+     "Transverse Mercator",
+     {
+         {"Latitude of natural origin", 5},
+         {"Longitude of natural origin", 3},
+         {"Scale factor at natural origin", 4},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
     {"Albers",
      {{"False_Easting", 1},
       {"False_Northing", 2},
@@ -4355,6 +4409,70 @@ static const struct {
      {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
      "Gall Stereographic",
      {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Patterson",
+     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
+     "Patterson",
+     {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Natural_Earth",
+     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
+     "Natural Earth",
+     {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Natural_Earth_II",
+     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
+     "Natural Earth II",
+     {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Compact_Miller",
+     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
+     "Compact Miller",
+     {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Times",
+     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
+     "Times",
+     {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Flat_Polar_Quartic",
+     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
+     "Flat Polar Quartic",
+     {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Behrmann",
+     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
+     "Lambert Cylindrical Equal Area (Spherical)",
+     {
+         {"Latitude of 1st standard parallel", 30},
          {"Longitude of natural origin", 3},
          {"False easting", 1},
          {"False northing", 2},
@@ -4938,6 +5056,47 @@ static const struct {
          {"False northing", 2},
      }},
 
+    {"Mercator_Variant_A",
+     {{"False_Easting", 1},
+      {"False_Northing", 2},
+      {"Scale_Factor", 3},
+      {"Central_Meridian", 4}},
+     "Mercator (variant A)",
+     {
+         {"Longitude of natural origin", 4},
+         {"Scale factor at natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Mercator_Variant_C",
+     {{"False_Easting", 1},
+      {"False_Northing", 2},
+      {"Standard_Parallel_1", 3},
+      {"Central_Meridian", 4}},
+     "Mercator (variant B)",
+     {
+         {"Latitude of 1st standard parallel", 3},
+         {"Longitude of natural origin", 4},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Transverse_Cylindrical_Equal_Area",
+     {{"False_Easting", 1},
+      {"False_Northing", 2},
+      {"Central_Meridian", 3},
+      {"Scale_Factor", 4},
+      {"Latitude_Of_Origin", 5}},
+     "Transverse Cylindrical Equal Area",
+     {
+         {"Latitude of natural origin", 5},
+         {"Longitude of natural origin", 3},
+         {"Scale factor at natural origin", 4},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
     {"Gnomonic_Ellipsoidal",
      {{"False_Easting", 1},
       {"False_Northing", 2},
@@ -5007,6 +5166,21 @@ static const struct {
      {
          {"Latitude of natural origin", 4},
          {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Vertical_Near_Side_Perspective",
+     {{"False_Easting", 1},
+      {"False_Northing", 2},
+      {"Longitude_Of_Center", 3},
+      {"Latitude_Of_Center", 4},
+      {"Height", 5}},
+     "Vertical Perspective",
+     {
+         {"Latitude of topocentric origin", 4},
+         {"Longitude of topocentric origin", 3},
+         {"Viewpoint height", 5},
          {"False easting", 1},
          {"False northing", 2},
      }},

@@ -2548,12 +2548,29 @@ const cs::VerticalCSNNPtr VerticalCRS::coordinateSystem() const {
 void VerticalCRS::_exportToWKT(io::WKTFormatter *formatter) const {
     const bool isWKT2 = formatter->version() == io::WKTFormatter::Version::WKT2;
     formatter->startNode(isWKT2 ? io::WKTConstants::VERTCRS
-                                : io::WKTConstants::VERT_CS,
+                                : formatter->useESRIDialect()
+                                      ? io::WKTConstants::VERTCS
+                                      : io::WKTConstants::VERT_CS,
                          !identifiers().empty());
     formatter->addQuotedString(nameStr());
     exportDatumOrDatumEnsembleToWkt(formatter);
     const auto &cs = SingleCRS::getPrivate()->coordinateSystem;
     const auto &axisList = cs->axisList();
+
+    if (formatter->useESRIDialect()) {
+        // Seems to be a constant value...
+        formatter->startNode(io::WKTConstants::PARAMETER, false);
+        formatter->addQuotedString("Vertical_Shift");
+        formatter->add(0.0);
+        formatter->endNode();
+
+        formatter->startNode(io::WKTConstants::PARAMETER, false);
+        formatter->addQuotedString("Direction");
+        formatter->add(
+            axisList[0]->direction() == cs::AxisDirection::UP ? 1.0 : -1.0);
+        formatter->endNode();
+    }
+
     if (!isWKT2) {
         axisList[0]->unit()._exportToWKT(formatter);
     }
@@ -3726,8 +3743,7 @@ ProjectedCRS::identify(const io::AuthorityFactoryPtr &authorityFactory) const {
                             return res;
                         }
                         res.emplace_back(crsNN, eqName ? 90 : 70);
-                    } else if (crs->nameStr() == thisName &&
-                               CRS::getPrivate()->implicitCS_ &&
+                    } else if (eqName && CRS::getPrivate()->implicitCS_ &&
                                coordinateSystem()
                                    ->axisList()[0]
                                    ->unit()
@@ -3748,7 +3764,8 @@ ProjectedCRS::identify(const io::AuthorityFactoryPtr &authorityFactory) const {
                                    dbContext) &&
                                objects.size() == 1) {
                         res.clear();
-                        res.emplace_back(crsNN, 100);
+                        res.emplace_back(crsNN,
+                                         crs->nameStr() == thisName ? 100 : 90);
                         return res;
                     } else {
                         res.emplace_back(crsNN, 25);
@@ -3915,6 +3932,28 @@ ProjectedCRS::_identify(const io::AuthorityFactoryPtr &authorityFactory) const {
 // ---------------------------------------------------------------------------
 
 //! @cond Doxygen_Suppress
+InvalidCompoundCRSException::InvalidCompoundCRSException(const char *message)
+    : Exception(message) {}
+
+// ---------------------------------------------------------------------------
+
+InvalidCompoundCRSException::InvalidCompoundCRSException(
+    const std::string &message)
+    : Exception(message) {}
+
+// ---------------------------------------------------------------------------
+
+InvalidCompoundCRSException::~InvalidCompoundCRSException() = default;
+
+// ---------------------------------------------------------------------------
+
+InvalidCompoundCRSException::InvalidCompoundCRSException(
+    const InvalidCompoundCRSException &) = default;
+//! @endcond
+
+// ---------------------------------------------------------------------------
+
+//! @cond Doxygen_Suppress
 struct CompoundCRS::Private {
     std::vector<CRSNNPtr> components_{};
 };
@@ -3965,9 +4004,67 @@ CompoundCRS::componentReferenceSystems() PROJ_PURE_DEFN {
  * At minimum the name should be defined.
  * @param components the component CRS of the CompoundCRS.
  * @return new CompoundCRS.
+ * @throw InvalidCompoundCRSException
  */
 CompoundCRSNNPtr CompoundCRS::create(const util::PropertyMap &properties,
                                      const std::vector<CRSNNPtr> &components) {
+
+    if (components.size() < 2) {
+        throw InvalidCompoundCRSException(
+            "compound CRS should have at least 2 components");
+    }
+
+    auto comp0 = components[0].get();
+    auto comp0Bound = dynamic_cast<const BoundCRS *>(comp0);
+    if (comp0Bound) {
+        comp0 = comp0Bound->baseCRS().get();
+    }
+    auto comp0Geog = dynamic_cast<const GeographicCRS *>(comp0);
+    auto comp0Proj = dynamic_cast<const ProjectedCRS *>(comp0);
+    auto comp0Eng = dynamic_cast<const EngineeringCRS *>(comp0);
+
+    auto comp1 = components[1].get();
+    auto comp1Bound = dynamic_cast<const BoundCRS *>(comp1);
+    if (comp1Bound) {
+        comp1 = comp1Bound->baseCRS().get();
+    }
+    auto comp1Vert = dynamic_cast<const VerticalCRS *>(comp1);
+    auto comp1Eng = dynamic_cast<const EngineeringCRS *>(comp1);
+    // Loose validation based on
+    // http://docs.opengeospatial.org/as/18-005r4/18-005r4.html#34
+    bool ok = false;
+    if ((comp0Geog && comp0Geog->coordinateSystem()->axisList().size() == 2 &&
+         (comp1Vert ||
+          (comp1Eng &&
+           comp1Eng->coordinateSystem()->axisList().size() == 1))) ||
+        (comp0Proj && comp0Proj->coordinateSystem()->axisList().size() == 2 &&
+         (comp1Vert ||
+          (comp1Eng &&
+           comp1Eng->coordinateSystem()->axisList().size() == 1))) ||
+        (comp0Eng && comp0Eng->coordinateSystem()->axisList().size() <= 2 &&
+         comp1Vert)) {
+        // Spatial compound coordinate reference system
+        ok = true;
+    } else {
+        bool isComp0Spatial = comp0Geog || comp0Proj || comp0Eng ||
+                              dynamic_cast<const GeodeticCRS *>(comp0) ||
+                              dynamic_cast<const VerticalCRS *>(comp0);
+        if (isComp0Spatial && dynamic_cast<const TemporalCRS *>(comp1)) {
+            // Spatio-temporal compound coordinate reference system
+            ok = true;
+        } else if (isComp0Spatial &&
+                   dynamic_cast<const ParametricCRS *>(comp1)) {
+            // Spatio-parametric compound coordinate reference system
+            ok = true;
+        }
+    }
+    if (!ok) {
+        throw InvalidCompoundCRSException(
+            "components of the compound CRS do not belong to one of the "
+            "allowed combinations of "
+            "http://docs.opengeospatial.org/as/18-005r4/18-005r4.html#34");
+    }
+
     auto compoundCRS(CompoundCRS::nn_make_shared<CompoundCRS>(components));
     compoundCRS->assignSelf(compoundCRS);
     compoundCRS->setProperties(properties);
@@ -4445,9 +4542,27 @@ BoundCRS::createFromTOWGS84(const CRSNNPtr &baseCRSIn,
  */
 BoundCRSNNPtr BoundCRS::createFromNadgrids(const CRSNNPtr &baseCRSIn,
                                            const std::string &filename) {
-    const CRSPtr sourceGeographicCRS = baseCRSIn->extractGeographicCRS();
+    const auto sourceGeographicCRS = baseCRSIn->extractGeographicCRS();
     auto transformationSourceCRS =
-        sourceGeographicCRS ? sourceGeographicCRS : baseCRSIn.as_nullable();
+        sourceGeographicCRS
+            ? NN_NO_CHECK(std::static_pointer_cast<CRS>(sourceGeographicCRS))
+            : baseCRSIn;
+    if (sourceGeographicCRS != nullptr &&
+        sourceGeographicCRS->datum() != nullptr &&
+        sourceGeographicCRS->primeMeridian()->longitude().getSIValue() != 0.0) {
+        transformationSourceCRS = GeographicCRS::create(
+            util::PropertyMap().set(common::IdentifiedObject::NAME_KEY,
+                                    sourceGeographicCRS->nameStr() +
+                                        " (with Greenwich prime meridian)"),
+            datum::GeodeticReferenceFrame::create(
+                util::PropertyMap().set(
+                    common::IdentifiedObject::NAME_KEY,
+                    sourceGeographicCRS->datum()->nameStr() +
+                        " (with Greenwich prime meridian)"),
+                sourceGeographicCRS->datum()->ellipsoid(),
+                util::optional<std::string>(), datum::PrimeMeridian::GREENWICH),
+            sourceGeographicCRS->coordinateSystem());
+    }
     std::string transformationName = transformationSourceCRS->nameStr();
     transformationName += " to WGS84";
 
@@ -4456,8 +4571,8 @@ BoundCRSNNPtr BoundCRS::createFromNadgrids(const CRSNNPtr &baseCRSIn,
         operation::Transformation::createNTv2(
             util::PropertyMap().set(common::IdentifiedObject::NAME_KEY,
                                     transformationName),
-            NN_NO_CHECK(transformationSourceCRS), GeographicCRS::EPSG_4326,
-            filename, std::vector<metadata::PositionalAccuracyNNPtr>()));
+            transformationSourceCRS, GeographicCRS::EPSG_4326, filename,
+            std::vector<metadata::PositionalAccuracyNNPtr>()));
 }
 
 // ---------------------------------------------------------------------------

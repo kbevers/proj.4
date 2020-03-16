@@ -9,7 +9,7 @@ The transverse Mercator projection in its various forms is the most widely used 
 +---------------------+----------------------------------------------------------+
 | **Classification**  | Transverse and oblique cylindrical                       |
 +---------------------+----------------------------------------------------------+
-| **Available forms** | Forward and inverse, Spherical and Elliptical            |
+| **Available forms** | Forward and inverse, spherical and ellipsoidal           |
 +---------------------+----------------------------------------------------------+
 | **Defined area**    | Global, but reasonably accurate only within 15 degrees   |
 |                     | of the central meridian                                  |
@@ -62,12 +62,12 @@ The following table gives special cases of the Transverse Mercator projection.
 
 Example using Gauss-Kruger on Germany area (aka EPSG:31467) ::
 
-    $ echo 9 51 | proj +proj=tmerc +lat_0=0 +lon_0=9 +k_0=1 +x_0=3500000 +y_0=0 +ellps=bessel +datum=potsdam +units=m +no_defs
+    $ echo 9 51 | proj +proj=tmerc +lat_0=0 +lon_0=9 +k_0=1 +x_0=3500000 +y_0=0 +ellps=bessel +units=m
     3500000.00	5651505.56
 
 Example using Gauss Boaga on Italy area (EPSG:3004) ::
 
-    $ echo 15 42 | proj +proj=tmerc +lat_0=0 +lon_0=15 +k_0=0.9996 +x_0=2520000 +y_0=0 +ellps=intl +units=m +no_defs
+    $ echo 15 42 | proj +proj=tmerc +lat_0=0 +lon_0=15 +k_0=0.9996 +x_0=2520000 +y_0=0 +ellps=intl +units=m
     2520000.00	4649858.60
 
 Parameters
@@ -79,7 +79,7 @@ Parameters
 
     .. versionadded:: 6.0.0
 
-    Use the algorithm described in section "Elliptical Form" below.
+    Use the algorithm described in section "Ellipsoidal Form" below.
     It is faster than the default algorithm, but also diverges faster
     as the distance from the central meridian increases.
 
@@ -147,8 +147,8 @@ Inverse projection
   \lambda = \arctan(\frac{\sinh x'}{\cos D})
 
 
-Elliptical form
-***************
+Ellipsoidal form
+****************
 
 The formulas below describe the algorithm used when giving the
 :option:`+approx` option. They are originally from :cite:`Snyder1987`,

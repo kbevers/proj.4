@@ -86,6 +86,15 @@ config_str = """
         - Scale_Factor: EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN
         - Latitude_Of_Origin: EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN
 
+- Transverse_Mercator_Complex: # This is likely PROJ etmerc method
+    WKT2_name: EPSG_NAME_METHOD_TRANSVERSE_MERCATOR
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
+        - Scale_Factor: EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN
+        - Latitude_Of_Origin: EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN
+
 - Albers:
     WKT2_name: EPSG_NAME_METHOD_ALBERS_EQUAL_AREA
     Params:
@@ -159,7 +168,17 @@ config_str = """
         - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
         - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
-# Behrmann: not handled
+- Behrmann:
+    WKT2_name: EPSG_NAME_METHOD_LAMBERT_CYLINDRICAL_EQUAL_AREA_SPHERICAL
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian:
+            Name: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
+            Default: 0.0
+        - Standard_Parallel_1:
+            Name: EPSG_NAME_PARAMETER_LATITUDE_1ST_STD_PARALLEL
+            Default: 30.0
 
 - Winkel_I:
     WKT2_name: "Winkel I"
@@ -440,9 +459,12 @@ config_str = """
         - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
         - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
-# Hammer_Aitoff: not handled
-
-# Flat_Polar_Quartic: not handled
+- Flat_Polar_Quartic:
+    WKT2_name: PROJ_WKT2_NAME_METHOD_FLAT_POLAR_QUARTIC
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
 - Craster_Parabolic:
     WKT2_name: "Craster Parabolic"
@@ -459,9 +481,21 @@ config_str = """
         - Longitude_Of_Center: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
         - Latitude_Of_Center: EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN
 
-# Times: not handled, but present in PROJ
+- Times:
+    WKT2_name: PROJ_WKT2_NAME_METHOD_TIMES
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
-# Vertical_Near_Side_Perspective: not handled, but present in PROJ
+- Vertical_Near_Side_Perspective:
+    WKT2_name: EPSG_NAME_METHOD_VERTICAL_PERSPECTIVE
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Longitude_Of_Center: EPSG_NAME_PARAMETER_LONGITUDE_TOPOGRAPHIC_ORIGIN
+        - Latitude_Of_Center: EPSG_NAME_PARAMETER_LATITUDE_TOPOGRAPHIC_ORIGIN
+        - Height: EPSG_NAME_PARAMETER_VIEWPOINT_HEIGHT
 
 - Stereographic_North_Pole:
     WKT2_name: EPSG_NAME_METHOD_POLAR_STEREOGRAPHIC_VARIANT_B
@@ -482,8 +516,6 @@ config_str = """
         - Standard_Parallel_1: EPSG_NAME_PARAMETER_LATITUDE_STD_PARALLEL
     Cond:
         - EPSG_NAME_PARAMETER_LATITUDE_STD_PARALLEL < 0
-
-# Fuller: not handled
 
 - Rectified_Skew_Orthomorphic_Natural_Origin:
     WKT2_name: EPSG_NAME_METHOD_HOTINE_OBLIQUE_MERCATOR_VARIANT_A
@@ -508,22 +540,12 @@ config_str = """
         - Latitude_Of_Center: EPSG_NAME_PARAMETER_LATITUDE_PROJECTION_CENTRE
         - XY_Plane_Rotation: EPSG_NAME_PARAMETER_ANGLE_RECTIFIED_TO_SKEW_GRID
 
-# Cube: not handled
-
-# Transverse_Mercator_Complex: not handled
-
-# Robinson_ARC_INFO: not handled
-
-# Local: not handled
-
 - Goode_Homolosine:
     WKT2_name: "Goode Homolosine"
     Params:
         - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
         - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
         - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
-
-# Berghaus_Star: not handled
 
 - Equidistant_Cylindrical_Ellipsoidal:
     WKT2_name: EPSG_NAME_METHOD_EQUIDISTANT_CYLINDRICAL
@@ -532,8 +554,6 @@ config_str = """
         - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
         - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
         - Standard_Parallel_1: EPSG_NAME_PARAMETER_LATITUDE_1ST_STD_PARALLEL
-
-# Ney_Modified_Conic: not handled
 
 - Laborde_Oblique_Mercator:
     WKT2_name: EPSG_NAME_METHOD_LABORDE_OBLIQUE_MERCATOR
@@ -545,8 +565,6 @@ config_str = """
         - Longitude_Of_Center: EPSG_NAME_PARAMETER_LONGITUDE_PROJECTION_CENTRE
         - Latitude_Of_Center: EPSG_NAME_PARAMETER_LATITUDE_PROJECTION_CENTRE
 
-# IGAC_Plano_Cartesiano: not handled
-
 - Gnomonic_Ellipsoidal:
     WKT2_name: PROJ_WKT2_NAME_METHOD_GNOMONIC
     Params:
@@ -554,22 +572,6 @@ config_str = """
         - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
         - Longitude_Of_Center: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
         - Latitude_Of_Center: EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN
-
-# Polar_Stereographic_Variant_A: not handled, no example in .csv
-
-# Polar_Stereographic_Variant_B: not handled, no example in .csv
-
-# Polar_Stereographic_Variant_C: not handled
-
-# Mercator_Variant_A: not handled, no example in .csv
-
-# Mercator_Variant_C: not handled, no example in .csv
-
-# Hammer_Ellipsoidal: not handled
-
-# Quartic_Authalic_Ellipsoidal: not handled, no example in .csv
-
-# Eckert_Greifendorff: not handled
 
 - Wagner_IV:
     WKT2_name: PROJ_WKT2_NAME_METHOD_WAGNER_IV
@@ -593,19 +595,33 @@ config_str = """
         - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
         - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
-# Natural_Earth: not handled
+- Natural_Earth:
+    WKT2_name: PROJ_WKT2_NAME_METHOD_NATURAL_EARTH
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
-# Natural_Earth_II: not handled
+- Natural_Earth_II:
+    WKT2_name: PROJ_WKT2_NAME_METHOD_NATURAL_EARTH_II
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
-# Patterson: not handled
+- Patterson:
+    WKT2_name: PROJ_WKT2_NAME_METHOD_PATTERSON
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
-# Compact_Miller: not handled
-
-# Transverse_Mercator_NGA_2014: not handled
-
-# Transverse_Cylindrical_Equal_Area: not handled
-
-# Aspect_Adaptive_Cylindrical: not handled
+- Compact_Miller:
+    WKT2_name: PROJ_WKT2_NAME_METHOD_COMPACT_MILLER
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
 
 - Geostationary_Satellite:
     WKT2_name: PROJ_WKT2_NAME_METHOD_GEOSTATIONARY_SATELLITE_SWEEP_Y
@@ -616,8 +632,6 @@ config_str = """
         - Height: "Satellite Height"
         - Option: 0.0
 
-# Equidistant_Cylindrical_Auxiliary_Sphere: not handled
-
 - Mercator_Auxiliary_Sphere:
     WKT2_name: EPSG_NAME_METHOD_POPULAR_VISUALISATION_PSEUDO_MERCATOR
     Params:
@@ -627,23 +641,72 @@ config_str = """
         - Standard_Parallel_1: EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN
         - Auxiliary_Sphere_Type: 0.0
 
-# Mollweide_Auxiliary_Sphere: not handled
+- Mercator_Variant_A:
+    WKT2_name: EPSG_NAME_METHOD_MERCATOR_VARIANT_A
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
+        - Scale_Factor: EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN
 
-# Eckert_VI_Auxiliary_Sphere: not handled
+- Mercator_Variant_C:
+    WKT2_name: EPSG_NAME_METHOD_MERCATOR_VARIANT_B
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
+        - Standard_Parallel_1: EPSG_NAME_PARAMETER_LATITUDE_1ST_STD_PARALLEL
+        - Latitude_Of_Origin: 0
 
-# Eckert_IV_Auxiliary_Sphere: not handled
+- Transverse_Cylindrical_Equal_Area:
+    WKT2_name: Transverse Cylindrical Equal Area
+    Params:
+        - False_Easting: EPSG_NAME_PARAMETER_FALSE_EASTING
+        - False_Northing: EPSG_NAME_PARAMETER_FALSE_NORTHING
+        - Central_Meridian: EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN
+        - Scale_Factor: EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN
+        - Latitude_Of_Origin: EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN
 
-# Stereographic_Auxiliary_Sphere: not handled
+# Missing/unclear mappings
 
-# Van_der_Grinten_I_Auxiliary_Sphere: not handled
+# Hammer_Aitoff: possibly hammer?
+# Hammer_Ellipsoidal: possibly hammer?
+# Eckert_Greifendorff: +proj=hammer +W=0.25 +M=1
+# Tobler_Cylindrical_I: likely tobmerc, but parameters TBD
+# Tobler_Cylindrical_II: likely tobmerc, but parameters TBD
 
-# Azimuthal_Equidistant_Auxiliary_Sphere: not handled
+# Missing mappings
 
-# Lambert_Azimuthal_Equal_Area_Auxiliary_Sphere: not handled
+# Transverse_Mercator_NGA_2014: utm -- tricky mapping from Central_Meridian to zone
+# Polar_Stereographic_Variant_A: ups -- tricky mapping from Latitude_Of_Origin to "+south" when required
+# Transverse Mercator: alias for Transverse_Mercator, as seen in ESRI:102470 - ESRI:102489
 
-# Orthographic_Auxiliary_Sphere: not handled
 
-# Gnomonic_Auxiliary_Sphere: not handled
+# The following methods are not currently possible in PROJ:
+
+# Ney_Modified_Conic
+# IGAC_Plano_Cartesiano
+# Fuller
+# Berghaus_Star
+# Cube
+# Robinson_ARC_INFO
+# Local
+# Equidistant_Cylindrical_Auxiliary_Sphere
+# Aspect_Adaptive_Cylindrical
+# Mollweide_Auxiliary_Sphere
+# Eckert_VI_Auxiliary_Sphere
+# Eckert_IV_Auxiliary_Sphere
+# Stereographic_Auxiliary_Sphere
+# Van_der_Grinten_I_Auxiliary_Sphere
+# Azimuthal_Equidistant_Auxiliary_Sphere
+# Lambert_Azimuthal_Equal_Area_Auxiliary_Sphere
+# Orthographic_Auxiliary_Sphere
+# Gnomonic_Auxiliary_Sphere
+# Polar_Stereographic_Variant_B
+# Polar_Stereographic_Variant_C
+# Quartic_Authalic_Ellipsoidal
+# Adams_Square_II
+# Peirce_Quincuncial
 
 """
 
@@ -664,14 +727,20 @@ def generate_mapping(WKT2_name, esri_proj_name, Params, suffix=''):
     for param in Params:
         for param_name in param:
             param_value = param[param_name]
+
+            default_value = None
+            if isinstance(param_value, dict):
+                default_value = param_value.get('Default', None)
+                param_value = param_value['Name']
+
             if isinstance(param_value, str):
                 if param_value.startswith('EPSG_'):
-                    print('  { "%s", %s, %s, 0.0 },' % (param_name, param_value, param_value.replace('_NAME_', '_CODE_')))
+                    print('  { "%s", %s, %s, "%.1f", %s },' % (param_name, param_value, param_value.replace('_NAME_', '_CODE_'), default_value or 0.0, "true" if default_value is not None else "false"))
                 else:
-                    print('  { "%s", "%s", 0, 0.0 },' % (param_name, param_value))
+                    print('  { "%s", "%s", 0, "%.1f", %s },' % (param_name, param_value, default_value or 0.0, "true" if default_value is not None else "false"))
             else:
-                print('  { "%s", nullptr, 0, %.1f },' % (param_name, param_value))
-    print('  { nullptr, nullptr, 0, 0.0 }')
+                print('  { "%s", nullptr, 0, "%.1f", false },' % (param_name, param_value))
+    print('  { nullptr, nullptr, 0, "0.0", false }')
     print('};')
 
 
@@ -757,8 +826,7 @@ print('};')
 print("""
 // ---------------------------------------------------------------------------
 
-// end of anonymous namespace
-}
+} // namespace {
 
 //! @endcond
 

@@ -329,9 +329,6 @@ static void outputObject(
     if (projStringExportable) {
         if (outputOpt.PROJ5) {
             try {
-                if (alreadyOutputed) {
-                    std::cout << std::endl;
-                }
                 auto crs = nn_dynamic_pointer_cast<CRS>(obj);
                 if (!outputOpt.quiet) {
                     if (crs) {
@@ -787,7 +784,7 @@ int main(int argc, char **argv) {
         CoordinateOperationContext::SourceTargetCRSExtentUse::SMALLEST;
     bool buildBoundCRSToWGS84 = false;
     CoordinateOperationContext::GridAvailabilityUse gridAvailabilityUse =
-        pj_context_is_network_enabled(nullptr)
+        proj_context_is_network_enabled(nullptr)
             ? CoordinateOperationContext::GridAvailabilityUse::KNOWN_AVAILABLE
             : CoordinateOperationContext::GridAvailabilityUse::USE_FOR_SORTING;
     CoordinateOperationContext::IntermediateCRSUse allowUseIntermediateCRS =
@@ -1071,7 +1068,7 @@ int main(int argc, char **argv) {
             std::exit(0);
         } else if (ci_equal(arg, "--remote-data")) {
 #ifdef CURL_ENABLED
-            if (pj_context_is_network_enabled(nullptr)) {
+            if (proj_context_is_network_enabled(nullptr)) {
                 std::cout << "Status: enabled" << std::endl;
                 std::cout << "URL: " << pj_context_get_url_endpoint(nullptr)
                           << std::endl;

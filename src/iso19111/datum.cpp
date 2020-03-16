@@ -1247,7 +1247,7 @@ void GeodeticReferenceFrame::_exportToWKT(
                 if (dbContext) {
                     auto factory = io::AuthorityFactory::create(
                         NN_NO_CHECK(dbContext), std::string());
-                    // We use anonymous autority and approximate matching, so
+                    // We use anonymous authority and approximate matching, so
                     // as to trigger the caching done in createObjectsFromName()
                     // in that case.
                     auto matches = factory->createObjectsFromName(
@@ -1846,7 +1846,9 @@ void VerticalReferenceFrame::_exportToWKT(
 {
     const bool isWKT2 = formatter->version() == io::WKTFormatter::Version::WKT2;
     formatter->startNode(isWKT2 ? io::WKTConstants::VDATUM
-                                : io::WKTConstants::VERT_DATUM,
+                                : formatter->useESRIDialect()
+                                      ? io::WKTConstants::VDATUM
+                                      : io::WKTConstants::VERT_DATUM,
                          !identifiers().empty());
     const auto &l_name = nameStr();
     if (!l_name.empty()) {
@@ -1856,7 +1858,7 @@ void VerticalReferenceFrame::_exportToWKT(
     }
     if (isWKT2) {
         Datum::getPrivate()->exportAnchorDefinition(formatter);
-    } else {
+    } else if (!formatter->useESRIDialect()) {
         formatter->add(2005); // CS_VD_GeoidModelDerived from OGC 01-009
         const auto &extension = formatter->getVDatumExtension();
         if (!extension.empty()) {

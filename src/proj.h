@@ -153,7 +153,7 @@ extern "C" {
 
 /* The version numbers should be updated with every release! **/
 #define PROJ_VERSION_MAJOR 7
-#define PROJ_VERSION_MINOR 0
+#define PROJ_VERSION_MINOR 1
 #define PROJ_VERSION_PATCH 0
 
 extern char const PROJ_DLL pj_release[]; /* global release id string */
@@ -489,6 +489,8 @@ int PROJ_DLL proj_context_set_network_callbacks(
 
 int PROJ_DLL proj_context_set_enable_network(PJ_CONTEXT* ctx,
                                              int enabled);
+
+int PROJ_DLL proj_context_is_network_enabled(PJ_CONTEXT* ctx);
 
 void PROJ_DLL proj_context_set_url_endpoint(PJ_CONTEXT* ctx, const char* url);
 

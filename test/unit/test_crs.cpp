@@ -2445,6 +2445,33 @@ TEST(crs, projectedCRS_identify_db) {
         }
         EXPECT_TRUE(found);
     }
+    {
+        // Identify a ESRI WKT where the EPSG system has Northing/Easting order
+        auto obj = WKTParser().attachDatabaseContext(dbContext).createFromWKT(
+            "PROJCS[\"NZGD2000_New_Zealand_Transverse_Mercator_2000\","
+            "    GEOGCS[\"GCS_NZGD2000\","
+            "        DATUM[\"New_Zealand_Geodetic_Datum_2000\","
+            "            SPHEROID[\"GRS 1980\",6378137,298.2572221010042,"
+            "                AUTHORITY[\"EPSG\",\"7019\"]],"
+            "            AUTHORITY[\"EPSG\",\"6167\"]],"
+            "        PRIMEM[\"Greenwich\",0],"
+            "        UNIT[\"degree\",0.0174532925199433]],"
+            "        PROJECTION[\"Transverse_Mercator\"],"
+            "        PARAMETER[\"latitude_of_origin\",0],"
+            "        PARAMETER[\"central_meridian\",173],"
+            "        PARAMETER[\"scale_factor\",0.9996],"
+            "        PARAMETER[\"false_easting\",1600000],"
+            "        PARAMETER[\"false_northing\",10000000],"
+            "        UNIT[\"metre\",1,"
+            "            AUTHORITY[\"EPSG\",\"9001\"]]]");
+        auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+        ASSERT_TRUE(crs != nullptr);
+        auto factoryAll = AuthorityFactory::create(dbContext, std::string());
+        auto res = crs->identify(factoryAll);
+        ASSERT_EQ(res.size(), 1U);
+        EXPECT_EQ(res.front().first->getEPSGCode(), 2193);
+        EXPECT_EQ(res.front().second, 90);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -3157,6 +3184,36 @@ TEST(crs, verticalCRS_as_WKT1_GDAL) {
 
 // ---------------------------------------------------------------------------
 
+TEST(crs, verticalCRS_as_WKT1_ESRI) {
+    auto crs = createVerticalCRS();
+    auto expected = "VERTCS[\"ODN height\",VDATUM[\"Ordnance Datum Newlyn\"],"
+                    "PARAMETER[\"Vertical_Shift\",0.0],"
+                    "PARAMETER[\"Direction\",1.0],"
+                    "UNIT[\"Meter\",1.0]]";
+
+    EXPECT_EQ(
+        crs->exportToWKT(
+            WKTFormatter::create(WKTFormatter::Convention::WKT1_ESRI).get()),
+        expected);
+}
+// ---------------------------------------------------------------------------
+
+TEST(crs, verticalCRS_down_as_WKT1_ESRI) {
+    auto wkt = "VERTCS[\"Caspian\",VDATUM[\"Caspian_Sea\"],"
+               "PARAMETER[\"Vertical_Shift\",0.0],"
+               "PARAMETER[\"Direction\",-1.0],UNIT[\"Meter\",1.0]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<VerticalCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(
+        crs->exportToWKT(
+            WKTFormatter::create(WKTFormatter::Convention::WKT1_ESRI).get()),
+        wkt);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(crs, verticalCRS_identify_db) {
     auto dbContext = DatabaseContext::create();
     auto factory = AuthorityFactory::create(dbContext, "EPSG");
@@ -3331,6 +3388,46 @@ static CompoundCRSNNPtr createCompoundCRS() {
 
 // ---------------------------------------------------------------------------
 
+TEST(crs, compoundCRS_valid) {
+    // geographic 2D + vertical
+    CompoundCRS::create(
+        PropertyMap(),
+        std::vector<CRSNNPtr>{GeographicCRS::EPSG_4326, createVerticalCRS()});
+
+    // projected 2D + vertical
+    CompoundCRS::create(
+        PropertyMap(),
+        std::vector<CRSNNPtr>{createProjected(), createVerticalCRS()});
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(crs, compoundCRS_invalid) {
+    EXPECT_THROW(CompoundCRS::create(PropertyMap(), {}),
+                 InvalidCompoundCRSException);
+
+    // Only one component
+    EXPECT_THROW(CompoundCRS::create(PropertyMap(),
+                                     std::vector<CRSNNPtr>{createProjected()}),
+                 InvalidCompoundCRSException);
+
+    // Two geographic
+    EXPECT_THROW(
+        CompoundCRS::create(PropertyMap(),
+                            std::vector<CRSNNPtr>{GeographicCRS::EPSG_4326,
+                                                  GeographicCRS::EPSG_4326}),
+        InvalidCompoundCRSException);
+
+    // geographic 3D + vertical
+    EXPECT_THROW(
+        CompoundCRS::create(PropertyMap(),
+                            std::vector<CRSNNPtr>{GeographicCRS::EPSG_4979,
+                                                  createVerticalCRS()}),
+        InvalidCompoundCRSException);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(crs, compoundCRS_as_WKT2) {
     auto crs = createCompoundCRS();
     auto expected =
@@ -3385,18 +3482,10 @@ TEST(crs, compoundCRS_isEquivalentTo) {
     EXPECT_TRUE(crs->isEquivalentTo(crs.get()));
     EXPECT_TRUE(crs->shallowClone()->isEquivalentTo(crs.get()));
     EXPECT_FALSE(crs->isEquivalentTo(createUnrelatedObject().get()));
-    auto compoundCRSOfProjCRS =
-        CompoundCRS::create(PropertyMap().set(IdentifiedObject::NAME_KEY, ""),
-                            std::vector<CRSNNPtr>{createProjected()});
-    auto emptyCompoundCRS =
-        CompoundCRS::create(PropertyMap().set(IdentifiedObject::NAME_KEY, ""),
-                            std::vector<CRSNNPtr>{});
-    EXPECT_FALSE(compoundCRSOfProjCRS->isEquivalentTo(emptyCompoundCRS.get()));
-    auto compoundCRSOfGeogCRS =
-        CompoundCRS::create(PropertyMap().set(IdentifiedObject::NAME_KEY, ""),
-                            std::vector<CRSNNPtr>{GeographicCRS::EPSG_4326});
-    EXPECT_FALSE(
-        compoundCRSOfProjCRS->isEquivalentTo(compoundCRSOfGeogCRS.get()));
+    auto otherCompoundCRS = CompoundCRS::create(
+        PropertyMap().set(IdentifiedObject::NAME_KEY, ""),
+        std::vector<CRSNNPtr>{GeographicCRS::EPSG_4326, createVerticalCRS()});
+    EXPECT_FALSE(crs->isEquivalentTo(otherCompoundCRS.get()));
 }
 
 // ---------------------------------------------------------------------------
@@ -4154,11 +4243,11 @@ TEST(crs, extractGeographicCRS) {
               GeographicCRS::EPSG_4326);
     EXPECT_EQ(createProjected()->extractGeographicCRS(),
               GeographicCRS::EPSG_4326);
-    EXPECT_EQ(
-        CompoundCRS::create(PropertyMap(),
-                            std::vector<CRSNNPtr>{GeographicCRS::EPSG_4326})
-            ->extractGeographicCRS(),
-        GeographicCRS::EPSG_4326);
+    EXPECT_EQ(CompoundCRS::create(
+                  PropertyMap(), std::vector<CRSNNPtr>{GeographicCRS::EPSG_4326,
+                                                       createVerticalCRS()})
+                  ->extractGeographicCRS(),
+              GeographicCRS::EPSG_4326);
 }
 
 // ---------------------------------------------------------------------------
