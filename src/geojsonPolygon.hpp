@@ -38,13 +38,13 @@ NS_PROJ_START
 class PROJ_GCC_DLL Polygon
 {
 protected:
-	std::string m_name;
+	std::string m_areaname;
 	vector<PolygonPoint> *m_pointList;
 	//Polygon();	
 public:
 	PROJ_FOR_TEST Polygon(const std::string &nameIn);
 	PROJ_FOR_TEST virtual ~Polygon();
-	PROJ_FOR_TEST const std::string &name() const { return m_name; }
+	PROJ_FOR_TEST const std::string &name() const { return m_areaname; }
 };
 
 class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon

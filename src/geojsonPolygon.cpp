@@ -96,7 +96,7 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 	
 	if (ends_with(tolower(actualName), "geojson"))
 	{
-		//TODO: Denne skal opne fila :-)		
+		//TODO: Denne skal opne fila :-)
 		auto polygon = GeoJsonMultiPolygon::open(ctx, std::move(fp), actualName);	
 		if (!polygon)
 			return nullptr;
@@ -174,12 +174,19 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 
 	auto feat = j_complete.at("features");
 
-	for (auto it1 = feat.begin(); it1 != feat.end(); ++it1)
+	for (auto it = feat.begin(); it != feat.end(); ++it)
 	{
 		bool isMultiPolygon = false;
 		vector<PolygonPoint> pointVector;
-
-		auto geo = (*it1)["geometry"];
+	 
+		auto areas = (*it)["properties"];
+		auto areaname = areas.find("areaname");
+		if (areaname->is_string())
+		{
+			std::string	name = areaname.value();
+			set->m_areaname = name;
+		}
+		auto geo = (*it)["geometry"];
 
 		for (auto& el : geo.items())
 		{
@@ -187,15 +194,15 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 			{
 				if (el.value() == "MultiPolygon")
 					isMultiPolygon = true;
-			}
+			}			
 			if (el.key() == "coordinates")
 			{
 				recursive_iterate(el, pointVector, [](json::const_iterator it) {});
 			}
 			if (isMultiPolygon)
 			{
-				set->m_pointList = &pointVector;
 				// TODO: Leggje til polygon
+				set->m_pointList = &pointVector;
 			}
 		}
 	}
