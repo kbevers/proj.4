@@ -2463,17 +2463,56 @@ WKTParser::Private::buildCS(const WKTNodeNNPtr &node, /* maybe null */
                 return CartesianCS::createEastingNorthing(unit);
             }
         } else if (ci_equal(parentNodeName, WKTConstants::VERT_CS) ||
+                   ci_equal(parentNodeName, WKTConstants::VERTCS) ||
                    ci_equal(parentNodeName, WKTConstants::BASEVERTCRS)) {
             csTypeCStr = "vertical";
+
+            bool downDirection = false;
+            if (ci_equal(parentNodeName, WKTConstants::VERTCS)) // ESRI
+            {
+                for (const auto &childNode : parentNode->GP()->children()) {
+                    const auto &childNodeChildren = childNode->GP()->children();
+                    if (childNodeChildren.size() == 2 &&
+                        ci_equal(childNode->GP()->value(),
+                                 WKTConstants::PARAMETER) &&
+                        childNodeChildren[0]->GP()->value() ==
+                            "\"Direction\"") {
+                        const auto &paramValue =
+                            childNodeChildren[1]->GP()->value();
+                        try {
+                            double val = asDouble(childNodeChildren[1]);
+                            if (val == 1.0) {
+                                // ok
+                            } else if (val == -1.0) {
+                                downDirection = true;
+                            }
+                        } catch (const std::exception &) {
+                            throw ParsingException(
+                                concat("unhandled parameter value type : ",
+                                       paramValue));
+                        }
+                    }
+                }
+            }
+
             if (axisCount == 0) {
                 auto unit =
                     buildUnitInSubNode(parentNode, UnitOfMeasure::Type::LINEAR);
                 if (unit == UnitOfMeasure::NONE) {
-                    if (ci_equal(parentNodeName, WKTConstants::VERT_CS)) {
+                    if (ci_equal(parentNodeName, WKTConstants::VERT_CS) ||
+                        ci_equal(parentNodeName, WKTConstants::VERTCS)) {
                         ThrowParsingExceptionMissingUNIT();
                     } else {
                         unit = UnitOfMeasure::METRE;
                     }
+                }
+                if (downDirection) {
+                    return VerticalCS::create(
+                        util::PropertyMap(),
+                        CoordinateSystemAxis::create(
+                            util::PropertyMap().set(IdentifiedObject::NAME_KEY,
+                                                    "depth"),
+                            "D", AxisDirection::DOWN, unit));
                 }
                 return VerticalCS::createGravityRelatedHeight(unit);
             }
@@ -3185,7 +3224,8 @@ ConversionNNPtr WKTParser::Private::buildProjectionFromESRI(
             if (iter != mapParamNameToValue.end()) {
                 if (param->wkt2_name == nullptr) {
                     try {
-                        if (param->fixed_value == io::asDouble(iter->second)) {
+                        if (io::asDouble(param->fixed_value) ==
+                            io::asDouble(iter->second)) {
                             matchCount++;
                         }
                     } catch (const std::exception &) {
@@ -3193,6 +3233,8 @@ ConversionNNPtr WKTParser::Private::buildProjectionFromESRI(
                 } else {
                     matchCount++;
                 }
+            } else if (param->is_fixed_value) {
+                mapParamNameToValue[param->esri_name] = param->fixed_value;
             }
         }
         if (matchCount > bestMatchCount) {
@@ -3887,6 +3929,7 @@ CRSNNPtr WKTParser::Private::buildVerticalCRS(const WKTNodeNNPtr &node) {
     auto &csNode = nodeP->lookForChild(WKTConstants::CS_);
     const auto &nodeValue = nodeP->value();
     if (isNull(csNode) && !ci_equal(nodeValue, WKTConstants::VERT_CS) &&
+        !ci_equal(nodeValue, WKTConstants::VERTCS) &&
         !ci_equal(nodeValue, WKTConstants::BASEVERTCRS)) {
         ThrowMissing(WKTConstants::CS_);
     }
@@ -3902,7 +3945,8 @@ CRSNNPtr WKTParser::Private::buildVerticalCRS(const WKTNodeNNPtr &node) {
     // following conventions from
     // https://pubs.usgs.gov/tm/11b4/pdf/tm11-B4.pdf
     // page 9
-    if (ci_equal(nodeValue, WKTConstants::VERT_CS)) {
+    if (ci_equal(nodeValue, WKTConstants::VERT_CS) ||
+        ci_equal(nodeValue, WKTConstants::VERTCS)) {
         std::string name;
         if (props.getStringValue(IdentifiedObject::NAME_KEY, name)) {
             std::string geoidName;
@@ -4060,6 +4104,52 @@ WKTParser::Private::buildCompoundCRS(const WKTNodeNNPtr &node) {
 
 // ---------------------------------------------------------------------------
 
+static CRSNNPtr
+createBoundCRSSourceTransformationCRS(const crs::CRSPtr &sourceCRS,
+                                      const crs::CRSPtr &targetCRS) {
+    CRSPtr sourceTransformationCRS;
+    if (dynamic_cast<GeographicCRS *>(targetCRS.get())) {
+        GeographicCRSPtr sourceGeographicCRS =
+            sourceCRS->extractGeographicCRS();
+        sourceTransformationCRS = sourceGeographicCRS;
+        if (sourceGeographicCRS) {
+            if (sourceGeographicCRS->datum() != nullptr &&
+                sourceGeographicCRS->primeMeridian()
+                        ->longitude()
+                        .getSIValue() != 0.0) {
+                sourceTransformationCRS =
+                    GeographicCRS::create(
+                        util::PropertyMap().set(
+                            common::IdentifiedObject::NAME_KEY,
+                            sourceGeographicCRS->nameStr() +
+                                " (with Greenwich prime meridian)"),
+                        datum::GeodeticReferenceFrame::create(
+                            util::PropertyMap().set(
+                                common::IdentifiedObject::NAME_KEY,
+                                sourceGeographicCRS->datum()->nameStr() +
+                                    " (with Greenwich prime meridian)"),
+                            sourceGeographicCRS->datum()->ellipsoid(),
+                            util::optional<std::string>(),
+                            datum::PrimeMeridian::GREENWICH),
+                        sourceGeographicCRS->coordinateSystem())
+                        .as_nullable();
+            }
+        } else {
+            sourceTransformationCRS =
+                std::dynamic_pointer_cast<VerticalCRS>(sourceCRS);
+            if (!sourceTransformationCRS) {
+                throw ParsingException(
+                    "Cannot find GeographicCRS or VerticalCRS in sourceCRS");
+            }
+        }
+    } else {
+        sourceTransformationCRS = sourceCRS;
+    }
+    return NN_NO_CHECK(sourceTransformationCRS);
+}
+
+// ---------------------------------------------------------------------------
+
 BoundCRSNNPtr WKTParser::Private::buildBoundCRS(const WKTNodeNNPtr &node) {
     const auto *nodeP = node->GP();
     auto &abridgedNode =
@@ -4103,23 +4193,10 @@ BoundCRSNNPtr WKTParser::Private::buildBoundCRS(const WKTNodeNNPtr &node) {
     consumeParameters(abridgedNode, true, parameters, values, defaultLinearUnit,
                       defaultAngularUnit);
 
-    CRSPtr sourceTransformationCRS;
-    if (dynamic_cast<GeographicCRS *>(targetCRS.get())) {
-        sourceTransformationCRS = sourceCRS->extractGeographicCRS();
-        if (!sourceTransformationCRS) {
-            sourceTransformationCRS =
-                std::dynamic_pointer_cast<VerticalCRS>(sourceCRS);
-            if (!sourceTransformationCRS) {
-                throw ParsingException(
-                    "Cannot find GeographicCRS or VerticalCRS in sourceCRS");
-            }
-        }
-    } else {
-        sourceTransformationCRS = sourceCRS;
-    }
-
+    const auto sourceTransformationCRS(
+        createBoundCRSSourceTransformationCRS(sourceCRS, targetCRS));
     auto transformation = Transformation::create(
-        buildProperties(abridgedNode), NN_NO_CHECK(sourceTransformationCRS),
+        buildProperties(abridgedNode), sourceTransformationCRS,
         NN_NO_CHECK(targetCRS), nullptr, buildProperties(methodNode),
         parameters, values, std::vector<PositionalAccuracyNNPtr>());
 
@@ -4368,6 +4445,7 @@ CRSPtr WKTParser::Private::buildCRS(const WKTNodeNNPtr &node) {
     }
 
     if (ci_equal(name, WKTConstants::VERT_CS) ||
+        ci_equal(name, WKTConstants::VERTCS) ||
         ci_equal(name, WKTConstants::VERTCRS) ||
         ci_equal(name, WKTConstants::VERTICALCRS)) {
         if (!isNull(nodeP->lookForChild(WKTConstants::BASEVERTCRS))) {
@@ -5265,24 +5343,11 @@ BoundCRSNNPtr JSONParser::buildBoundCRS(const json &j) {
         values.emplace_back(ParameterValue::create(getMeasure(param)));
     }
 
-    CRSPtr sourceTransformationCRS;
-    if (dynamic_cast<GeographicCRS *>(targetCRS.get())) {
-        sourceTransformationCRS = sourceCRS->extractGeographicCRS();
-        if (!sourceTransformationCRS) {
-            sourceTransformationCRS =
-                std::dynamic_pointer_cast<VerticalCRS>(sourceCRS.as_nullable());
-            if (!sourceTransformationCRS) {
-                throw ParsingException(
-                    "Cannot find GeographicCRS or VerticalCRS in sourceCRS");
-            }
-        }
-    } else {
-        sourceTransformationCRS = sourceCRS;
-    }
-
+    const auto sourceTransformationCRS(
+        createBoundCRSSourceTransformationCRS(sourceCRS, targetCRS));
     auto transformation = Transformation::create(
-        buildProperties(transformationJ), NN_NO_CHECK(sourceTransformationCRS),
-        targetCRS, nullptr, buildProperties(methodJ), parameters, values,
+        buildProperties(transformationJ), sourceTransformationCRS, targetCRS,
+        nullptr, buildProperties(methodJ), parameters, values,
         std::vector<PositionalAccuracyNNPtr>());
 
     return BoundCRS::create(sourceCRS, targetCRS, transformation);
@@ -6142,6 +6207,9 @@ WKTParser::attachDatabaseContext(const DatabaseContextPtr &dbContext) {
  */
 WKTParser::WKTGuessedDialect
 WKTParser::guessDialect(const std::string &wkt) noexcept {
+    if (ci_starts_with(wkt, WKTConstants::VERTCS)) {
+        return WKTGuessedDialect::WKT1_ESRI;
+    }
     const std::string *const wkt1_keywords[] = {
         &WKTConstants::GEOCCS, &WKTConstants::GEOGCS,  &WKTConstants::COMPD_CS,
         &WKTConstants::PROJCS, &WKTConstants::VERT_CS, &WKTConstants::LOCAL_CS};

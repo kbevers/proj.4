@@ -3107,18 +3107,45 @@ TEST_F(CApi, proj_grid_get_info_from_database) {
             nullptr, nullptr, nullptr, nullptr));
     }
     {
-        const char *name = nullptr;
+        const char *full_name = nullptr;
         const char *package_name = nullptr;
         const char *url = nullptr;
         int direct_download = 0;
         int open_license = 0;
         int available = 0;
         EXPECT_TRUE(proj_grid_get_info_from_database(
-            m_ctxt, "au_icsm_GDA94_GDA2020_conformal.tif", &name, &package_name,
-            &url, &direct_download, &open_license, &available));
-        ASSERT_NE(name, nullptr);
+            m_ctxt, "au_icsm_GDA94_GDA2020_conformal.tif", &full_name,
+            &package_name, &url, &direct_download, &open_license, &available));
+        ASSERT_NE(full_name, nullptr);
+        // empty string expected as the file is not in test data
+        EXPECT_TRUE(full_name[0] == 0);
         ASSERT_NE(package_name, nullptr);
+        EXPECT_TRUE(package_name[0] == 0); // empty string expected
         ASSERT_NE(url, nullptr);
+        EXPECT_EQ(std::string(url),
+                  "https://cdn.proj.org/au_icsm_GDA94_GDA2020_conformal.tif");
+        EXPECT_EQ(direct_download, 1);
+        EXPECT_EQ(open_license, 1);
+    }
+    // Same test as above, but with PROJ 6 grid name
+    {
+        const char *full_name = nullptr;
+        const char *package_name = nullptr;
+        const char *url = nullptr;
+        int direct_download = 0;
+        int open_license = 0;
+        int available = 0;
+        EXPECT_TRUE(proj_grid_get_info_from_database(
+            m_ctxt, "GDA94_GDA2020_conformal.gsb", &full_name, &package_name,
+            &url, &direct_download, &open_license, &available));
+        ASSERT_NE(full_name, nullptr);
+        // empty string expected as the file is not in test data
+        EXPECT_TRUE(full_name[0] == 0);
+        ASSERT_NE(package_name, nullptr);
+        EXPECT_TRUE(package_name[0] == 0); // empty string expected
+        ASSERT_NE(url, nullptr);
+        EXPECT_EQ(std::string(url),
+                  "https://cdn.proj.org/au_icsm_GDA94_GDA2020_conformal.tif");
         EXPECT_EQ(direct_download, 1);
         EXPECT_EQ(open_license, 1);
     }
@@ -4117,10 +4144,7 @@ TEST_F(CApi, proj_create_crs_to_crs_with_only_ballpark_transformations) {
     coord = proj_trans(Pnormalized, PJ_FWD, coord);
     EXPECT_NEAR(coord.xyzt.x, 3.0, 1e-9);
     EXPECT_NEAR(coord.xyzt.y, 40.65085651660555, 1e-9);
-    if (coord.xyzt.z != 0) {
-        // z will depend if the egm96_15.gtx grid is there or not
-        EXPECT_NEAR(coord.xyzt.z, 47.04784081844435, 1e-3);
-    }
+    EXPECT_NEAR(coord.xyzt.z, 47.72600023608570, 1e-3);
 }
 
 // ---------------------------------------------------------------------------
@@ -4128,10 +4152,6 @@ TEST_F(CApi, proj_create_crs_to_crs_with_only_ballpark_transformations) {
 TEST_F(
     CApi,
     proj_create_crs_to_crs_from_custom_compound_crs_with_NAD83_2011_and_geoidgrid_ref_against_WGS84_to_WGS84_G1762) {
-
-    if (strcmp(proj_grid_info("egm96_15.gtx").format, "missing") == 0) {
-        return; // use GTEST_SKIP() if we upgrade gtest
-    }
 
     PJ *P;
 
@@ -4187,7 +4207,7 @@ TEST_F(
 
     EXPECT_NEAR(outcoord.xyzt.x, 35.09499307271, 1e-9);
     EXPECT_NEAR(outcoord.xyzt.y, -118.64014868921, 1e-9);
-    EXPECT_NEAR(outcoord.xyzt.z, 118.059, 1e-3);
+    EXPECT_NEAR(outcoord.xyzt.z, 117.655, 1e-3);
 }
 
 // ---------------------------------------------------------------------------
@@ -4195,10 +4215,6 @@ TEST_F(
 TEST_F(
     CApi,
     proj_create_crs_to_crs_from_custom_compound_crs_with_NAD83_2011_and_geoidgrid_ref_against_NAD83_2011_to_WGS84_G1762) {
-
-    if (strcmp(proj_grid_info("egm96_15.gtx").format, "missing") == 0) {
-        return; // use GTEST_SKIP() if we upgrade gtest
-    }
 
     PJ *P;
 
@@ -4251,7 +4267,7 @@ TEST_F(
 
     EXPECT_NEAR(outcoord.xyzt.x, 35.000003665064803, 1e-9);
     EXPECT_NEAR(outcoord.xyzt.y, -118.00001414221214, 1e-9);
-    EXPECT_NEAR(outcoord.xyzt.z, -32.5823, 1e-3);
+    EXPECT_NEAR(outcoord.xyzt.z, -32.8110, 1e-3);
 }
 
 // ---------------------------------------------------------------------------

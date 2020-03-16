@@ -156,6 +156,8 @@ osgeo::proj::crs::GeographicCRS::create(osgeo::proj::util::PropertyMap const&, s
 osgeo::proj::crs::GeographicCRS::demoteTo2D(std::string const&, std::shared_ptr<osgeo::proj::io::DatabaseContext> const&) const
 osgeo::proj::crs::GeographicCRS::~GeographicCRS()
 osgeo::proj::crs::GeographicCRS::is2DPartOf3D(dropbox::oxygen::nn<osgeo::proj::crs::GeographicCRS const*>) const
+osgeo::proj::crs::InvalidCompoundCRSException::~InvalidCompoundCRSException()
+osgeo::proj::crs::InvalidCompoundCRSException::InvalidCompoundCRSException(osgeo::proj::crs::InvalidCompoundCRSException const&)
 osgeo::proj::crs::ParametricCRS::coordinateSystem() const
 osgeo::proj::crs::ParametricCRS::create(osgeo::proj::util::PropertyMap const&, dropbox::oxygen::nn<std::shared_ptr<osgeo::proj::datum::ParametricDatum> > const&, dropbox::oxygen::nn<std::shared_ptr<osgeo::proj::cs::ParametricCS> > const&)
 osgeo::proj::crs::ParametricCRS::datum() const
@@ -282,6 +284,7 @@ osgeo::proj::datum::VerticalReferenceFrame::create(osgeo::proj::util::PropertyMa
 osgeo::proj::datum::VerticalReferenceFrame::realizationMethod() const
 osgeo::proj::datum::VerticalReferenceFrame::~VerticalReferenceFrame()
 osgeo::proj::File::~File()
+osgeo::proj::FileManager::exists(projCtx_t*, char const*)
 osgeo::proj::FileManager::open(projCtx_t*, char const*, osgeo::proj::FileAccess)
 osgeo::proj::File::read_line(unsigned long, bool&, bool&)
 osgeo::proj::GenericShiftGrid::~GenericShiftGrid()
@@ -744,7 +747,6 @@ pj_compare_datums
 pj_context_get_grid_cache_filename(projCtx_t*)
 pj_context_get_url_endpoint(projCtx_t*)
 pj_context_get_user_writable_directory(projCtx_t*, bool)
-pj_context_is_network_enabled(projCtx_t*)
 pj_context_set_user_writable_directory(projCtx_t*, std::string const&)
 pj_ctx_alloc
 pj_ctx_fclose
@@ -780,6 +782,7 @@ pj_get_default_ctx
 pj_get_default_fileapi
 pj_get_default_searchpaths(projCtx_t*)
 pj_get_errno_ref
+pj_get_relative_share_proj(projCtx_t*)
 pj_get_release
 pj_get_spheroid_defn
 pj_has_inverse
@@ -832,6 +835,7 @@ proj_context_get_database_metadata
 proj_context_get_database_path
 proj_context_get_use_proj4_init_rules
 proj_context_guess_wkt_dialect
+proj_context_is_network_enabled
 proj_context_set_autoclose_database
 proj_context_set_database_path
 proj_context_set_enable_network

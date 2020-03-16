@@ -585,6 +585,7 @@ struct CoordinateOperation::Private {
     util::optional<common::DataEpoch> sourceCoordinateEpoch_{};
     util::optional<common::DataEpoch> targetCoordinateEpoch_{};
     bool hasBallparkTransformation_ = false;
+    bool use3DHelmert_ = false;
 
     // do not set this for a ProjectedCRS.definingConversion
     struct CRSStrongRef {
@@ -2129,6 +2130,14 @@ std::list<std::string> SingleOperation::validateParameters() const {
         }
 
         if (!opv) {
+            if ((methodEPSGCode == EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL ||
+                 methodEPSGCode ==
+                     EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL_SPHERICAL) &&
+                paramMapping == &paramLatitudeNatOrigin) {
+                // extension of EPSG used by GDAL/PROJ, so we should not
+                // warn on its absence.
+                continue;
+            }
             std::string msg("Cannot find expected parameter ");
             msg += paramMapping->wkt2_name;
             res.emplace_back(msg);
@@ -8858,6 +8867,7 @@ TransformationNNPtr Transformation::substitutePROJAlternativeGridNames(
 
     if (methodEPSGCode == EPSG_CODE_METHOD_VERTCON ||
         methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_NZLVD ||
+        methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_BEV_AT ||
         methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_GTX) {
         auto fileParameter =
             parameterValue(EPSG_NAME_PARAMETER_VERTICAL_OFFSET_FILE,
@@ -9049,16 +9059,16 @@ void Transformation::_exportToPROJString(
         double z =
             parameterValueNumericAsSI(EPSG_CODE_PARAMETER_Z_AXIS_TRANSLATION);
 
-        bool addPushPopV3 =
-            (methodEPSGCode ==
-                 EPSG_CODE_METHOD_COORDINATE_FRAME_GEOGRAPHIC_2D ||
-             methodEPSGCode ==
-                 EPSG_CODE_METHOD_TIME_DEPENDENT_COORDINATE_FRAME_GEOGRAPHIC_2D ||
-             methodEPSGCode == EPSG_CODE_METHOD_POSITION_VECTOR_GEOGRAPHIC_2D ||
-             methodEPSGCode ==
-                 EPSG_CODE_METHOD_TIME_DEPENDENT_POSITION_VECTOR_GEOGRAPHIC_2D ||
-             methodEPSGCode ==
-                 EPSG_CODE_METHOD_GEOCENTRIC_TRANSLATION_GEOGRAPHIC_2D);
+        auto sourceCRSGeog =
+            dynamic_cast<const crs::GeographicCRS *>(sourceCRS().get());
+        auto targetCRSGeog =
+            dynamic_cast<const crs::GeographicCRS *>(targetCRS().get());
+        const bool addPushPopV3 =
+            !CoordinateOperation::getPrivate()->use3DHelmert_ &&
+            ((sourceCRSGeog &&
+              sourceCRSGeog->coordinateSystem()->axisList().size() == 2) ||
+             (targetCRSGeog &&
+              targetCRSGeog->coordinateSystem()->axisList().size() == 2));
 
         setupPROJGeodeticSourceCRS(formatter, sourceCRS(), addPushPopV3,
                                    "Helmert");
@@ -9610,6 +9620,7 @@ void Transformation::_exportToPROJString(
     }
 
     if (methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_NZLVD ||
+        methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_BEV_AT ||
         methodEPSGCode == EPSG_CODE_METHOD_VERTICALGRID_GTX) {
         auto fileParameter =
             parameterValue(EPSG_NAME_PARAMETER_VERTICAL_OFFSET_FILE,
@@ -11678,11 +11689,30 @@ applyInverse(const std::vector<CoordinateOperationNNPtr> &list) {
 void CoordinateOperationFactory::Private::buildCRSIds(
     const crs::CRSNNPtr &crs, Private::Context &context,
     std::list<std::pair<std::string, std::string>> &ids) {
+    const auto &authFactory = context.context->getAuthorityFactory();
+    assert(authFactory);
     for (const auto &id : crs->identifiers()) {
         const auto &authName = *(id->codeSpace());
         const auto &code = id->code();
         if (!authName.empty()) {
-            ids.emplace_back(authName, code);
+            const auto tmpAuthFactory = io::AuthorityFactory::create(
+                authFactory->databaseContext(), authName);
+            try {
+                // Consistency check for the ID attached to the object.
+                // See https://github.com/OSGeo/PROJ/issues/1982 where EPSG:4656
+                // is attached to a GeographicCRS whereas it is a ProjectedCRS
+                if (tmpAuthFactory->createCoordinateReferenceSystem(code)
+                        ->_isEquivalentTo(
+                            crs.get(),
+                            util::IComparable::Criterion::
+                                EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS)) {
+                    ids.emplace_back(authName, code);
+                } else {
+                    // TODO? log this inconsistency
+                }
+            } catch (const std::exception &) {
+                // TODO? log this inconsistency
+            }
         }
     }
     if (ids.empty()) {
@@ -11710,8 +11740,6 @@ void CoordinateOperationFactory::Private::buildCRSIds(
                 return;
             }
 
-            const auto &authFactory = context.context->getAuthorityFactory();
-            assert(authFactory);
             const auto &authFactoryName = authFactory->getAuthority();
             try {
                 const auto tmpAuthFactory = io::AuthorityFactory::create(
@@ -12714,6 +12742,10 @@ void CoordinateOperationFactory::Private::createOperationsWithDatumPivot(
     const auto candidatesDstGeod(findCandidateGeodCRSForDatum(
         authFactory, geodDst, geodDst->datum().get()));
 
+    const bool sourceAndTargetAre3D =
+        geodSrc->coordinateSystem()->axisList().size() == 3 &&
+        geodDst->coordinateSystem()->axisList().size() == 3;
+
     auto createTransformations = [&](const crs::CRSNNPtr &candidateSrcGeod,
                                      const crs::CRSNNPtr &candidateDstGeod,
                                      const CoordinateOperationNNPtr &opFirst,
@@ -12741,8 +12773,9 @@ void CoordinateOperationFactory::Private::createOperationsWithDatumPivot(
             const bool isNullThird =
                 isNullTransformation(opsThird[0]->nameStr());
             CoordinateOperationNNPtr opSecondCloned(
-                (isNullFirst || isNullThird) ? opSecond->shallowClone()
-                                             : opSecond);
+                (isNullFirst || isNullThird || sourceAndTargetAre3D)
+                    ? opSecond->shallowClone()
+                    : opSecond);
             CoordinateOperation *invCOForward = nullptr;
             if (isNullFirst || isNullThird) {
                 if (opSecondCloned->identifiers().size() == 1 &&
@@ -12768,6 +12801,15 @@ void CoordinateOperationFactory::Private::createOperationsWithDatumPivot(
                             invCOForward->setProperties(map);
                         }
                     }
+                }
+            }
+            if (sourceAndTargetAre3D) {
+                opSecondCloned->getPrivate()->use3DHelmert_ = true;
+                auto invCO = dynamic_cast<InverseCoordinateOperation *>(
+                    opSecondCloned.get());
+                if (invCO) {
+                    invCOForward = invCO->forwardOperation().get();
+                    invCOForward->getPrivate()->use3DHelmert_ = true;
                 }
             }
             if (isNullFirst) {
@@ -13808,12 +13850,27 @@ void CoordinateOperationFactory::Private::createOperationsBoundToGeog(
         auto opsFirst = createOperations(
             boundSrc->baseCRS(), NN_NO_CHECK(geogCRSOfBaseOfBoundSrc), context);
         if (!opsFirst.empty()) {
+            CoordinateOperationPtr opIntermediate;
+            if (!geogCRSOfBaseOfBoundSrc->_isEquivalentTo(
+                    boundSrc->transformation()->sourceCRS().get(),
+                    util::IComparable::Criterion::EQUIVALENT)) {
+                auto opsIntermediate = createOperations(
+                    NN_NO_CHECK(geogCRSOfBaseOfBoundSrc),
+                    boundSrc->transformation()->sourceCRS(), context);
+                assert(!opsIntermediate.empty());
+                opIntermediate = opsIntermediate.front();
+            }
             for (const auto &opFirst : opsFirst) {
                 try {
+                    std::vector<CoordinateOperationNNPtr> subops;
+                    subops.emplace_back(opFirst);
+                    if (opIntermediate) {
+                        subops.emplace_back(NN_NO_CHECK(opIntermediate));
+                    }
+                    subops.emplace_back(boundSrc->transformation());
                     res.emplace_back(
                         ConcatenatedOperation::createComputeMetadata(
-                            {opFirst, boundSrc->transformation()},
-                            !allowEmptyIntersection));
+                            subops, !allowEmptyIntersection));
                 } catch (const InvalidOperationEmptyIntersection &) {
                 }
             }
@@ -13831,13 +13888,29 @@ void CoordinateOperationFactory::Private::createOperationsBoundToGeog(
             boundSrc->baseCRS(), NN_NO_CHECK(geogCRSOfBaseOfBoundSrc), context);
         auto opsLast = createOperations(hubSrc, targetCRS, context);
         if (!opsFirst.empty() && !opsLast.empty()) {
+            CoordinateOperationPtr opIntermediate;
+            if (!geogCRSOfBaseOfBoundSrc->_isEquivalentTo(
+                    boundSrc->transformation()->sourceCRS().get(),
+                    util::IComparable::Criterion::EQUIVALENT)) {
+                auto opsIntermediate = createOperations(
+                    NN_NO_CHECK(geogCRSOfBaseOfBoundSrc),
+                    boundSrc->transformation()->sourceCRS(), context);
+                assert(!opsIntermediate.empty());
+                opIntermediate = opsIntermediate.front();
+            }
             for (const auto &opFirst : opsFirst) {
                 for (const auto &opLast : opsLast) {
                     try {
+                        std::vector<CoordinateOperationNNPtr> subops;
+                        subops.emplace_back(opFirst);
+                        if (opIntermediate) {
+                            subops.emplace_back(NN_NO_CHECK(opIntermediate));
+                        }
+                        subops.emplace_back(boundSrc->transformation());
+                        subops.emplace_back(opLast);
                         res.emplace_back(
                             ConcatenatedOperation::createComputeMetadata(
-                                {opFirst, boundSrc->transformation(), opLast},
-                                !allowEmptyIntersection));
+                                subops, !allowEmptyIntersection));
                     } catch (const InvalidOperationEmptyIntersection &) {
                     }
                 }

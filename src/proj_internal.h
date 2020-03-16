@@ -759,7 +759,7 @@ C_NAMESPACE_VAR struct PJ_DATUMS pj_datums[];
 #ifdef PJ_LIB__
 #define PROJ_HEAD(name, desc) static const char des_##name [] = desc
 
-#define OPERATION(name, NEED_ELPJ_LPS)                          \
+#define OPERATION(name, NEED_ELLPS)                          \
                                                              \
 pj_projection_specific_setup_##name (PJ *P);                 \
 C_NAMESPACE PJ *pj_##name (PJ *P);                           \
@@ -773,7 +773,7 @@ C_NAMESPACE PJ *pj_##name (PJ *P) {                          \
     if (nullptr==P)                                          \
         return nullptr;                                      \
     P->descr = des_##name;                                   \
-    P->need_ellps = NEED_ELPJ_LPS;                              \
+    P->need_ellps = NEED_ELLPS;                              \
     P->left  = PJ_IO_UNITS_RADIANS;                          \
     P->right = PJ_IO_UNITS_CLASSIC;                          \
     return P;                                                \
@@ -861,9 +861,6 @@ PJ *pj_create_internal (PJ_CONTEXT *ctx, const char *definition);
 PJ *pj_create_argv_internal (PJ_CONTEXT *ctx, int argc, char **argv);
 
 // For use by projinfo
-bool PROJ_DLL pj_context_is_network_enabled(PJ_CONTEXT* ctx);
-
-// For use by projinfo
 std::string PROJ_DLL pj_context_get_url_endpoint(PJ_CONTEXT* ctx);
 
 void pj_load_ini(PJ_CONTEXT* ctx);
@@ -874,6 +871,7 @@ std::string PROJ_DLL pj_context_get_grid_cache_filename(PJ_CONTEXT *ctx);
 // For use by projsync
 std::string PROJ_DLL pj_context_get_user_writable_directory(PJ_CONTEXT *ctx, bool create);
 void PROJ_DLL pj_context_set_user_writable_directory(PJ_CONTEXT* ctx, const std::string& path);
+std::string PROJ_DLL pj_get_relative_share_proj(PJ_CONTEXT *ctx);
 
 /* classic public API */
 #include "proj_api.h"

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([PROJ], [7.0.0],
+AC_INIT([PROJ], [7.1.0],
         [https://github.com/OSGeo/PROJ/issues], proj, [https://proj.org])
 AC_CONFIG_MACRO_DIR([m4])
 AC_LANG(C)
@@ -199,6 +199,7 @@ AC_SEARCH_LIBS([sqrt], [m])
 
 AC_CHECK_FUNC(localeconv, [AC_DEFINE(HAVE_LOCALECONV,1,[Define to 1 if you have localeconv])])
 AC_CHECK_FUNCS([strerror])
+AC_CHECK_LIB(dl,dladdr,,,)
 
 dnl ---------------------------------------------------------------------------
 dnl Provide a mechanism to disable real mutex support (if lacking win32 or
@@ -237,7 +238,7 @@ dnl ---------------------------------------------------------------------------
 
 if test "x$SQLITE3_CFLAGS$SQLITE3_LIBS" = "x" ; then
 
-    dnl Would build and run with older versons, but with horrible performance
+    dnl Would build and run with older versions, but with horrible performance
     dnl See https://github.com/OSGeo/PROJ/issues/1718
 
     PKG_CHECK_MODULES([SQLITE3], [sqlite3 >= 3.11])
@@ -255,12 +256,10 @@ dnl Check for libtiff
 dnl ---------------------------------------------------------------------------
 
 AC_ARG_ENABLE([tiff],
-              AS_HELP_STRING([--disable-tiff],
-                    [Disable TIFF support. Strongly discouraged !]),
-              [enable_tiff=no],
-              [enable_tiff=yes])
+              AS_HELP_STRING([--enable-tiff],
+                    [Enable TIFF support; strongly encouraged to read some grids [default=yes]]))
 
-if test "x$enable_tiff" = "xyes" -o "x$enable_tiff" = ""; then
+if test "x$enable_tiff" != "xno" -o "x$enable_tiff" = ""; then
     if test "x$TIFF_CFLAGS$TIFF_LIBS" = "x" ; then
         if $PKG_CONFIG libtiff; then
             PKG_CHECK_MODULES([TIFF], [libtiff])
@@ -350,7 +349,7 @@ dnl ---------------------------------------------------------------------------
 AC_CONFIG_FILES([Makefile cmake/Makefile src/Makefile include/Makefile include/proj/Makefile include/proj/internal/Makefile
                  include/proj/internal/nlohmann/Makefile
                  test/Makefile test/cli/Makefile test/gie/Makefile test/gigs/Makefile test/unit/Makefile
-                 man/Makefile man/man1/Makefile man/man3/Makefile data/Makefile])
+                 man/Makefile man/man1/Makefile data/Makefile])
 if ! test "x$with_external_gtest" = "xyes" ; then
     AC_CONFIG_FILES([test/googletest/Makefile test/googletest/include/Makefile
                      test/googletest/include/gtest/Makefile

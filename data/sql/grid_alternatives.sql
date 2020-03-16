@@ -20,6 +20,10 @@ VALUES
 ('SeTa2016.gsb','de_lgvl_saarland_SeTa2016.tif','SeTa2016.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/de_lgvl_saarland_SeTa2016.tif',1,1,NULL),
 ('NTv2_SN.gsb','de_geosn_NTv2_SN.tif','NTv2_SN.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/de_geosn_NTv2_SN.tif',1,1,NULL),
 ('AT_GIS_GRID.gsb','at_bev_AT_GIS_GRID.tif','AT_GIS_GRID.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/at_bev_AT_GIS_GRID.tif',1,1,NULL),
+('GV_HoehenGrid_V1.csv','at_bev_GV_Hoehengrid_V1.tif',NULL,'GTiff','vgridshift',0,NULL,'https://cdn.proj.org/at_bev_GV_Hoehengrid_V1.tif',1,1,NULL),
+('GEOID_GRS80_Oesterreich.csv','at_bev_GEOID_GRS80_Oesterreich.tif',NULL,'GTiff','geoid_like',0,NULL,'https://cdn.proj.org/at_bev_GEOID_GRS80_Oesterreich.tif',1,1,NULL),
+('GEOID_BESSEL_Oesterreich.csv','at_bev_GEOID_BESSEL_Oesterreich.tif',NULL,'GTiff','geoid_like',0,NULL,'https://cdn.proj.org/at_bev_GEOID_BESSEL_Oesterreich.tif',1,1,NULL),
+('GV_Hoehengrid_plus_Geoid_V3.csv','at_bev_GV_Hoehengrid_plus_Geoid_V2.tif',NULL,'GTiff','geoid_like',0,NULL,'https://cdn.proj.org/at_bev_GV_Hoehengrid_plus_Geoid_V2.tif',1,1,NULL),
 ('nzgd2kgrid0005.gsb','nz_linz_nzgd2kgrid0005.tif','nzgd2kgrid0005.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/nz_linz_nzgd2kgrid0005.tif',1,1,NULL),
 ('OSTN15_NTv2_OSGBtoETRS.gsb','uk_os_OSTN15_NTv2_OSGBtoETRS.tif','OSTN15_NTv2_OSGBtoETRS.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/uk_os_OSTN15_NTv2_OSGBtoETRS.tif',1,1,NULL),
 -- Continental USA VERTCON: NGVD (19)29 height to NAVD (19)88 height
@@ -174,8 +178,20 @@ VALUES
 ('Icegeoid_ISN2004.gtx','is_lmi_Icegeoid_ISN2004.tif','Icegeoid_ISN2004.gtx','GTiff','geoid_like',0,NULL,'https://cdn.proj.org/is_lmi_Icegeoid_ISN2004.tif',1,1,NULL),
 ('Icegeoid_ISN93.gtx','is_lmi_Icegeoid_ISN93.tif','Icegeoid_ISN93.gtx','GTiff','geoid_like',0,NULL,'https://cdn.proj.org/is_lmi_Icegeoid_ISN93.tif',1,1,NULL),
 ('Icegeoid_ISN2016.gtx','is_lmi_Icegeoid_ISN2016.tif','Icegeoid_ISN2016.gtx','GTiff','geoid_like',0,NULL,'https://cdn.proj.org/is_lmi_Icegeoid_ISN2016.tif',1,1,NULL),
+-- New Caledonia,
+('gr3dnc01b.mnt','nc_dittt_gr3dnc01b.tif',NULL,'GTiff','geocentricoffset',0,NULL,'https://cdn.proj.org/nc_dittt_gr3dnc01b.tif',1,1,NULL),
+('gr3dnc02b.mnt','nc_dittt_gr3dnc02b.tif',NULL,'GTiff','geocentricoffset',0,NULL,'https://cdn.proj.org/nc_dittt_gr3dnc02b.tif',1,1,NULL),
+('gr3dnc03a.mnt','nc_dittt_gr3dnc03a.tif',NULL,'GTiff','geocentricoffset',0,NULL,'https://cdn.proj.org/nc_dittt_gr3dnc03a.tif',1,1,NULL),
 -- New Zealand grid shift models.
 ('auckland-1946-to-nzvd2016-conversion.csv','nz_linz_auckht1946-nzvd2016.tif','auckht1946-nzvd2016.gtx','GTiff','vgridshift',0,NULL,'https://cdn.proj.org/nz_linz_auckht1946-nzvd2016.tif',1,1,NULL),
+-- Slovakia
+--
+-- The definition of EPSG:8364 (JTSK03 to JTSK) uses NADCON method which is not supported by PROJ.
+-- UGKK (Slovak Geodetic and Cartographic Institute) provides also NTv2 grid file in addition
+-- to NADCON .las/.los files, so we define the NTv2 file here as an alternative.
+-- The file is available online but it does not have a confirmed open license yet,
+-- so it is not available in proj-datumgrid-europe for now
+('Slovakia_JTSK03_to_JTSK.LAS', 'Slovakia_JTSK03_to_JTSK.gsb', 'Slovakia_JTSK03_to_JTSK.gsb', 'NTv2', 'hgridshift', 0, NULL, 'https://www.geoportal.sk/files/gz/slovakia_jtsk03_to_jtsk_ntv2.zip', 0, 0, NULL),
 -- Superseded entries
 ('bluff-1955-to-nzvd2016-conversion.csv','nz_linz_blufht1955-nzvd2016.tif','blufht1955-nzvd2016.gtx','GTiff','vgridshift',0,NULL,'https://cdn.proj.org/nz_linz_blufht1955-nzvd2016.tif',1,1,NULL),
 ('dunedin-1958-to-nzvd2016-conversion.csv','nz_linz_duneht1958-nzvd2016.tif','duneht1958-nzvd2016.gtx','GTiff','vgridshift',0,NULL,'https://cdn.proj.org/nz_linz_duneht1958-nzvd2016.tif',1,1,NULL),

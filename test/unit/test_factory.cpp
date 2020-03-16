@@ -95,6 +95,14 @@ TEST(factory, AuthorityFactory_createUnitOfMeasure_linear) {
 
 // ---------------------------------------------------------------------------
 
+TEST(factory, AuthorityFactory_createUnitOfMeasure_linear_us_survey_foot) {
+    auto factory = AuthorityFactory::create(DatabaseContext::create(), "EPSG");
+    auto uom = factory->createUnitOfMeasure("9003");
+    EXPECT_EQ(uom->conversionToSI(), 12. / 39.37);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(factory, AuthorityFactory_createUnitOfMeasure_angular) {
     auto factory = AuthorityFactory::create(DatabaseContext::create(), "EPSG");
     auto uom = factory->createUnitOfMeasure("9102");
@@ -2755,10 +2763,10 @@ TEST(factory, createObjectsFromName) {
     {
         auto res = factoryEPSG->createObjectsFromName(
             "WGS84", {AuthorityFactory::ObjectType::GEOGRAPHIC_2D_CRS}, true);
-        EXPECT_EQ(res.size(),
-                  9U); // EPSG:4326 and EPSG:4030 and the 6 WGS84 realizations
-                       // and EPSG:7881 'Tritan St. Helena'' whose alias is
-                       // 'WGS 84 Tritan St. Helena'
+        // EPSG:4326 and the 6 WGS84 realizations
+        // and EPSG:7881 'Tritan St. Helena'' whose alias is
+        // 'WGS 84 Tritan St. Helena'
+        EXPECT_EQ(res.size(), 8U);
         if (!res.empty()) {
             EXPECT_EQ(res.front()->getEPSGCode(), 4326);
         }
