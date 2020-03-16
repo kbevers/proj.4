@@ -233,9 +233,13 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> 
 
 	double coslat = cos(lp->phi);
 
+	// TODO: Include in proj string
 	// Covariance matrices:
-	MatrixXd cnn = CovarianceNN(lp, commonPointList, direction);
-	MatrixXd cmn = CovarianceMN(lp, commonPointList, direction);	 
+	double k = 0.00039;
+	double c = 0.3;
+
+	MatrixXd cnn = CovarianceNN(lp, commonPointList, direction, k, c);
+	MatrixXd cmn = CovarianceMN(lp, commonPointList, direction, k, c);	 
  
 	// Vector From System:
 	MatrixXd xF(np, 1); MatrixXd yF(np, 1);
@@ -479,11 +483,10 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
 		return point.xyz;
 	}
-	// Testing
-	testReadGeojson();
 
-	int areaId = areaIdPoint(&point.lp);
-	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD);
+	int areaId = 1; // areaIdPoint(&point.lp);
+	double n = 8;
+	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
 	
 	if (closestPoints.size() == 0)
 	{
@@ -517,8 +520,9 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 		return point.lpz;
 	} 
 
-	int areaId = areaIdPoint(&point.lp);
-	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV);
+	int areaId = 1; //areaIdPoint(&point.lp);
+	double n = 8;
+	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
 
 	if (closestPoints.size() == 0)
 	{

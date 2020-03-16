@@ -155,7 +155,7 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 
 	FILE *f = fopen(cstr, "rb");
 	 
-	 auto set = new GeoJsonMultiPolygon(name);
+	auto set = new GeoJsonMultiPolygon(name);
 	//auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet(name));
 
 	fseek(f, 0, SEEK_END);
@@ -194,7 +194,8 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 			}
 			if (isMultiPolygon)
 			{
-				// TODO:
+				set->m_pointList = &pointVector;
+				// TODO: Leggje til polygon
 			}
 		}
 	}
@@ -301,53 +302,4 @@ int areaIdPoint(PJ_LP *lp)
 		return 4;
 
 	return 1;
-}
-
-void testReadGeojson(/*char* fileName*/)
-{
-	/*
-	char* fileName = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Ngo_areas.geojson";
-
-	FILE *f = fopen(fileName, "rb");
-	fseek(f, 0, SEEK_END);
-	long fsize = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	char *string = (char *)malloc(fsize + 1);
-	fread(string, fsize, 1, f);
-	fclose(f);
-
-	string[fsize] = 0;
-
-	// parse and serialize JSON
-	json j_complete = json::parse(string);
-	//std::cout << std::setw(4) << j_complete << "\n\n";
-
-	// Test
-	auto feat = j_complete.at("features");
-
-	for (auto it1 = feat.begin(); it1 != feat.end(); ++it1)
-	{
-		bool isMultiPolygon = false;
-		vector<PolygonPoint> pointVector;
-
-		auto geo = (*it1)["geometry"];
-
-		for (auto& el : geo.items())
-		{
-			if (el.key() == "type")
-			{
-				if (el.value() == "MultiPolygon")
-					isMultiPolygon = true;
-			}
-			if (el.key() == "coordinates")
-			{
-				recursive_iterate(el, pointVector, [](json::const_iterator it) {});
-			}
-			if (isMultiPolygon)
-			{
-			}
-		}
-	}
-	auto json_string = j_complete.dump();*/
 }

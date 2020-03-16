@@ -168,7 +168,7 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 	{
 		pj_ctx_fseek(ctx, fid, a_size * i + sizeof(__int32), SEEK_SET);
 		PJ_LPZ_Pair *pair = (PJ_LPZ_Pair *)pj_calloc(1, sizeof(struct PJ_LPZ_Pair));
-		pj_ctx_fread(ctx, pair, sizeof(struct PJ_LPZ_Pair), 1, fid);	
+		pj_ctx_fread(ctx, pair, sizeof(struct PJ_LPZ_Pair), 1, fid);
 
 		pJLPZList->push_back(*pair);
 	}
