@@ -1,10 +1,10 @@
 /*****************************************************************************
 * Project:	PROJ
 * Purpose:	GeoJson Multipolygon
-* Author:	Sveinung Himle <sveinung.himle at statkart.no>
+* Author:	Sveinung Himle <sveinung.himle at kartverket.no>
 *
 ******************************************************************************
-* Copyright (c) 2020, Sveinung Himle <sveinung.himle at statkart.no>
+* Copyright (c) 2020, Sveinung Himle <sveinung.himle at kartverket.no>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -176,7 +176,7 @@ GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const s
 				}
 				if (isMultiPolygon)
 				{
-					//set->m_polygons->push_back(polygon);
+					// set->m_polygons->push_back(polygon);
 					set->m_polygons.push_back(std::unique_ptr<GeoJsonMultiPolygon>(polygon));
 				}
 			}		
@@ -203,13 +203,13 @@ GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
 
 GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
 
-Polygon::Polygon(const std::string &nameIn) {};
+Polygon::Polygon(const std::string &areaname) {};
 
 Polygon::~Polygon() = default;
 
-GeoJsonMultiPolygon::GeoJsonMultiPolygon(const std::string &nameIn) : Polygon(nameIn)
+GeoJsonMultiPolygon::GeoJsonMultiPolygon(const std::string &areaname) : Polygon(areaname)
 {
-	m_areaname = nameIn;
+	m_areaname = areaname;
 };
 
 GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
@@ -221,61 +221,8 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 	FILE *f = fopen(cstr, "rb");
 	 
 	auto set = new GeoJsonMultiPolygon(name);
-	//auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet(name));
 
-	fseek(f, 0, SEEK_END);
-	long fsize = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	char *string = (char *)malloc(fsize + 1);
-	fread(string, fsize, 1, f);
 	fclose(f);
-
-	string[fsize] = 0;
-
-	// parse and serialize JSON
-	json j_complete = json::parse(string);
-
-	// Output to console. For testing.|
-	// std::cout << std::setw(4) << j_complete << "\n\n";
-
-	auto feat = j_complete.at("features");
-
-	for (auto it = feat.begin(); it != feat.end(); ++it)
-	{
-		bool isMultiPolygon = false;
-		vector<PolygonPoint> pointVector;
-	 
-		auto areas = (*it)["properties"];
-		auto areaname = areas.find("areaname");
-		if (areaname->is_string())
-		{
-			std::string	name = areaname.value();
-			set->m_areaname = name;
-		}
-		auto geo = (*it)["geometry"];
-
-		for (auto& el : geo.items())
-		{
-			if (el.key() == "type")
-			{
-				if (el.value() == "MultiPolygon")
-					isMultiPolygon = true;
-			}			
-			if (el.key() == "coordinates")
-			{
-				recursive_iterate(el, pointVector, [](json::const_iterator it) {});
-			}
-			if (isMultiPolygon)
-			{
-				// TODO: Leggje til polygon
-				set->m_pointList = pointVector;
-			}
-		}
-	}
-	
-	// Testing Json dump
-	auto json_string = j_complete.dump();
 
 	return set;
 }

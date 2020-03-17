@@ -1,10 +1,10 @@
 /*****************************************************************************
 * Project:	PROJ
 * Purpose:	GeoJson Multipolygon
-* Author:	Sveinung Himle <sveinung.himle at statkart.no>
+* Author:	Sveinung Himle <sveinung.himle at kartverket.no>
 *
 ******************************************************************************
-* Copyright (c) 2020, Sveinung Himle <sveinung.himle at statkart.no>
+* Copyright (c) 2020, Sveinung Himle <sveinung.himle at kartverket.no>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -41,7 +41,7 @@ protected:
 	std::string m_areaname;	
 	//Polygon();
 public:
-	PROJ_FOR_TEST Polygon(const std::string &nameIn);
+	PROJ_FOR_TEST Polygon(const std::string &areaname);
 	PROJ_FOR_TEST virtual ~Polygon();
 	PROJ_FOR_TEST const std::string &name() const { return m_areaname; }
 	PROJ_FOR_TEST vector<PolygonPoint> m_pointList;
@@ -51,11 +51,11 @@ class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon
 {
 protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
-	
+
 	//	GeoJsonMultiPolygon();
 
 public:
-	PROJ_FOR_TEST GeoJsonMultiPolygon(const std::string &nameIn);
+	PROJ_FOR_TEST GeoJsonMultiPolygon(const std::string &areaname);
 	PROJ_FOR_TEST static GeoJsonMultiPolygon *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
 	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;

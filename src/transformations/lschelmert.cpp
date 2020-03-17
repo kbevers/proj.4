@@ -1,10 +1,10 @@
 /*****************************************************************************
 * Project:	PROJ
 * Purpose:	Helmert Least Squared Collocation
-* Author:	Sveinung Himle <sveinung.himle at statkart.no>
+* Author:	Sveinung Himle <sveinung.himle at kartverket.no>
 *
 ******************************************************************************
-* Copyright (c) 2020, Sveinung Himle <sveinung.himle at statkart.no>
+* Copyright (c) 2020, Sveinung Himle <sveinung.himle at kartverket.no>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -420,7 +420,7 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 		{
 			if (!pj_cp_load(ctx, gi))
 			{
-				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 				return nullptr;
 			}
 		}
@@ -480,22 +480,24 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
 	if (cp == nullptr)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		return point.xyz;
 	}
+	 
+	//int areaId = 1;
+	int areaId = areaIdPoint(&point.lp);
 
-	int areaId = 1; // areaIdPoint(&point.lp);
-	double n = 8;
+	double n = 8; // TODO: Make as parameter...
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
 	
 	if (closestPoints.size() == 0)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		return point.xyz;
 	}
 	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD))
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		return point.xyz;
 	}
 	point.lp = helmert_apply(P, point.lp);
@@ -516,22 +518,24 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 
 	if (cp == nullptr)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		return point.lpz;
 	} 
 
-	int areaId = 1; //areaIdPoint(&point.lp);
+	//int areaId = 1; areaIdPoint(&point.lp);
+	int areaId = areaIdPoint(&point.lp);
+
 	double n = 8; // TODO: Make as parameter...
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
 
 	if (closestPoints.size() == 0)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		return point.lpz;
 	}
 	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_INV))
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		return point.lpz;
 	}
 	point.lp = helmert_apply(P, point.lp);
@@ -558,7 +562,7 @@ static PJ *destructor(PJ *P, int errlev) {
 }
 
 PJ *TRANSFORMATION(lschelmert, 0)
-{	
+{
 	//struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
 	
 	auto Q = new pj_opaque_lschelmert;
@@ -602,7 +606,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
 		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPL);
 	}
-	pj_polygon_init(P, "polygons");
+	Q->polygons = pj_polygon_init(P, "polygons");
  
 	return P;
 }
