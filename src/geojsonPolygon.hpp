@@ -40,7 +40,7 @@ class PROJ_GCC_DLL Polygon
 protected:
 	std::string m_areaname;
 	vector<PolygonPoint> *m_pointList;
-	//Polygon();	
+	//Polygon();
 public:
 	PROJ_FOR_TEST Polygon(const std::string &nameIn);
 	PROJ_FOR_TEST virtual ~Polygon();
@@ -76,6 +76,9 @@ public:
 	PROJ_FOR_TEST static std::unique_ptr<GeoJsonMultiPolygonSet>
 		open(PJ_CONTEXT *ctx, const std::string &filename);
 
+	PROJ_FOR_TEST static  std::unique_ptr<GeoJsonMultiPolygonSet> 
+		parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
+
 	PROJ_FOR_TEST const std::string &name() const { return m_name; }
  	PROJ_FOR_TEST const std::string &format() const { return m_format; }
 	PROJ_FOR_TEST const std::vector<std::unique_ptr<GeoJsonMultiPolygon>> & polygons() const
@@ -87,7 +90,7 @@ public:
 	PROJ_FOR_TEST virtual bool reopen(PJ_CONTEXT *ctx);
 };
 
-typedef std::vector<std::unique_ptr<GeoJsonMultiPolygon>> ListOfMultiPolygons;
+typedef std::vector<std::unique_ptr<GeoJsonMultiPolygonSet>> ListOfMultiPolygons;
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey);
 
 NS_PROJ_END	

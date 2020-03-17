@@ -665,6 +665,7 @@ struct FACTORS {
 #define PJD_ERR_GENERIC_ERROR           -61
 #define PJD_ERR_NETWORK_ERROR           -62
 #define PJD_ERR_FAILED_TO_LOAD_CPL      -63
+#define PJD_ERR_FAILED_TO_LOAD_GEOJSON  -64
 
 /* NOTE: Remember to update src/strerrno.cpp, src/apps/gie.cpp and transient_error in */
 /* src/transform.cpp when adding new value */

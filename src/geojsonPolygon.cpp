@@ -82,11 +82,11 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 {
 	if (filename == "null")
 	{
-		auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
-		set->m_name = filename;
-		set->m_format = "null";
+		auto polygonSet = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
+		polygonSet->m_name = filename;
+		polygonSet->m_format = "null";
 		//set->m_polygons.push_back(std::unique_ptr<NullVerticalShiftGrid>(new NullVerticalShiftGrid()));
-		return set;
+		return polygonSet;
 	}
 	auto fp = FileManager::open_resource_file(ctx, filename.c_str());
 	if (!fp)
@@ -95,18 +95,16 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 	const auto actualName(fp->name());
 	
 	if (ends_with(tolower(actualName), "geojson"))
-	{
-		//TODO: Denne skal opne fila :-)
-		auto polygon = GeoJsonMultiPolygon::open(ctx, std::move(fp), actualName);	
-		if (!polygon)
-			return nullptr;
+	{	 
+		auto polygonSet = GeoJsonMultiPolygonSet::parse(ctx, std::move(fp), actualName);
+		//auto polygon = GeoJsonMultiPolygon::open(ctx, std::move(fp), actualName);
 
-		auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
+	 	if (!polygonSet)
+	 		return nullptr;
 
-		set->m_name = actualName;
-		set->m_format = "geojson";
-		set->m_polygons.push_back(std::unique_ptr<GeoJsonMultiPolygon>(polygon));
-		return set;
+		//auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());	
+
+		return polygonSet;
 	}
 };
 
@@ -123,6 +121,67 @@ bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx)
 		//	m_grids = std::move(newGS->m_grids);
 	}
 	return !m_format.empty();
+}
+
+std::unique_ptr<GeoJsonMultiPolygonSet>
+GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
+{
+	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
+
+	fp->seek(0, SEEK_END);
+	long fsize = fp->tell();
+	fp->seek(0, SEEK_SET);
+
+	char *string = (char *)malloc(fsize + 1);
+	fp->read(string, fsize);
+	
+	string[fsize] = 0;
+
+	// parse and serialize JSON
+	json j_complete = json::parse(string);
+	
+	// Output to console. For testing.
+	// std::cout << std::setw(4) << j_complete << "\n\n";
+
+	auto feat = j_complete.at("features");
+
+	for (auto it = feat.begin(); it != feat.end(); ++it)
+	{	
+		bool isMultiPolygon = false;
+		vector<PolygonPoint> pointVector;
+
+		auto areas = (*it)["properties"];
+		auto areaname = areas.find("areaname");
+		
+		if (areaname->is_string())
+		{
+			std::string name = areaname.value();	 
+			auto polygon = new GeoJsonMultiPolygon(name);
+			
+			auto geo = (*it)["geometry"];
+			
+			for (auto& el : geo.items())
+			{
+				if (el.key() == "type")
+				{
+					if (el.value() == "MultiPolygon")
+						isMultiPolygon = true;
+				}
+				if (el.key() == "coordinates")				
+					recursive_iterate(el, pointVector, [](json::const_iterator it) {});
+				
+				if (isMultiPolygon)
+				{	 
+					set->m_polygons.push_back(std::unique_ptr<GeoJsonMultiPolygon>(polygon));
+				}
+			}		
+		}
+	}
+
+	// Testing Json dump
+	auto json_string = j_complete.dump();
+	
+	return set;
 }
 
 /*
@@ -170,7 +229,9 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 
 	// parse and serialize JSON
 	json j_complete = json::parse(string);
-	//std::cout << std::setw(4) << j_complete << "\n\n";
+
+	// Output to console. For testing.|
+	// std::cout << std::setw(4) << j_complete << "\n\n";
 
 	auto feat = j_complete.at("features");
 
@@ -206,11 +267,13 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 			}
 		}
 	}
+	
+	// Testing Json dump
 	auto json_string = j_complete.dump();
 
 	return set;
 }
-
+ 
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 {
 	std::string key("s");
@@ -233,13 +296,14 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 			polygonname++;
 		}	
 	    auto polySet = GeoJsonMultiPolygonSet::open(P->ctx, polygonname);
-	/*	if (!polySet)
+		
+		if (!polySet)
 		{
-			if (!canFail) 
+	 		if (!canFail) 
 			{
 			    if (proj_context_errno(P->ctx) != PJD_ERR_NETWORK_ERROR)
 				{
-					pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GRID);
+					pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GEOJSON);
 				}
 				return {};
 			}
@@ -247,9 +311,9 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 		}
 		else 
 		{
-			polygons.emplace_back(std::move(polySet));
-		}*/
-	} 
+			polygons.emplace_back(std::move(polySet)); 
+		}
+	}
 	return polygons;
 }
 NS_PROJ_END
@@ -293,7 +357,7 @@ bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 
 int areaIdPoint(PJ_LP *lp)
 {
-	// TODO: Flytte områdefilene
+	// TODO: Erstatte med GeoJson
 	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
 	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
 	char* fileName4 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area4.csv";

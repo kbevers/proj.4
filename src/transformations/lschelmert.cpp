@@ -521,7 +521,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	} 
 
 	int areaId = 1; //areaIdPoint(&point.lp);
-	double n = 8;
+	double n = 8; // TODO: Make as parameter...
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
 
 	if (closestPoints.size() == 0)
