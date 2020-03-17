@@ -103,6 +103,8 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 	 		return nullptr;
 
 		//auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());	
+		polygonSet->m_format = "geojson";
+		polygonSet->m_name = filename;
 
 		return polygonSet;
 	}
@@ -167,11 +169,14 @@ GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const s
 					if (el.value() == "MultiPolygon")
 						isMultiPolygon = true;
 				}
-				if (el.key() == "coordinates")				
+				if (el.key() == "coordinates")
+				{
 					recursive_iterate(el, pointVector, [](json::const_iterator it) {});
-				
+					polygon->m_pointList = pointVector;
+				}
 				if (isMultiPolygon)
-				{	 
+				{
+					//set->m_polygons->push_back(polygon);
 					set->m_polygons.push_back(std::unique_ptr<GeoJsonMultiPolygon>(polygon));
 				}
 			}		
@@ -204,6 +209,7 @@ Polygon::~Polygon() = default;
 
 GeoJsonMultiPolygon::GeoJsonMultiPolygon(const std::string &nameIn) : Polygon(nameIn)
 {
+	m_areaname = nameIn;
 };
 
 GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
@@ -263,7 +269,7 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 			if (isMultiPolygon)
 			{
 				// TODO: Leggje til polygon
-				set->m_pointList = &pointVector;
+				set->m_pointList = pointVector;
 			}
 		}
 	}
@@ -301,7 +307,7 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 		{
 	 		if (!canFail) 
 			{
-			    if (proj_context_errno(P->ctx) != PJD_ERR_NETWORK_ERROR)
+			   // if (proj_context_errno(P->ctx) != PJD_ERR_NETWORK_ERROR)
 				{
 					pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GEOJSON);
 				}

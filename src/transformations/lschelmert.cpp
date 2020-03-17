@@ -585,7 +585,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	P->fwd = nullptr;
 	P->inv = nullptr;
 
-	// ?
+	// TODO: Trengst denne?
 	P->left = PJ_IO_UNITS_RADIANS; 
 	P->right = PJ_IO_UNITS_RADIANS;
 
