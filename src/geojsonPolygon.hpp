@@ -51,13 +51,13 @@ class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon
 {
 protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
-
 	//	GeoJsonMultiPolygon();
 
 public:
 	PROJ_FOR_TEST GeoJsonMultiPolygon(const std::string &areaname);
 	PROJ_FOR_TEST static GeoJsonMultiPolygon *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
+	PROJ_FOR_TEST bool IsPointInArea();
 	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
 
@@ -76,16 +76,12 @@ public:
 	PROJ_FOR_TEST static std::unique_ptr<GeoJsonMultiPolygonSet>
 		open(PJ_CONTEXT *ctx, const std::string &filename);
 
-	PROJ_FOR_TEST static  std::unique_ptr<GeoJsonMultiPolygonSet> 
+	PROJ_FOR_TEST static std::unique_ptr<GeoJsonMultiPolygonSet> 
 		parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
 
 	PROJ_FOR_TEST const std::string &name() const { return m_name; }
  	PROJ_FOR_TEST const std::string &format() const { return m_format; }
-	PROJ_FOR_TEST const std::vector<std::unique_ptr<GeoJsonMultiPolygon>> & polygons() const
-	{
-		return m_polygons;
-	}
- 
+	PROJ_FOR_TEST const std::vector<std::unique_ptr<GeoJsonMultiPolygon>> &polygons() const { return m_polygons; } 
 	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx);
 	PROJ_FOR_TEST virtual bool reopen(PJ_CONTEXT *ctx);
 };
@@ -93,9 +89,8 @@ public:
 typedef std::vector<std::unique_ptr<GeoJsonMultiPolygonSet>> ListOfMultiPolygons;
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey);
 
-NS_PROJ_END	
-
+int areaIdPoint(const ListOfMultiPolygons &, PJ_LP *lp);
 bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName);
+
+NS_PROJ_END
 void testReadGeojson(/*char* fileName*/);
-int areaIdPoint(PJ_LP *lp);
- 

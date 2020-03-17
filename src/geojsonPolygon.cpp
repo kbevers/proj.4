@@ -269,14 +269,13 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 	}
 	return polygons;
 }
-NS_PROJ_END
 
 bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 {
 	std::ifstream file(fileName, std::ios::in);
 
 	PolygonPoint points[] = { {} };
-	PolygonPoint point = { pointPJ_LP.phi, pointPJ_LP.lam };
+	PolygonPoint point = { pointPJ_LP.phi, pointPJ_LP.lam }; // TODO: Feil eining
 	vector<PolygonPoint> pointVector;
 
 	if (file.is_open())
@@ -308,8 +307,23 @@ bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 	return isInside(vectorPointer, n, point);
 }
 
-int areaIdPoint(PJ_LP *lp)
+int areaIdPoint(const ListOfMultiPolygons &polygonList, PJ_LP *lp)
 {
+	for (const auto& polygonSet : polygonList)
+	{
+		// TODO: This is dirty. Clean up.
+		for (auto polygon = polygonSet->polygons().begin(); polygon != polygonSet->polygons().end(); polygon++)
+		{
+			// polygon
+			//if (dynamic_cast<GeoJsonMultiPolygon *>(polygon))
+			if (static_cast<GeoJsonMultiPolygon *>(polygon->get()))
+			{
+				auto poly = polygon->get();
+			}
+			//std::cout << *polygon << std::endl;
+		}
+		auto name = polygonSet->name();
+	}
 	// TODO: Erstatte med GeoJson
 	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
 	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
@@ -327,3 +341,4 @@ int areaIdPoint(PJ_LP *lp)
 
 	return 1;
 }
+NS_PROJ_END

@@ -485,7 +485,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	}
 	 
 	//int areaId = 1;
-	int areaId = areaIdPoint(&point.lp);
+	int areaId = areaIdPoint(Q->polygons, &point.lp);
 
 	double n = 8; // TODO: Make as parameter...
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
@@ -522,8 +522,8 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 		return point.lpz;
 	} 
 
-	//int areaId = 1; areaIdPoint(&point.lp);
-	int areaId = areaIdPoint(&point.lp);
+	//int areaId = 1;
+	int areaId = areaIdPoint(Q->polygons, &point.lp);
 
 	double n = 8; // TODO: Make as parameter...
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
