@@ -82,7 +82,7 @@ namespace
 	};
 }
 
-struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count, pj_cp **cps)
+struct COMMONPOINTS* find_CommonPointList(projCtx ctx, int cp_count, pj_cp **cps)
 {
 	int iCp;
 
@@ -104,8 +104,8 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 
 			for (child = gi->child; child != nullptr; child = child->next)
 			{
-				COMMONPOINTS *cp1 = child->cp;
 				/*
+				COMMONPOINTS *cp1 = child->cp;				
 				epsilon = (fabs(ct1->del.phi)+fabs(ct1->del.lam))/10000.0;
 
 				if( ct1->ll.phi - epsilon > input.phi
@@ -115,7 +115,6 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count
 					continue;
 				}*/
 				break;
-				
 			} 
 			if (child == nullptr) 
 				break;
@@ -369,7 +368,7 @@ int proj_cp_init(PJ* P, const char *cps)
 	return P->cplist_count;
 }
 
-struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPOINTS **cps)
+struct COMMONPOINTS* find_cp(projCtx ctx, int cp_count, PJ_COMMONPOINTS **cps)
 {
 	int icp;
 
@@ -384,7 +383,9 @@ struct COMMONPOINTS* find_cp(projCtx ctx, PJ_LP input, int cp_count, PJ_COMMONPO
 
 			for (child = gi->child; child != nullptr; child = child->next)
 			{
+				/*
 				struct COMMONPOINTS *cp1 = child->cp;
+				*/
 				break;
 			}
 			if (child == nullptr)
@@ -453,7 +454,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	point.lpz = lpz;
 
 	struct COMMONPOINTS *cp;
-	cp = find_cp(P->ctx, point.lp, P->cplist_count, P->cplist);
+	cp = find_cp(P->ctx, P->cplist_count, P->cplist);
 
 	if (cp == nullptr)
 	{
@@ -462,7 +463,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	}
 
  	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
-	int n = Q->n_points == HUGE_VAL ? 20 : Q->n_points;
+	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
 	
 	if (closestPoints.size() == 0)
@@ -489,7 +490,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	point.xyz = xyz;
 
 	struct COMMONPOINTS *cp;
-	cp = find_cp(P->ctx, point.lp, P->cplist_count, P->cplist);
+	cp = find_cp(P->ctx, P->cplist_count, P->cplist);
 
 	if (cp == nullptr)
 	{
@@ -498,7 +499,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	} 
 
 	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
-	int n = Q->n_points == HUGE_VAL ? 20 : Q->n_points;
+	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
 
 	if (closestPoints.size() == 0)
@@ -570,13 +571,14 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 	
+	// TODO: Skal denne returnere fellespunkta?
 	if (proj_cp_init(P, "cp_trans") == 0)
 	{
 		proj_log_error(P, "cp_trans: not able to initialize common point file.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 
-	Q->n_points = HUGE_VAL;
+	Q->n_points = FP_NORMAL;
 	if (pj_param_exists(P->params, "n_points"))	
 		Q->n_points = pj_param(P->ctx, P->params, "in_points").i;
 
@@ -588,30 +590,13 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	if (pj_param_exists(P->params, "k_coll"))
 		Q->k_coll = pj_param(P->ctx, P->params, "dk_coll").f;
 
-	/*
-	 if (pj_param_exists(P->params, "t_obs")) {
-        proj_log_error(P, "deformation: +t_obs parameter is deprecated. Use +dt instead.");
-        return destructor(P, PJD_ERR_MISSING_ARGS);
-    }
-
-    Q->t_epoch = HUGE_VAL;
-    if (pj_param(P->ctx, P->params, "tt_epoch").i) {
-        Q->t_epoch = pj_param(P->ctx, P->params, "dt_epoch").f;
-    }
-	*/
-
- 	if (0 == pj_param(P->ctx, P->params, "tn_points").i)
-	{
-		proj_log_error(P, "cp_trans: +cp_trans parameter missing.");
-		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
-	}
-
 	if (proj_errno(P))
 	{
+		// TODO: Feil meldingstekst her...
 		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
 		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPL);
 	}
 	Q->polygons = pj_polygon_init(P, "polygons");
- 
+
 	return P;
 }

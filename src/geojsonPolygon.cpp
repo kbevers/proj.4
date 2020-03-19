@@ -31,7 +31,7 @@
 #endif
 #define LRU11_DO_NOT_DEFINE_OUT_OF_CLASS_METHODS
  
-#include <fstream> // std::ifstream
+#include <fstream>
 #include <iostream>
 
 #include "filemanager.hpp"
@@ -39,7 +39,7 @@
 #include "proj/internal/lru_cache.hpp"
 #include "proj/internal/nlohmann/json.hpp"
 #include "proj_internal.h"
-#include "proj/internal/internal.hpp" // for split
+#include "proj/internal/internal.hpp"
  
 using json = nlohmann::json;
  
@@ -98,7 +98,7 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 	
 	if (ends_with(tolower(actualName), "geojson"))
 	{	 
-		auto polygonSet = GeoJsonMultiPolygonSet::parse(ctx, std::move(fp), actualName);
+		auto polygonSet = GeoJsonMultiPolygonSet::parse(ctx, std::move(fp));
 		//auto polygon = GeoJsonMultiPolygon::open(ctx, std::move(fp), actualName);
 
 	 	if (!polygonSet)
@@ -110,6 +110,7 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 
 		return polygonSet;
 	}
+	return nullptr;
 };
 
 bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx) 
@@ -128,8 +129,9 @@ bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx)
 }
 
 std::unique_ptr<GeoJsonMultiPolygonSet>
-GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
+GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
 {
+	// TODO: Refactor this parcing method.
 	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
 
 	fp->seek(0, SEEK_END);
@@ -230,6 +232,17 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 	return set;
 }
  
+bool GeoJsonMultiPolygon::IsPointInArea(PJ_LP *lp)
+{
+	PolygonPoint point = { lp->lam, lp->phi };
+
+	PolygonPoint *vectorPointer = m_pointList.data();
+	
+	int n = (int)size(m_pointList);
+
+	return isInside(vectorPointer, n, point);	 
+}
+
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 {
 	std::string key("s");
@@ -272,71 +285,17 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 	}
 	return polygons;
 }
-
-bool pointIsInAreaTest(PJ_LP *lp, GeoJsonMultiPolygon &polygon)
-{
-	PolygonPoint point = { lp->lam, lp->phi}; // TODO: Feil eining
-
-	PolygonPoint *vectorPointer = polygon.m_pointList.data();
-	
-	int n = (int)size(polygon.m_pointList);
-	
-	return isInside(vectorPointer, n, point);	
-}
-
-bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
-{
-	std::ifstream file(fileName, std::ios::in);
-
-	PolygonPoint points[] = { {} };
-	PolygonPoint point = { pointPJ_LP.phi, pointPJ_LP.lam }; // TODO: Feil eining
-	vector<PolygonPoint> pointVector;
-
-	if (file.is_open())
-	{
-		std::vector<std::vector<std::string>> dataList;
-		std::string line = "";
-		double x, y;
-
-		while (!file.eof())
-		{
-			getline(file, line, ',');
-			x = atof(line.c_str());
-
-			getline(file, line, '\n');
-			y = atof(line.c_str());
-
-			PolygonPoint areaPoint;
-			areaPoint.x = x;
-			areaPoint.y = y;
-
-			pointVector.push_back(areaPoint);
-		}
-		file.close();
-	};
-
-	PolygonPoint *vectorPointer = pointVector.data();
-	int n = size(pointVector);
-
-	return isInside(vectorPointer, n, point);
-}
-
+ 
 __int32 areaIdPoint(const ListOfMultiPolygons &polygonList, PJ_LP *lp)
-{
+{ 
 	for (const auto& polygonSet : polygonList)
-	{
-		// TODO: This is dirty. Refactorize.
-		for (auto polygon = polygonSet->polygons().begin(); polygon != polygonSet->polygons().end(); polygon++)
-		{			
-			if (static_cast<GeoJsonMultiPolygon *>(polygon->get()))
-			{
-				auto poly = polygon->get();
-				int id = poly->Id();
+	{ 
+		for (const auto& polygon : polygonSet->polygons())
+		{
+			auto areaid = polygon->Id();
 
-				if (pointIsInAreaTest(lp, *poly))
-				   return id;
-			}
-			//std::cout << *polygon << std::endl;
+			if (polygon->IsPointInArea(lp))
+				return areaid;
 		}
 	} 
 	return 0;

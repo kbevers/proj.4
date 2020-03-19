@@ -57,7 +57,7 @@ public:
 	PROJ_FOR_TEST GeoJsonMultiPolygon(__int32 &areaid);
 	PROJ_FOR_TEST static GeoJsonMultiPolygon *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
-	PROJ_FOR_TEST bool IsPointInArea();
+	PROJ_FOR_TEST bool IsPointInArea(PJ_LP *lp);
 	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
 
@@ -77,7 +77,7 @@ public:
 		open(PJ_CONTEXT *ctx, const std::string &filename);
 
 	PROJ_FOR_TEST static std::unique_ptr<GeoJsonMultiPolygonSet> 
-		parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
+		parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp);
 
 	PROJ_FOR_TEST const std::string &name() const { return m_name; }
  	PROJ_FOR_TEST const std::string &format() const { return m_format; }
@@ -89,7 +89,6 @@ public:
 typedef std::vector<std::unique_ptr<GeoJsonMultiPolygonSet>> ListOfMultiPolygons;
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey);
 
-__int32 areaIdPoint(const ListOfMultiPolygons &, PJ_LP *lp);
-bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName);
-
+__int32 areaIdPoint(const ListOfMultiPolygons &, PJ_LP *);
+ 
 NS_PROJ_END
