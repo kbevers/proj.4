@@ -75,38 +75,13 @@ namespace
 		double yT0;
 		double signalx;
 		double signaly;
+		int n_points;
+		double c_coll;
+		double k_coll;
 		ListOfMultiPolygons polygons{};
 	};
 }
 
-namespace ns
-{
-	// TODO: Move to common class
-	struct GeoJProperties
-	{
-		std::string name;
-	};
-
-	struct GeoJType
-	{
-		std::string name;
-		GeoJProperties properties;
-	};
-
-	struct GeoJCrs
-	{
-		GeoJType type;
-	};
-
-	struct GeoJson
-	{
-		std::string type;
-		std::string name;
-		GeoJCrs crs;
-		//std::string features;
-	};
-}
- 
 struct COMMONPOINTS* find_CommonPointList(projCtx ctx, PJ_LP input, int cp_count, pj_cp **cps)
 {
 	int iCp;
@@ -232,12 +207,10 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> 
 	}
 
 	double coslat = cos(lp->phi);
+	double k = Q->k_coll == HUGE_VAL ? 0.00039 : Q->k_coll;
+	double c = Q->c_coll == HUGE_VAL ? 0.3 : Q->c_coll;
 
-	// TODO: Include in proj string
-	// Covariance matrices:
-	double k = 0.00039;
-	double c = 0.3;
-
+    // Covariance matrices:
 	MatrixXd cnn = CovarianceNN(lp, commonPointList, direction, k, c);
 	MatrixXd cmn = CovarianceMN(lp, commonPointList, direction, k, c);	 
  
@@ -332,14 +305,14 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> 
 } 
 
 bool DistanceLess(const PJ_LPZ_Pair& lhs, const PJ_LPZ_Pair& rhs)
-{ 
+{
 	return lhs.dist < rhs.dist;
 }
 
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-std::vector<PJ_LPZ_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, int areaId, PJ_DIRECTION direction, int n = 20)
+std::vector<PJ_LPZ_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
 {
 	std::vector<PJ_LPZ_Pair> distances;
 	std::vector<PJ_LPZ_Pair> closestDistances;
@@ -349,8 +322,12 @@ std::vector<PJ_LPZ_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP 
 	double coslat = cos(lp.phi);
 
 	for (int i = 0; i < np; i++)
-	{
+	{ 	
 		PJ_LPZ_Pair pair = commonPointList->pJ_LPZ_PairList->at(i);
+
+		if (areaId != 0 && pair.area != areaId)
+			continue;
+
 		PJ_LPZ point = (direction == PJ_FWD) ? pair.fromPoint : pair.toPoint;
 
 		double deltaPhi = point.phi - lp.phi;
@@ -483,11 +460,9 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
 		return point.xyz;
 	}
-	 
-	//int areaId = 1;
-	int areaId = areaIdPoint(Q->polygons, &point.lp);
 
-	double n = 8; // TODO: Make as parameter...
+ 	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
+	int n = Q->n_points == HUGE_VAL ? 20 : Q->n_points;
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
 	
 	if (closestPoints.size() == 0)
@@ -522,10 +497,8 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 		return point.lpz;
 	} 
 
-	//int areaId = 1;
-	int areaId = areaIdPoint(Q->polygons, &point.lp);
-
-	double n = 8; // TODO: Make as parameter...
+	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
+	int n = Q->n_points == HUGE_VAL ? 20 : Q->n_points;
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
 
 	if (closestPoints.size() == 0)
@@ -564,7 +537,6 @@ static PJ *destructor(PJ *P, int errlev) {
 PJ *TRANSFORMATION(lschelmert, 0)
 {
 	//struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
-	
 	auto Q = new pj_opaque_lschelmert;
 	P->opaque = (void *)Q;
 	P->destructor = destructor;
@@ -589,7 +561,6 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	P->fwd = nullptr;
 	P->inv = nullptr;
 
-	// TODO: Trengst denne?
 	P->left = PJ_IO_UNITS_RADIANS; 
 	P->right = PJ_IO_UNITS_RADIANS;
 
@@ -599,7 +570,41 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 	
-	proj_cp_init(P, "cp_trans");
+	if (proj_cp_init(P, "cp_trans") == 0)
+	{
+		proj_log_error(P, "cp_trans: not able to initialize common point file.");
+		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
+	}
+
+	Q->n_points = HUGE_VAL;
+	if (pj_param_exists(P->params, "n_points"))	
+		Q->n_points = pj_param(P->ctx, P->params, "in_points").i;
+
+	Q->c_coll = HUGE_VAL;
+	if (pj_param_exists(P->params, "c_coll"))
+		Q->c_coll = pj_param(P->ctx, P->params, "dc_coll").f;
+
+	Q->k_coll = HUGE_VAL;
+	if (pj_param_exists(P->params, "k_coll"))
+		Q->k_coll = pj_param(P->ctx, P->params, "dk_coll").f;
+
+	/*
+	 if (pj_param_exists(P->params, "t_obs")) {
+        proj_log_error(P, "deformation: +t_obs parameter is deprecated. Use +dt instead.");
+        return destructor(P, PJD_ERR_MISSING_ARGS);
+    }
+
+    Q->t_epoch = HUGE_VAL;
+    if (pj_param(P->ctx, P->params, "tt_epoch").i) {
+        Q->t_epoch = pj_param(P->ctx, P->params, "dt_epoch").f;
+    }
+	*/
+
+ 	if (0 == pj_param(P->ctx, P->params, "tn_points").i)
+	{
+		proj_log_error(P, "cp_trans: +cp_trans parameter missing.");
+		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
+	}
 
 	if (proj_errno(P))
 	{

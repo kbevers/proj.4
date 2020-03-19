@@ -67,7 +67,9 @@ void recursive_iterate(const json& j, vector<PolygonPoint> &vlist, UnaryFunction
 				if (it->is_number_float())
 				{
 					float y = it.value();
-					PolygonPoint p{ x,  y };
+
+					// Converts to radians
+					PolygonPoint p{ proj_torad(x), proj_torad(y) };
 					vlist.push_back(p);
 				}
 			}
@@ -153,12 +155,12 @@ GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const s
 		vector<PolygonPoint> pointVector;
 
 		auto areas = (*it)["properties"];
-		auto areaname = areas.find("areaname");
+		auto area = areas.find("areaid"); 
 		
-		if (areaname->is_string())
+		if (area.value().is_number_integer())
 		{
-			std::string name = areaname.value();	 
-			auto polygon = new GeoJsonMultiPolygon(name);
+			__int32 id = area.value();
+			auto polygon = new GeoJsonMultiPolygon(id);
 			
 			auto geo = (*it)["geometry"];
 			
@@ -203,13 +205,13 @@ GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
 
 GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
 
-Polygon::Polygon(const std::string &areaname) {};
+Polygon::Polygon(const __int32 &areaid) {};
 
 Polygon::~Polygon() = default;
 
-GeoJsonMultiPolygon::GeoJsonMultiPolygon(const std::string &areaname) : Polygon(areaname)
+GeoJsonMultiPolygon::GeoJsonMultiPolygon(__int32 &areaid) : Polygon(areaid)
 {
-	m_areaname = areaname;
+	m_areaid = areaid;
 };
 
 GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
@@ -220,7 +222,8 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 
 	FILE *f = fopen(cstr, "rb");
 	 
-	auto set = new GeoJsonMultiPolygon(name);
+	__int32 testId = 2;
+	auto set = new GeoJsonMultiPolygon(testId/*name*/);
 
 	fclose(f);
 
@@ -270,6 +273,17 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 	return polygons;
 }
 
+bool pointIsInAreaTest(PJ_LP *lp, GeoJsonMultiPolygon &polygon)
+{
+	PolygonPoint point = { lp->lam, lp->phi}; // TODO: Feil eining
+
+	PolygonPoint *vectorPointer = polygon.m_pointList.data();
+	
+	int n = (int)size(polygon.m_pointList);
+	
+	return isInside(vectorPointer, n, point);	
+}
+
 bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 {
 	std::ifstream file(fileName, std::ios::in);
@@ -307,38 +321,24 @@ bool pointIsInArea(PJ_LP pointPJ_LP, char* fileName)
 	return isInside(vectorPointer, n, point);
 }
 
-int areaIdPoint(const ListOfMultiPolygons &polygonList, PJ_LP *lp)
+__int32 areaIdPoint(const ListOfMultiPolygons &polygonList, PJ_LP *lp)
 {
 	for (const auto& polygonSet : polygonList)
 	{
-		// TODO: This is dirty. Clean up.
+		// TODO: This is dirty. Refactorize.
 		for (auto polygon = polygonSet->polygons().begin(); polygon != polygonSet->polygons().end(); polygon++)
-		{
-			// polygon
-			//if (dynamic_cast<GeoJsonMultiPolygon *>(polygon))
+		{			
 			if (static_cast<GeoJsonMultiPolygon *>(polygon->get()))
 			{
 				auto poly = polygon->get();
+				int id = poly->Id();
+
+				if (pointIsInAreaTest(lp, *poly))
+				   return id;
 			}
 			//std::cout << *polygon << std::endl;
 		}
-		auto name = polygonSet->name();
-	}
-	// TODO: Erstatte med GeoJson
-	char* fileName2 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area2.csv";
-	char* fileName3 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area3.csv";
-	char* fileName4 = "C:/Prosjekter/SkTrans/EurefNgo/Punksky_tilfeldig/Area4.csv";
-
-	// TODO: Områdefil som geojson. Json ligg under include/proj/internal/nlohmann
-	// testReadGeojson();
-
-	if (pointIsInArea(*lp, fileName2))
-		return 2;
-	else if (pointIsInArea(*lp, fileName3))
-		return 3;
-	else if (pointIsInArea(*lp, fileName4))
-		return 4;
-
-	return 1;
+	} 
+	return 0;
 }
 NS_PROJ_END

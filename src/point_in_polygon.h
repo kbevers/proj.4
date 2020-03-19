@@ -63,6 +63,7 @@ namespace
 
 		if (o3 == 0 && onSegment(p2, p1, q2))
 			return true;
+
 		if (o4 == 0 && onSegment(p2, q1, q2))
 			return true;
 
