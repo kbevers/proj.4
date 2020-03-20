@@ -161,8 +161,8 @@ GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
 		
 		if (area.value().is_number_integer())
 		{
-			__int32 id = area.value();
-			auto polygon = new GeoJsonMultiPolygon(id);
+			__int32 areaid = area.value();
+			auto polygon = new GeoJsonMultiPolygon(areaid);
 			
 			auto geo = (*it)["geometry"];
 			
@@ -193,7 +193,7 @@ GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
 	return set;
 }
 
-/*
+
 void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
 {
 	for (const auto &poly : m_polygons)
@@ -201,8 +201,7 @@ void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
 		poly->reassign_context(ctx);
 	}
 } 
-*/
-
+ 
 GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
 
 GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
@@ -225,13 +224,17 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 	FILE *f = fopen(cstr, "rb");
 	 
 	__int32 testId = 2;
-	auto set = new GeoJsonMultiPolygon(testId/*name*/);
+	auto set = new GeoJsonMultiPolygon(testId);
 
 	fclose(f);
 
 	return set;
 }
- 
+
+void GeoJsonMultiPolygon::reassign_context(PJ_CONTEXT *ctx)
+{
+}
+
 bool GeoJsonMultiPolygon::IsPointInArea(PJ_LP *lp)
 {
 	PolygonPoint point = { lp->lam, lp->phi };

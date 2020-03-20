@@ -166,7 +166,6 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_D
 	auto np = commonPointList->size();
 	
 	double coslat = cos(lp->phi);
-
 	double x = lp->phi;
 	double y = lp->lam * coslat;
 
@@ -518,21 +517,28 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	return point.lpz;
 }
 
-static PJ *destructor(PJ *P, int errlev) {
+static PJ *destructor(PJ *P, int errlev)
+{
 	if (nullptr == P)
 		return nullptr;
 
 	auto Q = static_cast<struct pj_opaque_lschelmert*>(P->opaque);
 	if (Q)
 	{
-		//if (Q->->cart)
-		//	Q->cart->destructor(Q->cart, errlev);
-
 		delete Q;
 	}
 	P->opaque = nullptr;
 
 	return pj_default_destructor(P, errlev);
+}
+
+static void reassign_context(PJ* P, PJ_CONTEXT* ctx)
+{
+	auto Q = (struct pj_opaque_lschelmert *) P->opaque;
+	for (auto& poly : Q->polygons)
+	{
+		poly->reassign_context(ctx);
+	}
 }
 
 PJ *TRANSFORMATION(lschelmert, 0)
@@ -541,8 +547,9 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	auto Q = new pj_opaque_lschelmert;
 	P->opaque = (void *)Q;
 	P->destructor = destructor;
+	P->reassign_context = reassign_context;	
 
-	if (Q == nullptr )
+	if (Q == nullptr)
 	{
 		return pj_default_destructor(P, ENOMEM);
 	}
