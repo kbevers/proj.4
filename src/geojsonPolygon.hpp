@@ -23,7 +23,6 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 * DEALINGS IN THE SOFTWARE.
-*
 ******************************************************************************/
 
 #include <vector>
@@ -34,7 +33,9 @@
 #include "filemanager.hpp"
 
 NS_PROJ_START
- 
+
+// ---------------------------------------------------------------------------
+
 class PROJ_GCC_DLL Polygon
 {
 protected:
@@ -46,6 +47,8 @@ public:
 	PROJ_FOR_TEST vector<PolygonPoint> m_pointList;
 	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
+
+// ---------------------------------------------------------------------------
 
 class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon
 {
@@ -60,6 +63,8 @@ public:
 	PROJ_FOR_TEST void reassign_context(PJ_CONTEXT *ctx);
     //PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
+
+// ---------------------------------------------------------------------------
 
 class PROJ_GCC_DLL GeoJsonMultiPolygonSet
 {

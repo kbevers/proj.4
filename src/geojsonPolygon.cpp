@@ -79,6 +79,8 @@ void recursive_iterate(const json& j, vector<PolygonPoint> &vlist, UnaryFunction
 	}
 }
 
+// ---------------------------------------------------------------------------
+
 std::unique_ptr<GeoJsonMultiPolygonSet>
 GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 {
@@ -113,6 +115,8 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 	return nullptr;
 };
 
+// ---------------------------------------------------------------------------
+
 bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx) 
 {
 	pj_log(ctx, PJ_LOG_DEBUG_MAJOR, "Polygon %s has changed. Re-loading it", m_name.c_str());
@@ -128,8 +132,9 @@ bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx)
 	return !m_format.empty();
 }
 
-std::unique_ptr<GeoJsonMultiPolygonSet>
-GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
+// ---------------------------------------------------------------------------
+
+std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
 {
 	// TODO: Refactor this parcing method.
 	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
@@ -193,6 +198,7 @@ GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
 	return set;
 }
 
+// ---------------------------------------------------------------------------
 
 void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
 {
@@ -201,21 +207,35 @@ void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
 		poly->reassign_context(ctx);
 	}
 } 
- 
+
+// ---------------------------------------------------------------------------
+
 GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
+
+// ---------------------------------------------------------------------------
 
 GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
 
+// ---------------------------------------------------------------------------
+
 Polygon::Polygon(const __int32 &areaid) {};
 
+// ---------------------------------------------------------------------------
+
 Polygon::~Polygon() = default;
+
+// ---------------------------------------------------------------------------
 
 GeoJsonMultiPolygon::GeoJsonMultiPolygon(__int32 &areaid) : Polygon(areaid)
 {
 	m_areaid = areaid;
 };
 
+// ---------------------------------------------------------------------------
+
 GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
+
+// ---------------------------------------------------------------------------
 
 GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name)
 {
@@ -231,20 +251,24 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 	return set;
 }
 
+// ---------------------------------------------------------------------------
+
 void GeoJsonMultiPolygon::reassign_context(PJ_CONTEXT *ctx)
 {
 }
 
+// ---------------------------------------------------------------------------
+
 bool GeoJsonMultiPolygon::IsPointInArea(PJ_LP *lp)
 {
 	PolygonPoint point = { lp->lam, lp->phi };
-
-	PolygonPoint *vectorPointer = m_pointList.data();
-	
+	PolygonPoint *vectorPointer = m_pointList.data();	
 	int n = (int)size(m_pointList);
 
 	return isInside(vectorPointer, n, point);	 
 }
+
+// ---------------------------------------------------------------------------
 
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 {
@@ -288,7 +312,9 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 	}
 	return polygons;
 }
- 
+
+// ---------------------------------------------------------------------------
+
 __int32 areaIdPoint(const ListOfMultiPolygons &polygonList, PJ_LP *lp)
 { 
 	for (const auto& polygonSet : polygonList)

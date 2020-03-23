@@ -198,7 +198,8 @@ libproj_la_SOURCES = \
 	transformations/xyzgridshift.cpp \
 	\
 	aasincos.cpp adjlon.cpp \
-	dmstor.cpp auth.cpp cplist.cpp cps.cpp \
+	dmstor.cpp auth.cpp \
+	cplist.hpp cplist.cpp cps.hpp cps.cpp \
 	deriv.cpp ell_set.cpp ellps.cpp errno.cpp \
 	factors.cpp fwd.cpp init.cpp inv.cpp \
 	list.cpp malloc.cpp mlfn.cpp msfn.cpp proj_mdist.cpp \

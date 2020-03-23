@@ -795,28 +795,6 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 
 #endif /* def PJ_LIB__ */
 
-// Area boundary struct
-struct AreaBoundary
-{
-	char *filename;
-	std::string type;
-	std::string name;
-	// crs
-	// features
-};
-
-struct Features
-{
-	//properties
-	//geometry
-};
-
-struct MultiPolygon
-{
-	// TODO: Liste med punkt
-	PJ_LP vtgf;
-};
-
 struct PJ_LPZ_Pair
 {
 	char name[8];

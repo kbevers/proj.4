@@ -207,7 +207,9 @@ set(SRC_LIBPROJ_CORE
   adjlon.cpp
   auth.cpp
   cplist.cpp
+  cplist.hpp
   cps.cpp
+  cps.hpp
   ctx.cpp
   datum_set.cpp
   datums.cpp
