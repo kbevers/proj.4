@@ -45,7 +45,6 @@ Common_Points::~Common_Points() = default;
 
 // ---------------------------------------------------------------------------
 
-
 std::unique_ptr<Common_Points> *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
 {
 	unsigned char header[160];
@@ -55,6 +54,8 @@ std::unique_ptr<Common_Points> *Common_Points::open(PJ_CONTEXT *ctx, std::unique
 		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return nullptr;
 	}
+
+
 	return nullptr;
 }
 
@@ -122,9 +123,8 @@ PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 		pj_ctx_set_errno(ctx, ENOMEM);
 		return nullptr;
 	}
-
-	// TODO: Sjekk header
-	struct COMMONPOINTS *cp = cp_init( ctx, (struct projFileAPI_t*)fp );	
+	 
+	struct COMMONPOINTS *cp = cp_init(ctx, (struct projFileAPI_t*)fp);
 
 	commonPoints->format = "commonpoints";
 	commonPoints->cp = cp;
@@ -171,8 +171,7 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 	memcpy(&cp_tmp, gi->cp, sizeof(struct COMMONPOINTS));
 
 	PAFile fid;
-	int result;
-	
+ 	
 	fid = pj_open_lib(ctx, gi->filename, "rb");
 
 	if (fid == nullptr)

@@ -23,7 +23,6 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 * DEALINGS IN THE SOFTWARE.
-*
 ******************************************************************************/
 
 #ifndef FROM_PROJ_CPP
@@ -202,10 +201,8 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 
 void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
 {
-	for (const auto &poly : m_polygons)
-	{
-		poly->reassign_context(ctx);
-	}
+	for (const auto &poly : m_polygons)	 
+		poly->reassign_context(ctx);	 
 } 
 
 // ---------------------------------------------------------------------------

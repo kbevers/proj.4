@@ -136,9 +136,9 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, int cp_count, pj_cp **cps
 
 MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 {
-	auto np = commonPointList->size();
-
 	double coslat = cos(lp->phi);
+
+	auto np = commonPointList->size();
 
 	MatrixXd cnn(np, np);
 	
@@ -163,11 +163,11 @@ MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_D
 
 MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 {
-	auto np = commonPointList->size();
-	
 	double coslat = cos(lp->phi);
 	double x = lp->phi;
 	double y = lp->lam * coslat;
+
+	auto np = commonPointList->size();
 
 	MatrixXd cmn(np, 1);
 	 

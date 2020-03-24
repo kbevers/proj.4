@@ -37,14 +37,29 @@
 
 NS_PROJ_START
 
+class PROJ_GCC_DLL LPZ_Pair
+{
+private:
+	char name[8];
+	PJ_LPZ fromPoint;
+	PJ_LPZ toPoint;
+	__int32 area;
+	double dist;
+protected:
+public:
+};
+
+// ---------------------------------------------------------------------------
+
 class PROJ_GCC_DLL Common_Points
 {
-private:	
+private:
 protected:
 	int m_noOfPoints = 0;
 	std::string m_name { };
 	std::string m_format { };
-	
+	std::vector<LPZ_Pair> *pJ_LPZ_PairList = nullptr;
+	// std::vector<PJ_LPZ_Pair>* pJ_LPZ_PairList = nullptr;
 	// Common_Points();
 public:
 	PROJ_FOR_TEST Common_Points();
