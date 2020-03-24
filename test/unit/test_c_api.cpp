@@ -1348,12 +1348,73 @@ TEST_F(CApi, proj_create_operations) {
 
     EXPECT_EQ(proj_list_get(m_ctxt, res, -1), nullptr);
     EXPECT_EQ(proj_list_get(m_ctxt, res, proj_list_get_count(res)), nullptr);
-    auto op = proj_list_get(m_ctxt, res, 0);
-    ASSERT_NE(op, nullptr);
-    ObjectKeeper keeper_op(op);
-    EXPECT_FALSE(proj_coordoperation_has_ballpark_transformation(m_ctxt, op));
+    {
+        auto op = proj_list_get(m_ctxt, res, 0);
+        ASSERT_NE(op, nullptr);
+        ObjectKeeper keeper_op(op);
+        EXPECT_FALSE(
+            proj_coordoperation_has_ballpark_transformation(m_ctxt, op));
+        EXPECT_EQ(proj_get_name(op), std::string("NAD27 to NAD83 (3)"));
+    }
 
-    EXPECT_EQ(proj_get_name(op), std::string("NAD27 to NAD83 (3)"));
+    {
+        PJ_COORD coord;
+        coord.xy.x = 40;
+        coord.xy.y = -100;
+        int idx = proj_get_suggested_operation(m_ctxt, res, PJ_FWD, coord);
+        ASSERT_GE(idx, 0);
+        ASSERT_LT(idx, proj_list_get_count(res));
+        auto op = proj_list_get(m_ctxt, res, idx);
+        ASSERT_NE(op, nullptr);
+        ObjectKeeper keeper_op(op);
+        // Transformation for USA
+        EXPECT_EQ(proj_get_name(op), std::string("NAD27 to NAD83 (1)"));
+    }
+
+    {
+        PJ_COORD coord;
+        coord.xy.x = 40;
+        coord.xy.y = 10;
+        int idx = proj_get_suggested_operation(m_ctxt, res, PJ_FWD, coord);
+        EXPECT_GE(idx, -1);
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(CApi, proj_get_suggested_operation_with_operations_without_area_of_use) {
+    auto ctxt = proj_create_operation_factory_context(m_ctxt, nullptr);
+    ASSERT_NE(ctxt, nullptr);
+    ContextKeeper keeper_ctxt(ctxt);
+
+    // NAD83(2011) geocentric
+    auto source_crs = proj_create_from_database(
+        m_ctxt, "EPSG", "6317", PJ_CATEGORY_CRS, false, nullptr);
+    ASSERT_NE(source_crs, nullptr);
+    ObjectKeeper keeper_source_crs(source_crs);
+
+    // NAD83(2011) 2D
+    auto target_crs = proj_create_from_database(
+        m_ctxt, "EPSG", "6318", PJ_CATEGORY_CRS, false, nullptr);
+    ASSERT_NE(target_crs, nullptr);
+    ObjectKeeper keeper_target_crs(target_crs);
+
+    proj_operation_factory_context_set_spatial_criterion(
+        m_ctxt, ctxt, PROJ_SPATIAL_CRITERION_PARTIAL_INTERSECTION);
+
+    proj_operation_factory_context_set_grid_availability_use(
+        m_ctxt, ctxt, PROJ_GRID_AVAILABILITY_IGNORED);
+
+    auto res = proj_create_operations(m_ctxt, source_crs, target_crs, ctxt);
+    ASSERT_NE(res, nullptr);
+    ObjListKeeper keeper_res(res);
+
+    PJ_COORD coord;
+    coord.xyz.x = -463930;
+    coord.xyz.y = -4414006;
+    coord.xyz.z = 4562247;
+    int idx = proj_get_suggested_operation(m_ctxt, res, PJ_FWD, coord);
+    EXPECT_GE(idx, 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -3396,6 +3457,48 @@ TEST_F(CApi, proj_get_crs_info_list_from_database) {
         }
         proj_get_crs_list_parameters_destroy(params);
         proj_crs_info_list_destroy(list);
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(CApi, proj_get_units_from_database) {
+    { proj_unit_list_destroy(nullptr); }
+
+    {
+        auto list = proj_get_units_from_database(nullptr, nullptr, nullptr,
+                                                 true, nullptr);
+        ASSERT_NE(list, nullptr);
+        ASSERT_NE(list[0], nullptr);
+        ASSERT_NE(list[0]->auth_name, nullptr);
+        ASSERT_NE(list[0]->code, nullptr);
+        ASSERT_NE(list[0]->name, nullptr);
+        proj_unit_list_destroy(list);
+    }
+
+    {
+        int result_count = 0;
+        auto list = proj_get_units_from_database(nullptr, "EPSG", "linear",
+                                                 false, &result_count);
+        ASSERT_NE(list, nullptr);
+        EXPECT_GT(result_count, 1);
+        EXPECT_EQ(list[result_count], nullptr);
+        bool found9001 = false;
+        for (int i = 0; i < result_count; i++) {
+            EXPECT_EQ(std::string(list[i]->auth_name), "EPSG");
+            if (std::string(list[i]->code) == "9001") {
+                EXPECT_EQ(std::string(list[i]->name), "metre");
+                EXPECT_EQ(std::string(list[i]->category), "linear");
+                EXPECT_EQ(list[i]->conv_factor, 1.0);
+                ASSERT_NE(list[i]->proj_short_name, nullptr);
+                EXPECT_EQ(std::string(list[i]->proj_short_name), "m");
+                EXPECT_EQ(list[i]->deprecated, 0);
+                found9001 = true;
+            }
+            EXPECT_EQ(list[i]->deprecated, 0);
+        }
+        EXPECT_TRUE(found9001);
+        proj_unit_list_destroy(list);
     }
 }
 

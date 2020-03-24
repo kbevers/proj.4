@@ -349,23 +349,14 @@ int main(int argc, char **argv) {
         exit(0);
     }
 
-    // First pass to check if we have "cs2cs [-bla]* <SRC> <DEST>" syntax
-    int countNonOptionArg = 0;
+    // First pass to check if we have "cs2cs [-bla]* <SRC> <DEST> [<filename>]" syntax
+    bool isProj4StyleSyntax = false;
     for (int i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            if (argv[i][1] == 'f' || argv[i][1] == 'e' || argv[i][1] == 'd' ||
-                argv[i][1] == 'D' ) {
-                i++;
-            }
-        } else {
-            if (strcmp(argv[i], "+to") == 0) {
-                countNonOptionArg = -1;
-                break;
-            }
-            countNonOptionArg++;
+        if (argv[i][0] == '+') {
+            isProj4StyleSyntax = true;
+            break;
         }
     }
-    const bool isSrcDestSyntax = (countNonOptionArg == 2);
 
     /* process run line arguments */
     while (--argc > 0) { /* collect run line arguments */
@@ -425,11 +416,18 @@ int main(int argc, char **argv) {
                             (void)printf("%9s %-16s %-16s %s\n", le->id,
                                          le->major, le->ell, le->name);
                     } else if (arg[1] == 'u') { /* list units */
-                        const struct PJ_UNITS *lu;
-
-                        for (lu = proj_list_units(); lu->id; ++lu)
-                            (void)printf("%12s %-20s %s\n", lu->id,
-                                         lu->to_meter, lu->name);
+                        auto units = proj_get_units_from_database(nullptr, nullptr, "linear", false, nullptr);
+                        for( int i = 0; units && units[i]; i++ )
+                        {
+                            if( units[i]->proj_short_name )
+                            {
+                                (void)printf("%12s %-20.15g %s\n",
+                                                units[i]->proj_short_name,
+                                                units[i]->conv_factor,
+                                                units[i]->name);
+                            }
+                        }
+                        proj_unit_list_destroy(units);
                     } else if (arg[1] == 'm') { /* list prime meridians */
                         const struct PJ_PRIME_MERIDIANS *lpm;
 
@@ -485,11 +483,15 @@ int main(int argc, char **argv) {
                 }
                 break;
             }
-        } else if (isSrcDestSyntax) {
+        } else if (!isProj4StyleSyntax) {
             if (fromStr.empty())
                 fromStr = *argv;
-            else
+            else if( toStr.empty() )
                 toStr = *argv;
+            else {
+                 /* assumed to be input file name(s) */
+                eargv[eargc++] = *argv;
+            }
         } else if (strcmp(*argv, "+to") == 0) {
             have_to_flag = 1;
 
