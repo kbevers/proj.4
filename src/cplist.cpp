@@ -74,7 +74,7 @@ std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std:
 
 	if (ends_with(actualName, "cpt") || ends_with(actualName, "CPT"))
 	{
-		//auto cp = Common_Points::open
+	//	auto cp = Common_Points::open(ctx, file)
 
 	}
 
@@ -177,7 +177,7 @@ PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)
 		if (end_char >= sizeof(name))
 		{
 			pj_dalloc(list);
-			pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+			pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 			pj_release_lock();
 			return nullptr;
 		}
@@ -192,7 +192,7 @@ PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)
 		if (!pj_cplist_merge(ctx, name, &list, list_count, &list_max) && required)
 		{
 			pj_dalloc(list);
-			pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+			pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 			pj_release_lock();
 			return nullptr;
 		}

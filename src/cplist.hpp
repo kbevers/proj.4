@@ -44,7 +44,7 @@ protected:
 public:
 	PROJ_FOR_TEST CommonPointSet();
 	
-	PROJ_FOR_TEST virtual ~CommonPointSet();
+	PROJ_FOR_TEST virtual ~CommonPointSet();    
 	PROJ_FOR_TEST static std::unique_ptr<CommonPointSet> open(PJ_CONTEXT *ctx, const std::string &filename);
 	//PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	//PROJ_FOR_TEST const std::string &Format() const { return m_format; }

@@ -126,7 +126,7 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, int cp_count, pj_cp **cps
 		{
 			if (!pj_cp_load(ctx, gi))
 			{
-				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 				return nullptr;
 			}
 		}
@@ -361,7 +361,7 @@ int proj_cp_init(PJ* P, const char *cps)
 	}
 
 	if (P->cplist_count == 0)
-		proj_errno_set(P, PJD_ERR_FAILED_TO_LOAD_CPL);
+		proj_errno_set(P, PJD_ERR_FAILED_TO_LOAD_CPT);
 
 	pj_dealloc(scps);
 	return P->cplist_count;
@@ -397,7 +397,7 @@ struct COMMONPOINTS* find_cp(projCtx ctx, int cp_count, PJ_COMMONPOINTS **cps)
 		{
 			if (!pj_cp_load(ctx, gi))
 			{
-				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 				return nullptr;
 			}
 		}
@@ -457,7 +457,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
 	if (cp == nullptr)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
 
@@ -467,12 +467,12 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	
 	if (closestPoints.size() == 0)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
 	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD))
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
 	point.lp = helmert_apply(P, point.lp);
@@ -493,7 +493,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 
 	if (cp == nullptr)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
 	} 
 
@@ -503,12 +503,12 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 
 	if (closestPoints.size() == 0)
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
 	}
 	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_INV))
 	{
-		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
 	}
 	point.lp = helmert_apply(P, point.lp);
@@ -601,7 +601,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	{
 		// TODO: Feil meldingstekst her...
 		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
-		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPL);
+		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPT);
 	}
 	Q->polygons = pj_polygon_init(P, "polygons");
 

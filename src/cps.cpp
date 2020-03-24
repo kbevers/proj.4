@@ -46,9 +46,15 @@ Common_Points::~Common_Points() = default;
 // ---------------------------------------------------------------------------
 
 
-std::unique_ptr<Common_Points> Common_Points::open(PJ_CONTEXT *ctx, const std::string &filename)
+std::unique_ptr<Common_Points> *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
 {
+	unsigned char header[160];
 
+	if (fp->read(header, sizeof(header)) != sizeof(header))
+	{
+		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
+		return nullptr;
+	}
 	return nullptr;
 }
 
@@ -65,7 +71,7 @@ struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 
 	if (pj_ctx_fread(ctx, header, sizeof(header), 1, fid) != 1)
 	{
-		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return nullptr;
 	}
 
@@ -171,7 +177,7 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 
 	if (fid == nullptr)
 	{
-		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPL);
+		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		pj_release_lock();
 
 		return 0;

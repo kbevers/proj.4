@@ -33,6 +33,7 @@
 
 #include "proj.h"
 #include "proj/util.hpp"
+#include "filemanager.hpp"
 
 NS_PROJ_START
 
@@ -51,9 +52,8 @@ public:
 	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints; }
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
-    PROJ_FOR_TEST static std::unique_ptr<Common_Points> open(PJ_CONTEXT *ctx, const std::string &filename);
+    PROJ_FOR_TEST static std::unique_ptr<Common_Points> *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
  
-	
 };
 NS_PROJ_END
 
