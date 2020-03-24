@@ -44,8 +44,8 @@ Common_Points::Common_Points() = default;
 Common_Points::~Common_Points() = default;
 
 // ---------------------------------------------------------------------------
-
-std::unique_ptr<Common_Points> *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
+ 
+Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
 {
 	unsigned char header[160];
 
@@ -58,6 +58,20 @@ std::unique_ptr<Common_Points> *Common_Points::open(PJ_CONTEXT *ctx, std::unique
 
 	return nullptr;
 }
+
+// ---------------------------------------------------------------------------
+
+Common_Points *Common_Points::parse(PJ_CONTEXT *ctx, const std::string &filename)
+{
+
+	LPZ_Pair pointPair();
+
+
+
+
+	return nullptr;
+}
+
 
 NS_PROJ_END
 

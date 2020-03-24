@@ -41,24 +41,25 @@ class PROJ_GCC_DLL LPZ_Pair
 {
 private:
 	char name[8];
-	PJ_LPZ fromPoint;
-	PJ_LPZ toPoint;
-	__int32 area;
-	double dist;
+	PJ_LPZ m_fromPoint;
+	PJ_LPZ m_toPoint;
+	__int32 m_area;
+	double m_dist;
 protected:
+	LPZ_Pair();
 public:
 };
 
 // ---------------------------------------------------------------------------
 
-class PROJ_GCC_DLL Common_Points
+class PROJ_GCC_DLL Common_Points // TODO: Rename class
 {
 private:
 protected:
 	int m_noOfPoints = 0;
 	std::string m_name { };
 	std::string m_format { };
-	std::vector<LPZ_Pair> *pJ_LPZ_PairList = nullptr;
+	std::vector<std::unique_ptr<LPZ_Pair>> m_LpzPairList{};
 	// std::vector<PJ_LPZ_Pair>* pJ_LPZ_PairList = nullptr;
 	// Common_Points();
 public:
@@ -67,8 +68,9 @@ public:
 	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints; }
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
-    PROJ_FOR_TEST static std::unique_ptr<Common_Points> *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
- 
+    PROJ_FOR_TEST static Common_Points *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
+	PROJ_FOR_TEST static Common_Points *parse(PJ_CONTEXT *ctx, const std::string &filename);
+
 };
 NS_PROJ_END
 

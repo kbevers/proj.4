@@ -136,6 +136,9 @@ bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx)
 std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
 {
 	// TODO: Refactor this parcing method.
+
+	pj_acquire_lock();
+	
 	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
 
 	fp->seek(0, SEEK_END);
@@ -193,7 +196,9 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 
 	// Testing Json dump
 	auto json_string = j_complete.dump();
-	
+
+	pj_release_lock();
+
 	return set;
 }
 
@@ -202,7 +207,7 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
 {
 	for (const auto &poly : m_polygons)	 
-		poly->reassign_context(ctx);	 
+		poly->reassign_context(ctx);
 } 
 
 // ---------------------------------------------------------------------------

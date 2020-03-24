@@ -35,6 +35,7 @@ NS_PROJ_START
 class PROJ_GCC_DLL CommonPointSet
 {
 private:
+
 protected:
 	std::string m_name{};
 	std::string m_format{};
@@ -44,11 +45,11 @@ protected:
 public:
 	PROJ_FOR_TEST CommonPointSet();
 	
-	PROJ_FOR_TEST virtual ~CommonPointSet();    
+	PROJ_FOR_TEST virtual ~CommonPointSet(); 
 	PROJ_FOR_TEST static std::unique_ptr<CommonPointSet> open(PJ_CONTEXT *ctx, const std::string &filename);
-	//PROJ_FOR_TEST const std::string &Name() const { return m_name; }
-	//PROJ_FOR_TEST const std::string &Format() const { return m_format; }
-	//PROJ_FOR_TEST const std::vector<std::unique_ptr<Common_Points>> & Cps() const { return m_cps; }
+	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
+	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
+	PROJ_FOR_TEST const std::vector<std::unique_ptr<Common_Points>> & Cps() const { return m_cps; }
 };
 
 // ---------------------------------------------------------------------------
@@ -57,7 +58,7 @@ typedef std::vector <std::unique_ptr<CommonPointSet>> ListOfCps;
 
 // ---------------------------------------------------------------------------
 
-ListOfCps pj_cp_init(PJ *P, const char *cps);
+ListOfCps pj_cp_init(PJ *P, const char *cpkey);
 
 NS_PROJ_END
 

@@ -67,24 +67,74 @@ std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std:
 	}
 	auto fp = FileManager::open_resource_file(ctx, filename.c_str());
 	if (!fp)
-	{
 		return nullptr;
-	}
+	
 	const auto actualName(fp->name());
 
 	if (ends_with(actualName, "cpt") || ends_with(actualName, "CPT"))
 	{
-	//	auto cp = Common_Points::open(ctx, file)
+		auto cp = Common_Points::open(ctx, std::move(fp), actualName);
 
+		if (!cp)
+			return nullptr;
+
+		auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
+		set->m_name = filename;
+		set->m_format = "cpt";
+		set->m_cps.push_back(std::unique_ptr<Common_Points>(cp));
+
+		return set;
 	}
-
 
 	return nullptr;
 };
 
 // ---------------------------------------------------------------------------
 
+ListOfCps pj_cp_init(PJ *P, const char *cpkey)
+{
+	std::string key("s");
+	key += cpkey;
+
+	const char *cpnames = pj_param(P->ctx, P->params, key.c_str()).s;
+	if (cpnames == nullptr)
+		return {};
+	
+	auto list = internal::split(std::string(cpnames), ',');
+	ListOfCps cps;
+
+	for (const auto &cpnameStr : list) 
+	{
+		const char *cpname = cpnameStr.c_str();
+		bool canFail = false;
+		if (cpname[0] == '@')
+		{
+			canFail = true;
+			cpname++;
+		}
+		auto cpSet = CommonPointSet::open(P->ctx, cpname);
+		if (!cpSet)
+		{
+			if (!canFail)
+			{
+		 	//	if (proj_context_errno(P->ctx) != PJD_ERR_NETWORK_ERROR) 
+				{
+					pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
+				}
+				return {};
+			}
+			pj_ctx_set_errno(P->ctx, 0);
+		}
+		else
+		{
+			cps.emplace_back(std::move(cpSet));
+		}	
+	}
+	return cps;
+} 
+
 NS_PROJ_END
+
 // ---------------------------------------------------------------------------
 
 static int pj_cplist_merge(projCtx ctx, const char *cp_name, PJ_COMMONPOINTS ***p_list, int *p_listcount, int *p_list_max)
@@ -162,7 +212,7 @@ PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)
 	{
 		size_t end_char;
 		int required = 1;
-		char   name[PJ_MAX_PATH_LENGTH];
+		char name[PJ_MAX_PATH_LENGTH];
 
 		if (*s == '@')
 		{

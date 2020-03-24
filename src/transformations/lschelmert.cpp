@@ -41,6 +41,7 @@
 #include "geocent.h"
 #include "point_in_polygon.h"
 #include "geojsonPolygon.hpp"
+#include "cplist.hpp"
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
 
@@ -79,6 +80,7 @@ namespace
 		double c_coll;
 		double k_coll;
 		ListOfMultiPolygons polygons{};
+		ListOfCps cps{};
 	};
 }
 
@@ -557,8 +559,8 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
 	if (has_polygons == 0)
 	{
-		proj_log_error(P, "cp_trans: +polygon parameter missing.");
-		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
+		//proj_log_error(P, "cp_trans: +polygon parameter missing.");
+		//return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 
 	P->opaque = (void *)Q;
@@ -577,7 +579,10 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		proj_log_error(P, "cp_trans: +cp_trans parameter missing.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
-	
+
+	// TODO: Dette er ein test:
+	pj_cp_init(P, "cp_trans");
+
 	// TODO: Skal denne returnere fellespunkta?
 	if (proj_cp_init(P, "cp_trans") == 0)
 	{
