@@ -30,13 +30,22 @@
 #include <string.h>
 
 #include "proj_internal.h"
- 
+#include "cps.hpp"
+
+#include <algorithm>
+#include <cmath>
+
+/*
+std::unique_ptr<Common_Points> Common_Points::open(PJ_CONTEXT *ctx, const std::string &filename)
+{
+
+}*/
+
 // TODO: Move to another class
 struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 {
 	PAFile fid = (PAFile)fileapi;
-	struct COMMONPOINTS *cp;
-	int id_end;
+	struct COMMONPOINTS *cp;	 
 	char header[160];
 
 	cp = (struct COMMONPOINTS *) pj_malloc(sizeof(struct COMMONPOINTS));
@@ -56,8 +65,7 @@ struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 PJ_COMMONPOINTS *pj_commonpoints_init(projCtx ctx, const char *cp_name)
 {
 	PJ_COMMONPOINTS *commonPoints;
-	PAFile fp;
-	size_t header_size = 0;
+	PAFile fp;	 
 
 	errno = pj_errno = 0;
 	ctx->last_errno = 0;
@@ -160,7 +168,7 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 	pJLPZList = (std::vector<PJ_LPZ_Pair> *)pj_calloc(1, sizeof(struct std::vector<PJ_LPZ_Pair>));
 
 	int noOfPoints = 0;
-	size_t a_size = sizeof(struct PJ_LPZ_Pair) - 4;
+	long a_size = sizeof(struct PJ_LPZ_Pair) - 4;
 
 	pj_ctx_fread(ctx, &noOfPoints, sizeof(__int32), 1, fid);
 

@@ -19,3 +19,46 @@
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 * DEALINGS IN THE SOFTWARE.
 ***********************************************************************/
+
+//#ifndef CPS_HPP_INCLUDED
+//#define CPS_HPP_INCLUDED
+
+#include <memory>
+#include <vector>
+
+#include "cps.hpp"
+#include "proj.h"
+#include "proj/util.hpp"
+
+NS_PROJ_START
+
+class PROJ_GCC_DLL CommonPointSet
+{
+private:
+protected:
+	std::string m_name{};
+	std::string m_format{};
+	std::vector<std::unique_ptr<Common_Points>> m_cps {};
+
+	CommonPointSet();
+public:
+	//PROJ_FOR_TEST CommonPointSet();
+	//PROJ_FOR_TEST virtual ~CommonPointSet();
+
+	PROJ_FOR_TEST static std::unique_ptr<CommonPointSet> open(PJ_CONTEXT *ctx, const std::string &filename);
+	PROJ_FOR_TEST const std::string &name() const { return m_name; }
+	PROJ_FOR_TEST const std::string &format() const { return m_format; }
+	PROJ_FOR_TEST const std::vector<std::unique_ptr<Common_Points>> & Cps() const { return m_cps; }
+};
+
+// ---------------------------------------------------------------------------
+
+typedef std::vector <std::unique_ptr<CommonPointSet>> ListOfCps;
+
+// ---------------------------------------------------------------------------
+
+ListOfCps pj_cp_init(PJ *P, const char *cps);
+
+NS_PROJ_END
+
+//#endif

@@ -21,15 +21,35 @@
 ***********************************************************************/
 #define PJ_LIB__
 
+#ifndef FROM_PROJ_CPP
+#define FROM_PROJ_CPP
+#endif
+
 #include <errno.h>
 #include <stddef.h>
 #include <string.h>
 
+#include "cplist.hpp"
+//#include "cps.hpp"
+#include "filemanager.hpp"
 #include "proj.h"
 #include "proj_internal.h"
 
+#include <algorithm>
+#include <cmath>
+
 static PJ_COMMONPOINTS *list = nullptr;
 #define PJ_MAX_PATH_LENGTH 1024
+
+NS_PROJ_START
+
+std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std::string &filename)
+{
+	return nullptr;
+};
+
+NS_PROJ_END
+// ---------------------------------------------------------------------------
 
 static int pj_cplist_merge(projCtx ctx, const char *cp_name, PJ_COMMONPOINTS ***p_list, int *p_listcount, int *p_list_max)
 {
@@ -91,6 +111,8 @@ static int pj_cplist_merge(projCtx ctx, const char *cp_name, PJ_COMMONPOINTS ***
 	return pj_cplist_merge(ctx, cp_name, p_list, p_listcount, p_list_max);
 }
 
+// ---------------------------------------------------------------------------
+
 PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)
 {
 	const char *s;
@@ -145,3 +167,4 @@ PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)
 
 	return list;
 }
+

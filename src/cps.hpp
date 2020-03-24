@@ -23,32 +23,38 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 * DEALINGS IN THE SOFTWARE.
-*
 ******************************************************************************/
 
-//#ifndef GRIDS_HPP_INCLUDED
-//#define GRIDS_HPP_INCLUDED
+#ifndef CPS_HPP_INCLUDED
+#define CPS_HPP_INCLUDED
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "proj.h"
 #include "proj/util.hpp"
 
 NS_PROJ_START
 
-class PROJ_GCC_DLL CommonPoints
+class PROJ_GCC_DLL Common_Points
 {
-private:
-	int m_noOfPoints = 0;
+private:	
 protected:
+	int m_noOfPoints = 0;
+	std::string m_name{};
 	std::string m_format{};
-
+	
+	Common_Points();
 public:
-
-	PROJ_FOR_TEST virtual ~CommonPoints();
-
+	
+	PROJ_FOR_TEST virtual ~Common_Points();
+	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
+	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
+	PROJ_FOR_TEST static std::unique_ptr<Common_Points> open(PJ_CONTEXT *ctx, const std::string &filename);
+ 
 	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints;	}
-};
 
+};
 NS_PROJ_END
+
+#endif
