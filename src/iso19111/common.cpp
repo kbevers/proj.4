@@ -39,6 +39,7 @@
 #include "proj/internal/io_internal.hpp"
 
 #include "proj.h"
+#include "proj_internal.h"
 
 #include <cmath> // M_PI
 #include <cstdlib>
@@ -312,7 +313,7 @@ bool UnitOfMeasure::operator!=(const UnitOfMeasure &other) PROJ_PURE_DEFN {
 //! @cond Doxygen_Suppress
 std::string UnitOfMeasure::exportToPROJString() const {
     if (type() == Type::LINEAR) {
-        auto proj_units = proj_list_units();
+        auto proj_units = pj_list_linear_units();
         for (int i = 0; proj_units[i].id != nullptr; i++) {
             if (::fabs(proj_units[i].factor - conversionToSI()) <
                 1e-10 * conversionToSI()) {
@@ -320,7 +321,7 @@ std::string UnitOfMeasure::exportToPROJString() const {
             }
         }
     } else if (type() == Type::ANGULAR) {
-        auto proj_angular_units = proj_list_angular_units();
+        auto proj_angular_units = pj_list_angular_units();
         for (int i = 0; proj_angular_units[i].id != nullptr; i++) {
             if (::fabs(proj_angular_units[i].factor - conversionToSI()) <
                 1e-10 * conversionToSI()) {
