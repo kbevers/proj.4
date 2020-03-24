@@ -35,11 +35,24 @@
 #include <algorithm>
 #include <cmath>
 
-/*
+NS_PROJ_START
+
+Common_Points::Common_Points() = default;
+
+// ---------------------------------------------------------------------------
+
+Common_Points::~Common_Points() = default;
+
+// ---------------------------------------------------------------------------
+
+
 std::unique_ptr<Common_Points> Common_Points::open(PJ_CONTEXT *ctx, const std::string &filename)
 {
 
-}*/
+	return nullptr;
+}
+
+NS_PROJ_END
 
 // TODO: Move to another class
 struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)

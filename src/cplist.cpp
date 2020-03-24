@@ -30,8 +30,9 @@
 #include <string.h>
 
 #include "cplist.hpp"
-//#include "cps.hpp"
+#include "cps.hpp"
 #include "filemanager.hpp"
+#include "proj/internal/internal.hpp"
 #include "proj.h"
 #include "proj_internal.h"
 
@@ -43,10 +44,45 @@ static PJ_COMMONPOINTS *list = nullptr;
 
 NS_PROJ_START
 
+using namespace internal;
+
+CommonPointSet::CommonPointSet() = default;
+
+// ---------------------------------------------------------------------------
+
+CommonPointSet::~CommonPointSet() = default;
+
+// ---------------------------------------------------------------------------
+
 std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 {
+	if (filename == "null")
+	{
+		auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
+		set->m_name = filename;
+		set->m_format = "null";
+	 	set->m_cps.push_back(std::unique_ptr<Common_Points>(new Common_Points()));
+
+		return set;
+	}
+	auto fp = FileManager::open_resource_file(ctx, filename.c_str());
+	if (!fp)
+	{
+		return nullptr;
+	}
+	const auto actualName(fp->name());
+
+	if (ends_with(actualName, "cpt") || ends_with(actualName, "CPT"))
+	{
+		//auto cp = Common_Points::open
+
+	}
+
+
 	return nullptr;
 };
+
+// ---------------------------------------------------------------------------
 
 NS_PROJ_END
 // ---------------------------------------------------------------------------

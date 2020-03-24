@@ -41,19 +41,19 @@ class PROJ_GCC_DLL Common_Points
 private:	
 protected:
 	int m_noOfPoints = 0;
-	std::string m_name{};
-	std::string m_format{};
+	std::string m_name { };
+	std::string m_format { };
 	
-	Common_Points();
+	// Common_Points();
 public:
-	
-	PROJ_FOR_TEST virtual ~Common_Points();
+	PROJ_FOR_TEST Common_Points();
+    PROJ_FOR_TEST virtual ~Common_Points();
+	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints; }
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
-	PROJ_FOR_TEST static std::unique_ptr<Common_Points> open(PJ_CONTEXT *ctx, const std::string &filename);
+    PROJ_FOR_TEST static std::unique_ptr<Common_Points> open(PJ_CONTEXT *ctx, const std::string &filename);
  
-	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints;	}
-
+	
 };
 NS_PROJ_END
 
