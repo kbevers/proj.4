@@ -140,6 +140,8 @@ VALUES
 -- Portugal
 ('DLx_ETRS89_geo.gsb','pt_dgt_DLx_ETRS89_geo.tif','DLx_ETRS89_geo.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/pt_dgt_DLx_ETRS89_geo.tif',1,1,NULL),
 ('D73_ETRS89_geo.gsb','pt_dgt_D73_ETRS89_geo.tif','D73_ETRS89_geo.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/pt_dgt_D73_ETRS89_geo.tif',1,1,NULL),
+('portugal/DLX_ETRS89_geo','pt_dgt_DLx_ETRS89_geo.tif','DLx_ETRS89_geo.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/pt_dgt_DLx_ETRS89_geo.tif',1,1,NULL),
+('portugal/D73_ETRS89_geo','pt_dgt_D73_ETRS89_geo.tif','D73_ETRS89_geo.gsb','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/pt_dgt_D73_ETRS89_geo.tif',1,1,NULL),
 -- Canada provincial grids
 ('AB_CSRS.DAC','ca_nrc_ABCSRSV4.tif','ABCSRSV4.GSB','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/ca_nrc_ABCSRSV4.tif',1,1,NULL),
 ('CRD27_00.GSB','ca_nrc_CRD27_00.tif','CRD27_00.GSB','GTiff','hgridshift',0,NULL,'https://cdn.proj.org/ca_nrc_CRD27_00.tif',1,1,NULL),
@@ -185,13 +187,7 @@ VALUES
 -- New Zealand grid shift models.
 ('auckland-1946-to-nzvd2016-conversion.csv','nz_linz_auckht1946-nzvd2016.tif','auckht1946-nzvd2016.gtx','GTiff','vgridshift',0,NULL,'https://cdn.proj.org/nz_linz_auckht1946-nzvd2016.tif',1,1,NULL),
 -- Slovakia
---
--- The definition of EPSG:8364 (JTSK03 to JTSK) uses NADCON method which is not supported by PROJ.
--- UGKK (Slovak Geodetic and Cartographic Institute) provides also NTv2 grid file in addition
--- to NADCON .las/.los files, so we define the NTv2 file here as an alternative.
--- The file is available online but it does not have a confirmed open license yet,
--- so it is not available in proj-datumgrid-europe for now
-('Slovakia_JTSK03_to_JTSK.LAS', 'Slovakia_JTSK03_to_JTSK.gsb', 'Slovakia_JTSK03_to_JTSK.gsb', 'NTv2', 'hgridshift', 0, NULL, 'https://www.geoportal.sk/files/gz/slovakia_jtsk03_to_jtsk_ntv2.zip', 0, 0, NULL),
+('Slovakia_JTSK03_to_JTSK.LAS','sk_gku_JTSK03_to_JTSK.tif',NULL,'GTiff','hgridshift',0,NULL,'https://cdn.proj.org/sk_gku_JTSK03_to_JTSK.tif',1,1,NULL),
 -- Superseded entries
 ('bluff-1955-to-nzvd2016-conversion.csv','nz_linz_blufht1955-nzvd2016.tif','blufht1955-nzvd2016.gtx','GTiff','vgridshift',0,NULL,'https://cdn.proj.org/nz_linz_blufht1955-nzvd2016.tif',1,1,NULL),
 ('dunedin-1958-to-nzvd2016-conversion.csv','nz_linz_duneht1958-nzvd2016.tif','duneht1958-nzvd2016.gtx','GTiff','vgridshift',0,NULL,'https://cdn.proj.org/nz_linz_duneht1958-nzvd2016.tif',1,1,NULL),
