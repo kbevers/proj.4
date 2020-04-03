@@ -2472,6 +2472,84 @@ TEST(crs, projectedCRS_identify_db) {
         EXPECT_EQ(res.front().first->getEPSGCode(), 2193);
         EXPECT_EQ(res.front().second, 90);
     }
+    {
+        // Special case for https://github.com/OSGeo/PROJ/issues/2086
+        // The name of the CRS to identify is
+        // NAD_1983_HARN_StatePlane_Colorado_North_FIPS_0501
+        // whereas it should be
+        // NAD_1983_HARN_StatePlane_Colorado_North_FIPS_0501_Feet
+        auto obj = WKTParser().attachDatabaseContext(dbContext).createFromWKT(
+            "PROJCS[\"NAD_1983_HARN_StatePlane_Colorado_North_FIPS_0501\","
+            "GEOGCS[\"GCS_North_American_1983_HARN\","
+            "DATUM[\"D_North_American_1983_HARN\",SPHEROID[\"GRS_1980\","
+            "6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],"
+            "UNIT[\"Degree\",0.0174532925199433]],"
+            "PROJECTION[\"Lambert_Conformal_Conic\"],"
+            "PARAMETER[\"False_Easting\",3000000.000316083],"
+            "PARAMETER[\"False_Northing\",999999.999996],"
+            "PARAMETER[\"Central_Meridian\",-105.5],"
+            "PARAMETER[\"Standard_Parallel_1\",39.71666666666667],"
+            "PARAMETER[\"Standard_Parallel_2\",40.78333333333333],"
+            "PARAMETER[\"Latitude_Of_Origin\",39.33333333333334],"
+            "UNIT[\"Foot_US\",0.3048006096012192]]");
+        auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+        ASSERT_TRUE(crs != nullptr);
+        auto factoryAll = AuthorityFactory::create(dbContext, std::string());
+        auto res = crs->identify(factoryAll);
+        ASSERT_EQ(res.size(), 1U);
+        EXPECT_EQ(res.front().first->getEPSGCode(), 2876);
+        EXPECT_EQ(res.front().second, 100);
+    }
+    {
+        // Test case of https://github.com/OSGeo/PROJ/issues/2099
+        // The name of the CRS to identify is
+        // JGD2011_Japan_Zone_2
+        // whereas the official ESRI alias is
+        // JGD_2011_Japan_Zone_2
+        auto obj = WKTParser().attachDatabaseContext(dbContext).createFromWKT(
+            "PROJCS[\"JGD2011_Japan_Zone_2\",GEOGCS[\"GCS_JGD_2011\","
+            "DATUM[\"D_JGD_2011\","
+            "SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],"
+            "PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],"
+            "PROJECTION[\"Transverse_Mercator\"],"
+            "PARAMETER[\"False_Easting\",0.0],"
+            "PARAMETER[\"False_Northing\",0.0],"
+            "PARAMETER[\"Central_Meridian\",131],"
+            "PARAMETER[\"Scale_Factor\",0.9999],"
+            "PARAMETER[\"Latitude_Of_Origin\",33],UNIT[\"Meter\",1.0]]");
+        auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+        ASSERT_TRUE(crs != nullptr);
+        auto factoryAll = AuthorityFactory::create(dbContext, std::string());
+        auto res = crs->identify(factoryAll);
+        ASSERT_EQ(res.size(), 1U);
+        EXPECT_EQ(res.front().first->getEPSGCode(), 6670);
+        EXPECT_EQ(res.front().second, 70);
+    }
+    {
+        // Test case of https://github.com/OSGeo/PROJ/issues/2116
+        // The NAD_1983_CSRS_Prince_Edward_Island has entries in the alias
+        // table under the ESRI authority for deprecated EPSG:2292 and
+        // non-deprecated EPSG:2954
+        auto obj = WKTParser().attachDatabaseContext(dbContext).createFromWKT(
+            "PROJCS[\"NAD_1983_CSRS_Prince_Edward_Island\","
+            "GEOGCS[\"GCS_North_American_1983_CSRS\","
+            "DATUM[\"D_North_American_1983_CSRS\","
+            "SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],"
+            "PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],"
+            "PROJECTION[\"Double_Stereographic\"],"
+            "PARAMETER[\"False_Easting\",400000.0],"
+            "PARAMETER[\"False_Northing\",800000.0],"
+            "PARAMETER[\"Central_Meridian\",-63.0],"
+            "PARAMETER[\"Scale_Factor\",0.999912],"
+            "PARAMETER[\"Latitude_Of_Origin\",47.25],UNIT[\"Meter\",1.0]]");
+        auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+        ASSERT_TRUE(crs != nullptr);
+        auto factoryAll = AuthorityFactory::create(dbContext, std::string());
+        auto res = crs->identify(factoryAll);
+        ASSERT_EQ(res.size(), 1U);
+        EXPECT_EQ(res.front().first->getEPSGCode(), 2954);
+        EXPECT_EQ(res.front().second, 100);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -4875,7 +4953,11 @@ TEST(crs, engineeringCRS_WKT2) {
 TEST(crs, engineeringCRS_WKT1) {
 
     auto expected = "LOCAL_CS[\"Engineering CRS\",\n"
-                    "    LOCAL_DATUM[\"Engineering datum\",32767]]";
+                    "    LOCAL_DATUM[\"Engineering datum\",32767],\n"
+                    "    UNIT[\"metre\",1,\n"
+                    "        AUTHORITY[\"EPSG\",\"9001\"]],\n"
+                    "    AXIS[\"Easting\",EAST],\n"
+                    "    AXIS[\"Northing\",NORTH]]";
     EXPECT_EQ(
         createEngineeringCRS()->exportToWKT(
             WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get()),
@@ -5461,7 +5543,8 @@ TEST(crs, crs_alterCSLinearUnit) {
         auto wkt = alteredCRS->exportToWKT(
             &(WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL)
                   ->setMultiLine(false)));
-        EXPECT_EQ(wkt, "LOCAL_CS[\"foo\",UNIT[\"my unit\",2]]");
+        EXPECT_EQ(wkt, "LOCAL_CS[\"foo\",UNIT[\"my unit\",2],"
+                       "AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]");
     }
 
     {
@@ -5591,6 +5674,22 @@ TEST(crs, promoteTo3D_and_demoteTo2D) {
         EXPECT_EQ(
             crs3DAsProjected->baseCRS()->coordinateSystem()->axisList().size(),
             3U);
+
+        // Check that importing an exported Projected 3D CRS as WKT keeps
+        // the 3D aspect of the baseCRS (see #2122)
+        {
+            WKTFormatterNNPtr f(
+                WKTFormatter::create(WKTFormatter::Convention::WKT2_2019));
+            crs3DAsProjected->exportToWKT(f.get());
+            auto obj = WKTParser().createFromWKT(f->toString());
+            auto crsFromWkt = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+            ASSERT_TRUE(crsFromWkt != nullptr);
+            EXPECT_EQ(crsFromWkt->coordinateSystem()->axisList().size(), 3U);
+            EXPECT_EQ(
+                crsFromWkt->baseCRS()->coordinateSystem()->axisList().size(),
+                3U);
+        }
+
         EXPECT_TRUE(crs3D->promoteTo3D(std::string(), nullptr)
                         ->isEquivalentTo(crs3D.get()));
 
