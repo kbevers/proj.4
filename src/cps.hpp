@@ -43,11 +43,11 @@ private:
 	char name[8];
 	PJ_LPZ m_fromPoint;
 	PJ_LPZ m_toPoint;
-	__int32 m_area;
-	double m_dist;
+	__int32 m_area = 0;
+	double m_dist = 0.0;
 protected:
-	LPZ_Pair();
 public:
+	PROJ_FOR_TEST LPZ_Pair();
 };
 
 // ---------------------------------------------------------------------------
@@ -69,8 +69,7 @@ public:
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
     PROJ_FOR_TEST static Common_Points *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
-	PROJ_FOR_TEST static Common_Points *parse(PJ_CONTEXT *ctx, const std::string &filename);
-
+	PROJ_FOR_TEST static std::unique_ptr<Common_Points> *parse(PJ_CONTEXT *ctx, const std::string &filename);
 };
 NS_PROJ_END
 

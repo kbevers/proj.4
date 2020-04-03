@@ -75,6 +75,8 @@ std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std:
 	{
 		auto cp = Common_Points::open(ctx, std::move(fp), actualName);
 
+		auto cp2 = Common_Points::parse(ctx, actualName);
+
 		if (!cp)
 			return nullptr;
 

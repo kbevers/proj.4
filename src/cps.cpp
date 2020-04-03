@@ -31,11 +31,16 @@
 
 #include "proj_internal.h"
 #include "cps.hpp"
+#include "cplist.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 NS_PROJ_START
+
+LPZ_Pair::LPZ_Pair() = default;
+
+// ---------------------------------------------------------------------------
 
 Common_Points::Common_Points() = default;
 
@@ -55,24 +60,22 @@ Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, co
 		return nullptr;
 	}
 
-
 	return nullptr;
 }
 
 // ---------------------------------------------------------------------------
 
-Common_Points *Common_Points::parse(PJ_CONTEXT *ctx, const std::string &filename)
+std::unique_ptr<Common_Points> *Common_Points::parse(PJ_CONTEXT *ctx, const std::string &filename)
 {
+	pj_acquire_lock();
 
-	LPZ_Pair pointPair();
+	//auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
+	auto set = std::unique_ptr<Common_Points>(new Common_Points());
+	
+	auto pointPair = new LPZ_Pair();
 
-
-
-
-	return nullptr;
+	return &set;
 }
-
-
 NS_PROJ_END
 
 // TODO: Move to another class
@@ -195,7 +198,8 @@ int pj_cp_load(projCtx_t* ctx, PJ_COMMONPOINTS *gi)
 
 		return 0;
 	}
-
+	
+	// TODO: C4099 warning
 	std::vector<PJ_LPZ_Pair> *pJLPZList = cp_tmp.pJ_LPZ_PairList;
 	pJLPZList = (std::vector<PJ_LPZ_Pair> *)pj_calloc(1, sizeof(struct std::vector<PJ_LPZ_Pair>));
 
