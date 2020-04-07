@@ -230,6 +230,12 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJ_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJ_BINARY_DIR}/bin)
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
+#link_directories("C:\\Dev\\vcpkg\\installed\\x64-windows\\lib\\tiff.lib") 
+#include_directories("C:\\Dev\\vcpkg\\installed\\x64-windows\\include\\")
+ 
+#link_directories("C:/Dev/vcpkg/installed/x64-windows/lib/tiff.lib") 
+#include_directories("C:/Dev/vcpkg/installed/x64-windows/include/")
+
 ################################################################################
 # Installation
 ################################################################################
