@@ -16,7 +16,7 @@ option(BUILD_PROJ
 option(BUILD_PROJINFO
   "Build projinfo (SRS and coordinate operation metadata/query tool)" ON)
 option(BUILD_PROJSYNC
-  "Build projsync (synchronize transformation support data)" ON)
+  "Build projsync (synchronize transformation support data)" OFF)
 
 if(NOT MSVC)
 
