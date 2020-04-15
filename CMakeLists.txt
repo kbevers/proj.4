@@ -144,37 +144,37 @@ endif()
 # Check for libtiff
 ################################################################################
 
-#option(ENABLE_TIFF "Enable TIFF support to read some grids" ON)
-#mark_as_advanced(ENABLE_TIFF)
-#set(TIFF_ENABLED FALSE)
-#if(ENABLE_TIFF)
-#  find_package(TIFF REQUIRED)
-#  if(TIFF_FOUND)
-#    set(TIFF_ENABLED TRUE)
-#  else()
-#    message(SEND_ERROR
-#      "libtiff dependency not found! Use ENABLE_TIFF=OFF to force it off")
-#  endif()
-#else()
-#  message(WARNING
-#    "TIFF support is not enabled and will result in the inability to read "
-#    "some grids")
-#endif()
+option(ENABLE_TIFF "Enable TIFF support to read some grids" ON)
+mark_as_advanced(ENABLE_TIFF)
+set(TIFF_ENABLED FALSE)
+if(ENABLE_TIFF)
+  find_package(TIFF REQUIRED)
+  if(TIFF_FOUND)
+    set(TIFF_ENABLED TRUE)
+  else()
+    message(SEND_ERROR
+      "libtiff dependency not found! Use ENABLE_TIFF=OFF to force it off")
+  endif()
+else()
+  message(WARNING
+    "TIFF support is not enabled and will result in the inability to read "
+    "some grids")
+endif()
 
 ################################################################################
 # Check for curl
 ################################################################################
 
-#option(ENABLE_CURL "Enable Curl support" ON)
-#set(CURL_ENABLED FALSE)
-#if(ENABLE_CURL)
-#  find_package(CURL REQUIRED)
-#  if(CURL_FOUND)
-#    set(CURL_ENABLED TRUE)
-#  else()
-#    message(SEND_ERROR "curl dependency not found!")
-#  endif()
-#endif()
+option(ENABLE_CURL "Enable Curl support" ON)
+set(CURL_ENABLED FALSE)
+if(ENABLE_CURL)
+  find_package(CURL REQUIRED)
+  if(CURL_FOUND)
+    set(CURL_ENABLED TRUE)
+  else()
+    message(SEND_ERROR "curl dependency not found!")
+  endif()
+endif()
 
 ################################################################################
 # threading configuration
@@ -229,12 +229,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJ_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJ_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJ_BINARY_DIR}/bin)
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
-#link_directories("C:\\Dev\\vcpkg\\installed\\x64-windows\\lib\\tiff.lib") 
-#include_directories("C:\\Dev\\vcpkg\\installed\\x64-windows\\include\\")
- 
-#link_directories("C:/Dev/vcpkg/installed/x64-windows/lib/tiff.lib") 
-#include_directories("C:/Dev/vcpkg/installed/x64-windows/include/")
 
 ################################################################################
 # Installation
