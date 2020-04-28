@@ -580,7 +580,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 
-	// TODO: Dette er ein test:
+	// TODO: Dette er ein init-test.
 	pj_cp_init(P, "cp_trans");
 
 	// TODO: Skal denne returnere fellespunkta?

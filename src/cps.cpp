@@ -46,6 +46,14 @@ Common_Points::Common_Points() = default;
 
 // ---------------------------------------------------------------------------
 
+Common_Points::Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, int noOfPoints) : m_fp(std::move(fp))
+{
+	m_name = nameIn;
+	m_noOfPoints = noOfPoints;
+}
+
+// ---------------------------------------------------------------------------
+
 Common_Points::~Common_Points() = default;
 
 // ---------------------------------------------------------------------------
@@ -60,21 +68,60 @@ Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, co
 		return nullptr;
 	}
 
-	return nullptr;
+	__int32 noOfPoints;
+	memcpy(&noOfPoints, header + 0, 4);	
+
+	if (noOfPoints < 4)
+		return nullptr;
+	
+	// TODO: Add name in CPT-file.
+	// TODO: Add licence in CPT-file.
+	 std::string name = "Dette er ein test";
+	//memcpy(&name, header + 4, 8);
+
+	return new Common_Points(std::move(fp), name, noOfPoints);
 }
 
 // ---------------------------------------------------------------------------
 
 std::unique_ptr<Common_Points> *Common_Points::parse(PJ_CONTEXT *ctx, const std::string &filename)
 {
-	pj_acquire_lock();
+	pj_acquire_lock();	
 
 	//auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
 	auto set = std::unique_ptr<Common_Points>(new Common_Points());
-	
+
 	auto pointPair = new LPZ_Pair();
+	
+	if (set->m_fp->read(pointPair, sizeof(pointPair)) != sizeof(pointPair))	
+	{
+	}	
 
 	return &set;
+}
+
+// ---------------------------------------------------------------------------
+
+bool Common_Points::load(PJ_CONTEXT *ctx)
+{
+	if (m_LpzPairList.size() == NoOfPoints())
+		return true;
+
+	auto pointPair = new LPZ_Pair();
+
+	unsigned long offset = 4;
+	m_fp->seek(offset);
+
+	while (m_fp->read(pointPair, sizeof(LPZ_Pair) - offset) == sizeof(LPZ_Pair) - offset)
+	{
+		m_LpzPairList.push_back(std::unique_ptr<LPZ_Pair>(pointPair));
+		pointPair = new LPZ_Pair();		
+	}
+
+	if (m_LpzPairList.size() != NoOfPoints())
+		return false;
+
+	return true;
 }
 NS_PROJ_END
 
@@ -82,7 +129,7 @@ NS_PROJ_END
 struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 {
 	PAFile fid = (PAFile)fileapi;
-	struct COMMONPOINTS *cp;	 
+	struct COMMONPOINTS *cp;
 	char header[160];
 
 	cp = (struct COMMONPOINTS *) pj_malloc(sizeof(struct COMMONPOINTS));

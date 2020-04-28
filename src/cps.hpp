@@ -61,15 +61,18 @@ protected:
 	std::string m_format { };
 	std::vector<std::unique_ptr<LPZ_Pair>> m_LpzPairList{};
 	// std::vector<PJ_LPZ_Pair>* pJ_LPZ_PairList = nullptr;
-	// Common_Points();
+	PJ_CONTEXT *m_ctx;
+	std::unique_ptr<File> m_fp;
 public:
 	PROJ_FOR_TEST Common_Points();
+	PROJ_FOR_TEST Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, int noOfPoints);
     PROJ_FOR_TEST virtual ~Common_Points();
 	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints; }
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
     PROJ_FOR_TEST static Common_Points *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
 	PROJ_FOR_TEST static std::unique_ptr<Common_Points> *parse(PJ_CONTEXT *ctx, const std::string &filename);
+    PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
 };
 NS_PROJ_END
 
