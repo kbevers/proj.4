@@ -579,16 +579,15 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		proj_log_error(P, "cp_trans: +cp_trans parameter missing.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
-
-	// TODO: Dette er ein init-test.
-	pj_cp_init(P, "cp_trans");
+	Q->cps = pj_cp_init(P, "cp_trans");	 
 
 	// TODO: Skal denne returnere fellespunkta?
+	/*
 	if (proj_cp_init(P, "cp_trans") == 0)
 	{
 		proj_log_error(P, "cp_trans: not able to initialize common point file.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
-	}
+	}*/
 
 	Q->n_points = FP_NORMAL;
 	if (pj_param_exists(P->params, "n_points"))	

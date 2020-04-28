@@ -46,10 +46,9 @@ Common_Points::Common_Points() = default;
 
 // ---------------------------------------------------------------------------
 
-Common_Points::Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, int noOfPoints) : m_fp(std::move(fp))
-{
-	m_name = nameIn;
-	m_noOfPoints = noOfPoints;
+Common_Points::Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints) 
+	: m_fp(std::move(fp)), m_name(nameIn), m_format(format), m_noOfPoints(noOfPoints)
+{	
 }
 
 // ---------------------------------------------------------------------------
@@ -76,10 +75,11 @@ Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, co
 	
 	// TODO: Add name in CPT-file.
 	// TODO: Add licence in CPT-file.
-	 std::string name = "Dette er ein test";
+	 std::string name = filename;
+	 std::string format = "cpt";
 	//memcpy(&name, header + 4, 8);
 
-	return new Common_Points(std::move(fp), name, noOfPoints);
+	return new Common_Points(std::move(fp), name, format, noOfPoints);
 }
 
 // ---------------------------------------------------------------------------

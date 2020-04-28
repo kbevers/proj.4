@@ -73,16 +73,14 @@ std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std:
 
 	if (ends_with(actualName, "cpt") || ends_with(actualName, "CPT"))
 	{
-		auto cp = Common_Points::open(ctx, std::move(fp), actualName);
-
-		auto dwed =	cp->load(ctx);
-
-	    // cp->parse(ctx, actualName);
-	    // auto cp2 = Common_Points::parse(ctx, actualName);
-
+		auto cp = Common_Points::open(ctx, std::move(fp), filename /*actualName*/);
+	
 		if (!cp)
 			return nullptr;
 
+		if (!cp->load(ctx))
+			return nullptr;
+		
 		auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
 		set->m_name = filename;
 		set->m_format = "cpt";

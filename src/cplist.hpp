@@ -40,11 +40,8 @@ protected:
 	std::string m_name{};
 	std::string m_format{};
 	std::vector<std::unique_ptr<Common_Points>> m_cps {};
-
-	//CommonPointSet();
 public:
-	PROJ_FOR_TEST CommonPointSet();
-	
+	PROJ_FOR_TEST CommonPointSet();	
 	PROJ_FOR_TEST virtual ~CommonPointSet(); 
 	PROJ_FOR_TEST static std::unique_ptr<CommonPointSet> open(PJ_CONTEXT *ctx, const std::string &filename);
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }

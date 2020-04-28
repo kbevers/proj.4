@@ -65,7 +65,7 @@ protected:
 	std::unique_ptr<File> m_fp;
 public:
 	PROJ_FOR_TEST Common_Points();
-	PROJ_FOR_TEST Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, int noOfPoints);
+	PROJ_FOR_TEST Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints);
     PROJ_FOR_TEST virtual ~Common_Points();
 	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints; }
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
