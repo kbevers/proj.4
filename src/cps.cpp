@@ -81,25 +81,7 @@ Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, co
 
 	return new Common_Points(std::move(fp), name, format, noOfPoints);
 }
-
-// ---------------------------------------------------------------------------
-
-std::unique_ptr<Common_Points> *Common_Points::parse(PJ_CONTEXT *ctx, const std::string &filename)
-{
-	pj_acquire_lock();	
-
-	//auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
-	auto set = std::unique_ptr<Common_Points>(new Common_Points());
-
-	auto pointPair = new LPZ_Pair();
-	
-	if (set->m_fp->read(pointPair, sizeof(pointPair)) != sizeof(pointPair))	
-	{
-	}	
-
-	return &set;
-}
-
+ 
 // ---------------------------------------------------------------------------
 
 bool Common_Points::load(PJ_CONTEXT *ctx)
