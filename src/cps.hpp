@@ -75,7 +75,6 @@ public:
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
     PROJ_FOR_TEST static Common_Points *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
 	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
-	//PROJ_FOR_TEST const Common_Points *findCp(const ListOfCps &cps, const PJ_LP &input/*, CommonPointSet &cpSetOut*/);
 	PROJ_FOR_TEST const Common_Points *cpAt(double lon, double lat) const;
 };
 NS_PROJ_END

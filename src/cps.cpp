@@ -107,25 +107,6 @@ bool Common_Points::load(PJ_CONTEXT *ctx)
 	return true;
 }
 
- const Common_Points* findCp(const ListOfCps &cps, const PJ_LP &input/*,  CommonPointSet &cpSetOut*/)
-{
-	for (const auto &cpSet : cps)
-	{
-		/*
- 		cpSetOut = cpSet.get();	
-
-		if (cpSetOut == nullptr)
-			return nullptr;
-
-		if (cpSetOut->Cps().size() == 0)
-			return nullptr; 
-		*/
-		// TODO: Add extent area in cpt-file.
-	    //	return cpSet->Cps();
-	}
-	return nullptr;
-}
- 
 const Common_Points *Common_Points::cpAt(double lon, double lat) const
 {
 	double coslat = cos(lat);

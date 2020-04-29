@@ -461,7 +461,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	struct COMMONPOINTS *cp;
 	cp = find_cp(P->ctx, P->cplist_count, P->cplist);
 	
-	//auto dwe = findCp(Q->cps, nullptr, nullptr);
+	auto cp2 = findCp(Q->cps, lpz);
  
 	if (cp == nullptr)
 	{

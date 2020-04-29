@@ -136,6 +136,32 @@ ListOfCps pj_cp_init(PJ *P, const char *cpkey)
 	return cps;
 } 
 
+const Common_Points* findCp(const ListOfCps &cps, const PJ_LPZ &input)
+{
+	for (const auto &cpSet : cps)
+	{
+		if (cpSet->cpAt(input.phi, input.phi) != nullptr)
+		{
+			return cpSet->cpAt(input.phi, input.phi);
+		}
+		//return nullptr;
+		//	return cpSet;
+
+		/*
+		cpSetOut = cpSet.get();
+
+		if (cpSetOut == nullptr)
+			return nullptr;
+
+		if (cpSetOut->Cps().size() == 0)
+			return nullptr;
+		*/
+		// TODO: Add extent area in cpt-file.
+		//	return cpSet->Cps();
+	}
+	return nullptr;
+}
+
 const Common_Points *CommonPointSet::cpAt(double lon, double lat) const
 {
 	for (const auto &cp : m_cps)
@@ -146,6 +172,9 @@ const Common_Points *CommonPointSet::cpAt(double lon, double lat) const
 	}
 	return nullptr;
 }
+
+
+
 
 
 NS_PROJ_END

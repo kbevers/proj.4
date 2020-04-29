@@ -32,6 +32,8 @@
 
 NS_PROJ_START
 
+// ---------------------------------------------------------------------------
+
 class PROJ_GCC_DLL CommonPointSet
 {
 private:
@@ -56,6 +58,10 @@ typedef std::vector<std::unique_ptr<CommonPointSet>> ListOfCps;
 // ---------------------------------------------------------------------------
 
 ListOfCps pj_cp_init(PJ *P, const char *cpkey);
+
+// ---------------------------------------------------------------------------
+
+const Common_Points *findCp(const ListOfCps &cps, const PJ_LPZ &input);
 
 NS_PROJ_END
 
