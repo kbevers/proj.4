@@ -41,6 +41,7 @@
 #include "geocent.h"
 #include "point_in_polygon.h"
 #include "geojsonPolygon.hpp"
+#include "cps.hpp"
 #include "cplist.hpp"
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
@@ -79,6 +80,7 @@ namespace
 		int n_points;
 		double c_coll;
 		double k_coll;
+
 		ListOfMultiPolygons polygons{};
 		ListOfCps cps{};
 	};
@@ -189,7 +191,6 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_D
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-
 static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction)
 {
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
@@ -376,7 +377,7 @@ struct COMMONPOINTS* find_cp(projCtx ctx, int cp_count, PJ_COMMONPOINTS **cps)
 	for (icp = 0; icp < cp_count; icp++)
 	{
 		PJ_COMMONPOINTS *gi = cps[icp];
-		struct COMMONPOINTS *cp = gi->cp;	
+		struct COMMONPOINTS *cp = gi->cp;
 		
 		while (gi->child)
 		{
@@ -453,10 +454,15 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
+	
+	// TODO: Lese
+	// auto cps = Q->cps;
 
 	struct COMMONPOINTS *cp;
 	cp = find_cp(P->ctx, P->cplist_count, P->cplist);
-
+	
+	//auto dwe = findCp(Q->cps, nullptr, nullptr);
+ 
 	if (cp == nullptr)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
@@ -464,7 +470,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	}
 
  	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
-	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
+	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
 	
 	if (closestPoints.size() == 0)

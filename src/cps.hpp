@@ -48,6 +48,8 @@ private:
 protected:
 public:
 	PROJ_FOR_TEST LPZ_Pair();
+	PROJ_FOR_TEST const PJ_LPZ &FromPoint() const { return m_fromPoint; }
+	PROJ_FOR_TEST const PJ_LPZ &ToPoint() const { return m_toPoint; }
 };
 
 // ---------------------------------------------------------------------------
@@ -59,8 +61,9 @@ protected:
 	int m_noOfPoints = 0;
 	std::string m_name { };
 	std::string m_format { };
-	std::vector<std::unique_ptr<LPZ_Pair>> m_LpzPairList{};
-	// std::vector<PJ_LPZ_Pair>* pJ_LPZ_PairList = nullptr;
+	//std::vector<LPZ_Pair> m_LpzPairList { };
+	std::vector<std::unique_ptr<LPZ_Pair>> m_LpzPairList { };
+	
 	PJ_CONTEXT *m_ctx;
 	std::unique_ptr<File> m_fp;
 public:
@@ -71,7 +74,9 @@ public:
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
     PROJ_FOR_TEST static Common_Points *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
-    PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
+	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
+	//PROJ_FOR_TEST const Common_Points *findCp(const ListOfCps &cps, const PJ_LP &input/*, CommonPointSet &cpSetOut*/);
+	PROJ_FOR_TEST const Common_Points *cpAt(double lon, double lat) const;
 };
 NS_PROJ_END
 

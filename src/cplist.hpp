@@ -35,7 +35,6 @@ NS_PROJ_START
 class PROJ_GCC_DLL CommonPointSet
 {
 private:
-
 protected:
 	std::string m_name{};
 	std::string m_format{};
@@ -47,11 +46,12 @@ public:
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
 	PROJ_FOR_TEST const std::vector<std::unique_ptr<Common_Points>> & Cps() const { return m_cps; }
+	PROJ_FOR_TEST const Common_Points *cpAt(double lon, double lat) const;
 };
 
 // ---------------------------------------------------------------------------
 
-typedef std::vector <std::unique_ptr<CommonPointSet>> ListOfCps;
+typedef std::vector<std::unique_ptr<CommonPointSet>> ListOfCps;
 
 // ---------------------------------------------------------------------------
 

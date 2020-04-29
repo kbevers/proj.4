@@ -136,6 +136,18 @@ ListOfCps pj_cp_init(PJ *P, const char *cpkey)
 	return cps;
 } 
 
+const Common_Points *CommonPointSet::cpAt(double lon, double lat) const
+{
+	for (const auto &cp : m_cps)
+	{ 
+		if (cp->cpAt(lon, lat) != nullptr)
+			return cp.get();
+			   //->->gridAt(lon, lat);)
+	}
+	return nullptr;
+}
+
+
 NS_PROJ_END
 
 // ---------------------------------------------------------------------------

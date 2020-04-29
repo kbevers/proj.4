@@ -81,7 +81,7 @@ Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, co
 
 	return new Common_Points(std::move(fp), name, format, noOfPoints);
 }
- 
+
 // ---------------------------------------------------------------------------
 
 bool Common_Points::load(PJ_CONTEXT *ctx)
@@ -97,6 +97,7 @@ bool Common_Points::load(PJ_CONTEXT *ctx)
 	while (m_fp->read(pointPair, sizeof(LPZ_Pair) - offset) == sizeof(LPZ_Pair) - offset)
 	{
 		m_LpzPairList.push_back(std::unique_ptr<LPZ_Pair>(pointPair));
+	//	m_LpzPairList.push_back(&pointPair);
 		pointPair = new LPZ_Pair();		
 	}
 
@@ -105,9 +106,61 @@ bool Common_Points::load(PJ_CONTEXT *ctx)
 
 	return true;
 }
+
+ const Common_Points* findCp(const ListOfCps &cps, const PJ_LP &input/*,  CommonPointSet &cpSetOut*/)
+{
+	for (const auto &cpSet : cps)
+	{
+		/*
+ 		cpSetOut = cpSet.get();	
+
+		if (cpSetOut == nullptr)
+			return nullptr;
+
+		if (cpSetOut->Cps().size() == 0)
+			return nullptr; 
+		*/
+		// TODO: Add extent area in cpt-file.
+	    //	return cpSet->Cps();
+	}
+	return nullptr;
+}
+ 
+const Common_Points *Common_Points::cpAt(double lon, double lat) const
+{
+	double coslat = cos(lat);
+	 
+	for (auto&& pair : m_LpzPairList)
+	{
+		auto point = pair->FromPoint();
+		double deltaPhi = point.phi - lat;
+		double deltaLam = (point.lam - lon) * coslat;
+
+		if (hypot(deltaPhi, deltaLam) < 1.0)
+			return this;
+	}
+	/*
+	bool result = std::any_of(m_LpzPairList.begin(), m_LpzPairList.end(), [] (std::unique_ptr<LPZ_Pair> pair)
+	{
+		auto point = pair->FromPoint();
+
+		//PJ_LPZ point = (direction == PJ_FWD) ? pair.fromPoint : pair.toPoint;
+
+		double deltaPhi = point.phi - lon;
+		double deltaLam = (point.lam - lat); //* coslat;
+
+		//pair.dist = hypot(deltaPhi, deltaLam);
+	 
+		return nullptr;
+		//auto wd = pair.get();
+	}); */
+
+	return nullptr;
+}; 
+
 NS_PROJ_END
 
-// TODO: Move to another class
+// TODO: Delete the struct
 struct COMMONPOINTS *cp_init(projCtx ctx, struct projFileAPI_t* fileapi)
 {
 	PAFile fid = (PAFile)fileapi;
