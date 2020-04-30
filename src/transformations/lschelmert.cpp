@@ -46,7 +46,6 @@
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
 
-//using namespace GeoJsonMultiPolygon;
 using namespace NS_PROJ;
 using namespace Eigen;
 using json = nlohmann::json;
@@ -138,35 +137,42 @@ struct COMMONPOINTS* find_CommonPointList(projCtx ctx, int cp_count, pj_cp **cps
 	return nullptr;
 };
 
-MatrixXd CovarianceNN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
-{
-	double coslat = cos(lp->phi);
-
+MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<std::unique_ptr<LPZ_Pair>> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+{ 
+	int i = 0;
+	int j = 0;
 	auto np = commonPointList->size();
 
+	double coslat = cos(lp->phi);
+	
 	MatrixXd cnn(np, np);
 	
-	for (int i = 0; i < np; i++)
-	{
-		PJ_LPZ_Pair pp1 = commonPointList->at(i);
+	for (auto&& pair1 : *commonPointList)
+	{  
+		j = 0;
+		auto pp1 = pair1.get(); 
+		
+		PJ_LPZ p1 = (direction == PJ_FWD) ? pp1->FromPoint() : pp1->ToPoint();
 
-		PJ_LPZ p1 = (direction == PJ_FWD) ? pp1.fromPoint : pp1.toPoint;
-
-		for (int j = 0; j < np; j++)
+		for (auto&& pair2 : *commonPointList)
 		{
-			PJ_LPZ_Pair pp2 = commonPointList->at(j);
-			PJ_LPZ p2 = (direction == PJ_FWD) ? pp2.fromPoint : pp2.toPoint;
+			auto pp2 = pair2.get();
+
+			PJ_LPZ p2 = (direction == PJ_FWD) ? pp2->FromPoint() : pp2->ToPoint();
 
 			double dist = hypot(p1.phi - p2.phi, (p1.lam * coslat) - (p2.lam * coslat));
 			double a = (M_PI / 2.0) * (dist / c);
-			cnn(i, j) = k * exp(-a) * cos(a);
+			cnn(i, j++) = k * exp(-a) * cos(a);		
 		}
+		i++;
 	}
 	return cnn;
 }
 
-MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+MatrixXd CovarianceMN(PJ_LP *lp, std::vector<std::unique_ptr<LPZ_Pair>> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 {
+	int i = 0;
+
 	double coslat = cos(lp->phi);
 	double x = lp->phi;
 	double y = lp->lam * coslat;
@@ -174,15 +180,16 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_D
 	auto np = commonPointList->size();
 
 	MatrixXd cmn(np, 1);
-	 
-	for (int i = 0; i < np; i++)
-	{
-		PJ_LPZ_Pair pointPair = commonPointList->at(i);
-		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
 
-		double dist = hypot(pointFrom.phi - x, (pointFrom.lam * coslat) - y);
+	for (auto&& pair : *commonPointList)
+	{  
+		auto pp = pair.get();
+
+		PJ_LPZ p = (direction == PJ_FWD) ? pp->FromPoint() : pp->ToPoint();
+		
+		double dist = hypot(p.phi - x, (p.lam * coslat) - y);
 		double a = (M_PI / 2.0) * (dist / c);
-		cmn(i, 0) = k * exp(-a) * cos(a);
+		cmn(i++, 0) = k * exp(-a) * cos(a); 
 	}
 	return cmn;
 }
@@ -191,8 +198,8 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_D
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> *commonPointList, PJ_DIRECTION direction)
-{
+static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<std::unique_ptr<LPZ_Pair>> *commonPointList, PJ_DIRECTION direction)
+{ 
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
 	auto np = commonPointList->size();
@@ -221,12 +228,13 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> 
 	// Vector To System:
 	MatrixXd xT(np, 1); MatrixXd yT(np, 1);
 
-	for (int i = 0; i < np; i++)
+	int i = 0;
+	for (auto&& pair : *commonPointList)
 	{
-		PJ_LPZ_Pair pointPair = commonPointList->at(i);
+		auto pp = pair.get();
 
-		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pointPair.fromPoint : pointPair.toPoint;
-		PJ_LPZ pointTo = (direction == PJ_FWD) ? pointPair.toPoint : pointPair.fromPoint;
+		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pp->FromPoint() : pp->ToPoint();
+	    PJ_LPZ pointTo = (direction == PJ_FWD) ? pp->ToPoint() : pp->FromPoint();
 
 		xF(i, 0) = pointFrom.phi;
 		yF(i, 0) = pointFrom.lam * coslat;
@@ -235,7 +243,9 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> 
 		yT(i, 0) = pointTo.lam * coslat;
 
 		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-			proj_log_trace(P, "Source: (%10.8f, %10.8f) Target: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, pointTo.phi, pointTo.lam);			
+			proj_log_trace(P, "Source: (%10.8f, %10.8f) Target: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, pointTo.phi, pointTo.lam);
+	
+		i++;
 	}
 
 	MatrixXd p = cnn.inverse();
@@ -305,46 +315,42 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<PJ_LPZ_Pair> 
 	return P;
 } 
 
-bool DistanceLess(const PJ_LPZ_Pair& lhs, const PJ_LPZ_Pair& rhs)
+bool DistanceLess(const std::unique_ptr<LPZ_Pair>& lhs, const std::unique_ptr<LPZ_Pair>& rhs)
 {
-	return lhs.dist < rhs.dist;
+	return lhs->Distance() < rhs->Distance();
 }
 
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-std::vector<PJ_LPZ_Pair> findClosestPoints(COMMONPOINTS *commonPointList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
-{
-	std::vector<PJ_LPZ_Pair> distances;
-	std::vector<PJ_LPZ_Pair> closestDistances;
 
-	auto np = commonPointList->pJ_LPZ_PairList->size();
+std::vector<std::unique_ptr<LPZ_Pair>> findClosestPoints(Common_Points *cpList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
+{
+	std::vector<std::unique_ptr<LPZ_Pair>> distances;	 
 
 	double coslat = cos(lp.phi);
 
-	for (int i = 0; i < np; i++)
-	{ 	
-		PJ_LPZ_Pair pair = commonPointList->pJ_LPZ_PairList->at(i);
-
-		if (areaId != 0 && pair.area != areaId)
+	for (auto&& pair : cpList->LpzPairList())
+	{
+		if (areaId != 0 && pair->Area() != areaId)
 			continue;
 
-		PJ_LPZ point = (direction == PJ_FWD) ? pair.fromPoint : pair.toPoint;
+		PJ_LPZ point = (direction == PJ_FWD) ? pair->FromPoint() : pair->ToPoint();
 
 		double deltaPhi = point.phi - lp.phi;
 		double deltaLam = (point.lam - lp.lam) * coslat;
 
-		pair.dist = hypot(deltaPhi, deltaLam);
-		 
-		distances.push_back(pair);
-	}
+		if (hypot(deltaPhi, deltaLam) > 1.0)
+			continue;
 
+		distances.push_back(std::unique_ptr<LPZ_Pair>(pair.get()));
+	}	 
 	std::sort(distances.begin(), distances.end(), DistanceLess);
 
-	for (int i = 0; i < n; i++)
-		closestDistances.push_back(distances[i]);
+	// TODO: Check n.
+	distances.resize(n);
 
-	return closestDistances;
+	return distances;
 }
 
 int proj_cp_init(PJ* P, const char *cps)
@@ -454,15 +460,9 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
-	
-	// TODO: Lese
-	// auto cps = Q->cps;
 
-	struct COMMONPOINTS *cp;
-	cp = find_cp(P->ctx, P->cplist_count, P->cplist);
-	
-	auto cp2 = findCp(Q->cps, lpz);
- 
+	Common_Points* cp = findCp(Q->cps, lpz);
+
 	if (cp == nullptr)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
@@ -495,15 +495,15 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 
 	PJ_COORD point = { {0,0,0,0} };
 	point.xyz = xyz;
+	auto lpz = point.lpz;
 
-	struct COMMONPOINTS *cp;
-	cp = find_cp(P->ctx, P->cplist_count, P->cplist);
+	Common_Points *cp = findCp(Q->cps, lpz);
 
 	if (cp == nullptr)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
-	} 
+	}
 
 	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
@@ -565,8 +565,8 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
 	if (has_polygons == 0)
 	{
-		//proj_log_error(P, "cp_trans: +polygon parameter missing.");
-		//return pj_default_destructor(P, PJD_ERR_NO_ARGS);
+		 proj_log_error(P, "cp_trans: +polygon parameter missing.");
+		 return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 
 	P->opaque = (void *)Q;

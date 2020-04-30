@@ -97,7 +97,6 @@ bool Common_Points::load(PJ_CONTEXT *ctx)
 	while (m_fp->read(pointPair, sizeof(LPZ_Pair) - offset) == sizeof(LPZ_Pair) - offset)
 	{
 		m_LpzPairList.push_back(std::unique_ptr<LPZ_Pair>(pointPair));
-	//	m_LpzPairList.push_back(&pointPair);
 		pointPair = new LPZ_Pair();		
 	}
 

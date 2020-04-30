@@ -136,7 +136,9 @@ ListOfCps pj_cp_init(PJ *P, const char *cpkey)
 	return cps;
 } 
 
-const Common_Points* findCp(const ListOfCps &cps, const PJ_LPZ &input)
+// ---------------------------------------------------------------------------
+
+Common_Points* findCp(const ListOfCps &cps, const PJ_LPZ &input)
 {
 	for (const auto &cpSet : cps)
 	{
@@ -162,20 +164,17 @@ const Common_Points* findCp(const ListOfCps &cps, const PJ_LPZ &input)
 	return nullptr;
 }
 
-const Common_Points *CommonPointSet::cpAt(double lon, double lat) const
+// ---------------------------------------------------------------------------
+
+Common_Points *CommonPointSet::cpAt(double lon, double lat) const
 {
 	for (const auto &cp : m_cps)
 	{ 
 		if (cp->cpAt(lon, lat) != nullptr)
-			return cp.get();
-			   //->->gridAt(lon, lat);)
+			return cp.get();			   
 	}
 	return nullptr;
 }
-
-
-
-
 
 NS_PROJ_END
 
@@ -297,4 +296,3 @@ PJ_COMMONPOINTS **pj_cplist(projCtx ctx, const char *lists, int *list_count)
 
 	return list;
 }
-

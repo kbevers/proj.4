@@ -48,7 +48,7 @@ public:
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
 	PROJ_FOR_TEST const std::vector<std::unique_ptr<Common_Points>> & Cps() const { return m_cps; }
-	PROJ_FOR_TEST const Common_Points *cpAt(double lon, double lat) const;
+	PROJ_FOR_TEST Common_Points *cpAt(double lon, double lat) const;
 };
 
 // ---------------------------------------------------------------------------
@@ -61,7 +61,7 @@ ListOfCps pj_cp_init(PJ *P, const char *cpkey);
 
 // ---------------------------------------------------------------------------
 
-const Common_Points *findCp(const ListOfCps &cps, const PJ_LPZ &input);
+Common_Points *findCp(const ListOfCps &cps, const PJ_LPZ &input);
 
 NS_PROJ_END
 
