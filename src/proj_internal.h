@@ -798,34 +798,6 @@ PJ *pj_projection_specific_setup_##name (PJ *P)
 
 #endif /* def PJ_LIB__ */
 
-struct PJ_LPZ_Pair
-{
-	char name[8];
-	PJ_LPZ fromPoint;
-	PJ_LPZ toPoint;
-	__int32 area;
-	double dist;
-};
-
-struct COMMONPOINTS
-{
-	// TODO: C4099 warning
-	int noOfPoints = 0;
-	std::vector<PJ_LPZ_Pair>* pJ_LPZ_PairList = nullptr;
-};
-
-typedef struct pj_cp
-{
-	char *cp_name;
-	char *filename;
-	const char *format;
-
-	COMMONPOINTS *cp;
-
-	struct pj_cp *next;
-	struct pj_cp *child;
-} PJ_COMMONPOINTS;
-
 /* procedure prototypes */
 double PROJ_DLL dmstor(const char *, char **);
 double dmstor_ctx(projCtx_t *ctx, const char *, char **);
@@ -909,9 +881,6 @@ std::string PROJ_DLL pj_context_get_user_writable_directory(PJ_CONTEXT *ctx, boo
 void PROJ_DLL pj_context_set_user_writable_directory(PJ_CONTEXT* ctx, const std::string& path);
 std::string PROJ_DLL pj_get_relative_share_proj(PJ_CONTEXT *ctx);
 
-int pj_cp_load(projCtx_t *, PJ_COMMONPOINTS *);
-PJ_COMMONPOINTS **pj_cplist(projCtx_t *, const char *, int *);
-PJ_COMMONPOINTS *pj_commonpoints_init(projCtx_t *, const char *);
 std::vector<CoordOperation> pj_create_prepared_operations(PJ_CONTEXT *ctx,
                                                      const PJ *source_crs,
                                                      const PJ *target_crs,

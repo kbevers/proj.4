@@ -85,58 +85,6 @@ namespace
 	};
 }
 
-struct COMMONPOINTS* find_CommonPointList(projCtx ctx, int cp_count, pj_cp **cps)
-{
-	int iCp;
-
-	for (iCp = 0; iCp < cp_count; iCp++)
-	{
-		pj_cp *gi = cps[iCp];
-		
-		COMMONPOINTS *cp = gi->cp;
-		/*	if (ct->ll.phi - epsilon > input.phi
-			|| ct->ll.lam - epsilon > input.lam
-			|| (ct->ll.phi + (ct->lim.phi - 1) * ct->del.phi + epsilon < input.phi)
-			|| (ct->ll.lam + (ct->lim.lam - 1) * ct->del.lam + epsilon < input.lam)) {
-			continue;
-		}*/
-
-		while (gi->child)
-		{
-			pj_cp *child;
-
-			for (child = gi->child; child != nullptr; child = child->next)
-			{
-				/*
-				COMMONPOINTS *cp1 = child->cp;				
-				epsilon = (fabs(ct1->del.phi)+fabs(ct1->del.lam))/10000.0;
-
-				if( ct1->ll.phi - epsilon > input.phi
-					|| ct1->ll.lam - epsilon > input.lam
-					|| (ct1->ll.phi+(ct1->lim.phi-1)*ct1->del.phi + epsilon < input.phi)
-					|| (ct1->ll.lam+(ct1->lim.lam-1)*ct1->del.lam + epsilon < input.lam) ) {
-					continue;
-				}*/
-				break;
-			} 
-			if (child == nullptr) 
-				break;
-
-			gi = child;
-			cp = child->cp;
-		}
-		if (cp->pJ_LPZ_PairList == nullptr || cp->noOfPoints == 0)
-		{
-			if (!pj_cp_load(ctx, gi))
-			{
-				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
-				return nullptr;
-			}
-		}
-	}
-	return nullptr;
-};
-
 MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<std::unique_ptr<LPZ_Pair>> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 { 
 	int i = 0;
@@ -351,68 +299,6 @@ std::vector<std::unique_ptr<LPZ_Pair>> findClosestPoints(Common_Points *cpList, 
 	distances.resize(n);
 
 	return distances;
-}
-
-int proj_cp_init(PJ* P, const char *cps)
-{
-	char *scps = (char *)pj_malloc((strlen(cps) + 1 + 1) * sizeof(char));
-	sprintf(scps, "%s%s", "s", cps);
-
-	if (P->cplist == nullptr)
-	{
-		P->cplist = pj_cplist(P->ctx, pj_param(P->ctx, P->params, scps).s, &(P->cplist_count));
-
-		if (P->cplist == nullptr || P->cplist_count == 0)
-		{
-			pj_dealloc(scps);
-			return 0;
-		}
-	}
-
-	if (P->cplist_count == 0)
-		proj_errno_set(P, PJD_ERR_FAILED_TO_LOAD_CPT);
-
-	pj_dealloc(scps);
-	return P->cplist_count;
-}
-
-struct COMMONPOINTS* find_cp(projCtx ctx, int cp_count, PJ_COMMONPOINTS **cps)
-{
-	int icp;
-
-	for (icp = 0; icp < cp_count; icp++)
-	{
-		PJ_COMMONPOINTS *gi = cps[icp];
-		struct COMMONPOINTS *cp = gi->cp;
-		
-		while (gi->child)
-		{
-			PJ_COMMONPOINTS *child;
-
-			for (child = gi->child; child != nullptr; child = child->next)
-			{
-				/*
-				struct COMMONPOINTS *cp1 = child->cp;
-				*/
-				break;
-			}
-			if (child == nullptr)
-				break;
-
-			gi = child;
-			cp = child->cp;
-		}
-		if (cp->pJ_LPZ_PairList == nullptr)
-		{
-			if (!pj_cp_load(ctx, gi))
-			{
-				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
-				return nullptr;
-			}
-		}
-		return cp;
-	}
-	return nullptr;
 }
 
 PJ_LP helmert_apply(PJ *P, PJ_LP lp)
