@@ -85,12 +85,11 @@ namespace
 	};
 }
 
-MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
 { 
 	int i = 0;
 	int j = 0;
 	auto np = commonPointList->size();
-
 	double coslat = cos(lp->phi);
 	
 	MatrixXd cnn(np, np);
@@ -114,15 +113,13 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *commonPointList, P
 	return cnn;
 }
 
-MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
-{
-	int i = 0;
-
+MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
+{	
+	int i = 0;	
 	double coslat = cos(lp->phi);
 	double x = lp->phi;
 	double y = lp->lam * coslat;
-
-	auto np = commonPointList->size();
+	auto np = commonPointList->size();	 
 
 	MatrixXd cmn(np, 1);
 
@@ -159,7 +156,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *co
 
 	double coslat = cos(lp->phi);
 	double k = Q->k_coll == HUGE_VAL ? 0.00039 : Q->k_coll;
-	double c = Q->c_coll == HUGE_VAL ? 0.3 : Q->c_coll;
+	double c = Q->c_coll == HUGE_VAL ? 0.001204 : Q->c_coll;
 
     // Covariance matrices:
 	MatrixXd cnn = CovarianceNN(lp, commonPointList, direction, k, c);
@@ -266,13 +263,13 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
 
-std::vector<LPZ_Pair> findClosestPoints(Common_Points *cpList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
+std::vector<LPZ_Pair>* findClosestPoints(Common_Points *cpList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
 {
-	std::vector<LPZ_Pair> distances;
+	std::vector<LPZ_Pair> *distances = new std::vector<LPZ_Pair>{};
 
 	double coslat = cos(lp.phi);
 
-	for (auto&& pair : cpList->LpzPairList())
+	for (auto pair : cpList->LpzPairList())
 	{
 		if (areaId != 0 && pair.Area() != areaId)
 			continue;
@@ -284,15 +281,17 @@ std::vector<LPZ_Pair> findClosestPoints(Common_Points *cpList, PJ_LP lp, __int32
 
 		if (hypot(deltaPhi, deltaLam) > 1.0)
 			continue;
-		
-		distances.push_back(pair);
-	}	 
-	std::sort(distances.begin(), distances.end(), DistanceLess);
 
-	auto np = distances.size();
+		pair.SetDistance(hypot(deltaPhi, deltaLam));
+		
+		distances->push_back(pair);
+	}	 
+	std::sort(distances->begin(), distances->end(), DistanceLess);
+
+	auto np = distances->size();
 
 	if (n < np)
-		distances.resize(n);
+		distances->resize(n);
 
 	return distances;
 }
@@ -355,12 +354,12 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
 	
-	if (closestPoints.size() == 0)
+	if (closestPoints->size() == 0)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
-	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD))
+	if (!calculateHelmertParameter(P, &point.lp, closestPoints, PJ_FWD))
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
@@ -391,12 +390,12 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
 	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
 
-	if (closestPoints.size() == 0)
+	if (closestPoints->size() == 0)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
 	}
-	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_INV))
+	if (!calculateHelmertParameter(P, &point.lp, closestPoints, PJ_INV))
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
@@ -467,15 +466,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		proj_log_error(P, "cp_trans: +cp_trans parameter missing.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
-	Q->cps = pj_cp_init(P, "cp_trans");	 
-
-	// TODO: Skal denne returnere fellespunkta?
-	/*
-	if (proj_cp_init(P, "cp_trans") == 0)
-	{
-		proj_log_error(P, "cp_trans: not able to initialize common point file.");
-		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
-	}*/
+	Q->cps = pj_cp_init(P, "cp_trans");	
 
 	Q->n_points = FP_NORMAL;
 	if (pj_param_exists(P->params, "n_points"))	

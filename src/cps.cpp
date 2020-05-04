@@ -88,13 +88,15 @@ bool Common_Points::load(PJ_CONTEXT *ctx)
 {
 	if (m_LpzPairList.size() == NoOfPoints())
 		return true;
+	
+	unsigned long offset = 4;
+
+	if (!m_fp->seek(offset))
+		return false;
 
 	auto pointPair = new LPZ_Pair();
-
-	unsigned long offset = 4;
-	m_fp->seek(offset);
-
-	while (m_fp->read(pointPair, sizeof(LPZ_Pair) - offset) == sizeof(LPZ_Pair) - offset)
+	
+	while (m_fp->read(pointPair = new LPZ_Pair(), sizeof(LPZ_Pair) - offset) == sizeof(LPZ_Pair) - offset)
 	{
 		m_LpzPairList.push_back(*pointPair);
 		pointPair = new LPZ_Pair();
