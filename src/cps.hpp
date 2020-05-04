@@ -57,7 +57,7 @@ public:
 
 // ---------------------------------------------------------------------------
 
-class PROJ_GCC_DLL Common_Points // TODO: Rename class
+class PROJ_GCC_DLL PointPairs
 {
 private:
 protected:
@@ -69,16 +69,16 @@ protected:
 	PJ_CONTEXT *m_ctx;
 	std::unique_ptr<File> m_fp;
 public:
-	PROJ_FOR_TEST Common_Points();
-	PROJ_FOR_TEST Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints);
-    PROJ_FOR_TEST virtual ~Common_Points();
+	PROJ_FOR_TEST PointPairs();
+	PROJ_FOR_TEST PointPairs(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints);
+    PROJ_FOR_TEST virtual ~PointPairs();
 	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints; }
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
 	PROJ_FOR_TEST const std::vector<LPZ_Pair> &LpzPairList() const { return m_LpzPairList; }
-    PROJ_FOR_TEST static Common_Points *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
+    PROJ_FOR_TEST static PointPairs *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
 	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
-	PROJ_FOR_TEST const Common_Points *cpAt(double lon, double lat) const;
+	PROJ_FOR_TEST const PointPairs *ppAt(double lon, double lat) const;
 };
 NS_PROJ_END
 

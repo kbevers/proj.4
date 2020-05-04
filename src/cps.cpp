@@ -42,22 +42,22 @@ LPZ_Pair::LPZ_Pair() = default;
 
 // ---------------------------------------------------------------------------
 
-Common_Points::Common_Points() = default;
+PointPairs::PointPairs() = default;
 
 // ---------------------------------------------------------------------------
 
-Common_Points::Common_Points(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints) 
+PointPairs::PointPairs(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints)
 	: m_fp(std::move(fp)), m_name(nameIn), m_format(format), m_noOfPoints(noOfPoints)
 {	
 }
 
 // ---------------------------------------------------------------------------
 
-Common_Points::~Common_Points() = default;
+PointPairs::~PointPairs() = default;
 
 // ---------------------------------------------------------------------------
  
-Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
+PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
 {
 	unsigned char header[160];
 
@@ -79,12 +79,12 @@ Common_Points *Common_Points::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, co
 	 std::string format = "cpt";
 	//memcpy(&name, header + 4, 8);
 
-	return new Common_Points(std::move(fp), name, format, noOfPoints);
+	return new PointPairs(std::move(fp), name, format, noOfPoints);
 }
 
 // ---------------------------------------------------------------------------
 
-bool Common_Points::load(PJ_CONTEXT *ctx)
+bool PointPairs::load(PJ_CONTEXT *ctx)
 {
 	if (m_LpzPairList.size() == NoOfPoints())
 		return true;
@@ -108,7 +108,7 @@ bool Common_Points::load(PJ_CONTEXT *ctx)
 	return true;
 }
 
-const Common_Points *Common_Points::cpAt(double lon, double lat) const
+const PointPairs *PointPairs::ppAt(double lon, double lat) const
 {
 	double coslat = cos(lat);
 	 

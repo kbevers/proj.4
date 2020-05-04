@@ -81,26 +81,26 @@ namespace
 		double k_coll;
 
 		ListOfMultiPolygons polygons{};
-		ListOfCps cps{};
+		ListOfPpSet pps{};
 	};
 }
 
-MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
+MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
 { 
 	int i = 0;
 	int j = 0;
-	auto np = commonPointList->size();
+	auto np = pairList->size();
 	double coslat = cos(lp->phi);
 	
 	MatrixXd cnn(np, np);
 	
-	for (auto&& pair1 : *commonPointList)
+	for (auto&& pair1 : *pairList)
 	{  
 		j = 0;
 
 		PJ_LPZ p1 = (direction == PJ_FWD) ? pair1.FromPoint() : pair1.ToPoint();
 
-		for (auto&& pair2 : *commonPointList)
+		for (auto&& pair2 : *pairList)
 		{ 
 			PJ_LPZ p2 = (direction == PJ_FWD) ? pair2.FromPoint() : pair2.ToPoint();
 
@@ -113,17 +113,17 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *commonPointList, P
 	return cnn;
 }
 
-MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
+MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
 {	
 	int i = 0;	
 	double coslat = cos(lp->phi);
 	double x = lp->phi;
 	double y = lp->lam * coslat;
-	auto np = commonPointList->size();	 
+	auto np = pairList->size();
 
 	MatrixXd cmn(np, 1);
 
-	for (auto&& pair : *commonPointList)
+	for (auto&& pair : *pairList)
 	{   
 		PJ_LPZ p = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 		
@@ -138,11 +138,11 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *commonPointList, PJ_DIRE
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction)
+static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction)
 { 
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
-	auto np = commonPointList->size();
+	auto np = pairList->size();
 
 	if (np < 3)
 	{
@@ -159,8 +159,8 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *co
 	double c = Q->c_coll == HUGE_VAL ? 0.001204 : Q->c_coll;
 
     // Covariance matrices:
-	MatrixXd cnn = CovarianceNN(lp, commonPointList, direction, k, c);
-	MatrixXd cmn = CovarianceMN(lp, commonPointList, direction, k, c);	 
+	MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);
+	MatrixXd cmn = CovarianceMN(lp, pairList, direction, k, c);
  
 	// Vector From System:
 	MatrixXd xF(np, 1); MatrixXd yF(np, 1);
@@ -170,7 +170,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *co
 
 	int i = 0;
 
-	for (auto&& pair : *commonPointList)
+	for (auto&& pair : *pairList)
 	{
 		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 	    PJ_LPZ pointTo = (direction == PJ_FWD) ? pair.ToPoint() : pair.FromPoint();
@@ -263,13 +263,13 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
 
-std::vector<LPZ_Pair>* findClosestPoints(Common_Points *cpList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
+std::vector<LPZ_Pair>* findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
 {
 	std::vector<LPZ_Pair> *distances = new std::vector<LPZ_Pair>{};
 
 	double coslat = cos(lp.phi);
 
-	for (auto pair : cpList->LpzPairList())
+	for (auto pair : ppList->LpzPairList())
 	{
 		if (areaId != 0 && pair.Area() != areaId)
 			continue;
@@ -342,9 +342,9 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
 
-	Common_Points* cp = findCp(Q->cps, lpz);
+	PointPairs* pp = findPointPairs(Q->pps, lpz);
 
-	if (cp == nullptr)
+	if (pp == nullptr)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
@@ -352,7 +352,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
  	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
-	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_FWD, n);
+	auto closestPoints = findClosestPoints(pp, point.lp, areaId, PJ_FWD, n);
 	
 	if (closestPoints->size() == 0)
 	{
@@ -378,9 +378,9 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	point.xyz = xyz;
 	auto lpz = point.lpz;
 
-	Common_Points *cp = findCp(Q->cps, lpz);
+	PointPairs *pp = findPointPairs(Q->pps, lpz);
 
-	if (cp == nullptr)
+	if (pp == nullptr)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
@@ -388,7 +388,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 
 	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
-	auto closestPoints = findClosestPoints(cp, point.lp, areaId, PJ_INV, n);
+	auto closestPoints = findClosestPoints(pp, point.lp, areaId, PJ_INV, n);
 
 	if (closestPoints->size() == 0)
 	{
@@ -446,7 +446,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
 	if (has_polygons == 0)
 	{
-		 proj_log_error(P, "cp_trans: +polygon parameter missing.");
+		 proj_log_error(P, "pair_trans: +polygon parameter missing.");
 		 return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
 
@@ -461,12 +461,12 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	P->left = PJ_IO_UNITS_RADIANS; 
 	P->right = PJ_IO_UNITS_RADIANS;
 
-	if (0 == pj_param(P->ctx, P->params, "tcp_trans").i) 
+	if (0 == pj_param(P->ctx, P->params, "tpp_trans").i) 
 	{
-		proj_log_error(P, "cp_trans: +cp_trans parameter missing.");
+		proj_log_error(P, "pp_trans: +pp_trans parameter missing.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
-	Q->cps = pj_cp_init(P, "cp_trans");	
+	Q->pps = pj_cp_init(P, "pp_trans");
 
 	Q->n_points = FP_NORMAL;
 	if (pj_param_exists(P->params, "n_points"))	
@@ -483,7 +483,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	if (proj_errno(P))
 	{
 		// TODO: Feil meldingstekst her...
-		proj_log_error(P, "cp_trans: could not find required cp_tran(s).");
+		proj_log_error(P, "pair_trans: could not find required pair_tran(s).");
 		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPT);
 	}
 	Q->polygons = pj_polygon_init(P, "polygons");

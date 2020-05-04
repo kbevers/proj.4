@@ -34,34 +34,34 @@ NS_PROJ_START
 
 // ---------------------------------------------------------------------------
 
-class PROJ_GCC_DLL CommonPointSet
+class PROJ_GCC_DLL PointPairsSet
 {
 private:
 protected:
 	std::string m_name{};
 	std::string m_format{};
-	std::vector<std::unique_ptr<Common_Points>> m_cps {};
+	std::vector<std::unique_ptr<PointPairs>> m_pairs {};
 public:
-	PROJ_FOR_TEST CommonPointSet();	
-	PROJ_FOR_TEST virtual ~CommonPointSet(); 
-	PROJ_FOR_TEST static std::unique_ptr<CommonPointSet> open(PJ_CONTEXT *ctx, const std::string &filename);
+	PROJ_FOR_TEST PointPairsSet();
+	PROJ_FOR_TEST virtual ~PointPairsSet();
+	PROJ_FOR_TEST static std::unique_ptr<PointPairsSet> open(PJ_CONTEXT *ctx, const std::string &filename);
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
-	PROJ_FOR_TEST const std::vector<std::unique_ptr<Common_Points>> & Cps() const { return m_cps; }
-	PROJ_FOR_TEST Common_Points *cpAt(double lon, double lat) const;
+	PROJ_FOR_TEST const std::vector<std::unique_ptr<PointPairs>> & Pairs() const { return m_pairs; }
+	PROJ_FOR_TEST PointPairs *pairsAt(double lon, double lat) const;
 };
 
 // ---------------------------------------------------------------------------
 
-typedef std::vector<std::unique_ptr<CommonPointSet>> ListOfCps;
+typedef std::vector<std::unique_ptr<PointPairsSet>> ListOfPpSet;
 
 // ---------------------------------------------------------------------------
 
-ListOfCps pj_cp_init(PJ *P, const char *cpkey);
+ListOfPpSet pj_cp_init(PJ *P, const char *cpkey);
 
 // ---------------------------------------------------------------------------
 
-Common_Points *findCp(const ListOfCps &cps, const PJ_LPZ &input);
+PointPairs *findPointPairs(const ListOfPpSet &cps, const PJ_LPZ &input);
 
 NS_PROJ_END
 

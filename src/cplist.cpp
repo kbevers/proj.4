@@ -45,22 +45,22 @@ NS_PROJ_START
 
 using namespace internal;
 
-CommonPointSet::CommonPointSet() = default;
+PointPairsSet::PointPairsSet() = default;
 
 // ---------------------------------------------------------------------------
 
-CommonPointSet::~CommonPointSet() = default;
+PointPairsSet::~PointPairsSet() = default;
 
 // ---------------------------------------------------------------------------
 
-std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std::string &filename)
+std::unique_ptr<PointPairsSet> PointPairsSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 {
 	if (filename == "null")
 	{
-		auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
+		auto set = std::unique_ptr<PointPairsSet>(new PointPairsSet());
 		set->m_name = filename;
 		set->m_format = "null";
-	 	set->m_cps.push_back(std::unique_ptr<Common_Points>(new Common_Points()));
+	 	set->m_pairs.push_back(std::unique_ptr<PointPairs>(new PointPairs()));
 
 		return set;
 	}
@@ -72,50 +72,49 @@ std::unique_ptr<CommonPointSet> CommonPointSet::open(PJ_CONTEXT *ctx, const std:
 
 	if (ends_with(actualName, "cpt") || ends_with(actualName, "CPT"))
 	{
-		auto cp = Common_Points::open(ctx, std::move(fp), filename);
+		auto pp = PointPairs::open(ctx, std::move(fp), filename);
 	
-		if (!cp)
+		if (!pp)
 			return nullptr;
 
-		if (!cp->load(ctx))
+		if (!pp->load(ctx))
 			return nullptr;
 		
-		auto set = std::unique_ptr<CommonPointSet>(new CommonPointSet());
+		auto set = std::unique_ptr<PointPairsSet>(new PointPairsSet());
 		set->m_name = filename;
 		set->m_format = "cpt";
-		set->m_cps.push_back(std::unique_ptr<Common_Points>(cp));
+		set->m_pairs.push_back(std::unique_ptr<PointPairs>(pp));
 
 		return set;
 	}
-
 	return nullptr;
 };
 
 // ---------------------------------------------------------------------------
 
-ListOfCps pj_cp_init(PJ *P, const char *cpkey)
+ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 {
 	std::string key("s");
 	key += cpkey;
 
-	const char *cpnames = pj_param(P->ctx, P->params, key.c_str()).s;
-	if (cpnames == nullptr)
+	const char *ppnames = pj_param(P->ctx, P->params, key.c_str()).s;
+	if (ppnames == nullptr)
 		return {};
 	
-	auto list = internal::split(std::string(cpnames), ',');
-	ListOfCps cps;
+	auto list = internal::split(std::string(ppnames), ',');
+	ListOfPpSet cps;
 
-	for (const auto &cpnameStr : list) 
+	for (const auto &ppnameStr : list)
 	{
-		const char *cpname = cpnameStr.c_str();
+		const char *ppname = ppnameStr.c_str();
 		bool canFail = false;
-		if (cpname[0] == '@')
+		if (ppname[0] == '@')
 		{
 			canFail = true;
-			cpname++;
+			ppname++;
 		}
-		auto cpSet = CommonPointSet::open(P->ctx, cpname);
-		if (!cpSet)
+		auto ppSet = PointPairsSet::open(P->ctx, ppname);
+		if (!ppSet)
 		{
 			if (!canFail)
 			{
@@ -129,7 +128,7 @@ ListOfCps pj_cp_init(PJ *P, const char *cpkey)
 		}
 		else
 		{
-			cps.emplace_back(std::move(cpSet));
+			cps.emplace_back(std::move(ppSet));
 		}	
 	}
 	return cps;
@@ -137,13 +136,13 @@ ListOfCps pj_cp_init(PJ *P, const char *cpkey)
 
 // ---------------------------------------------------------------------------
 
-Common_Points* findCp(const ListOfCps &cps, const PJ_LPZ &input)
+PointPairs* findPointPairs(const ListOfPpSet &pps, const PJ_LPZ &input)
 {
-	for (const auto &cpSet : cps)
+	for (const auto &ppSet : pps)
 	{
-		if (cpSet->cpAt(input.phi, input.phi) != nullptr)
+		if (ppSet->pairsAt(input.phi, input.phi) != nullptr)
 		{
-			return cpSet->cpAt(input.phi, input.phi);
+			return ppSet->pairsAt(input.phi, input.phi);
 		}
 		//return nullptr;
 		//	return cpSet;
@@ -165,12 +164,12 @@ Common_Points* findCp(const ListOfCps &cps, const PJ_LPZ &input)
 
 // ---------------------------------------------------------------------------
 
-Common_Points *CommonPointSet::cpAt(double lon, double lat) const
+PointPairs *PointPairsSet::pairsAt(double lon, double lat) const
 {
-	for (const auto &cp : m_cps)
+	for (const auto &pairs : m_pairs)
 	{ 
-		if (cp->cpAt(lon, lat) != nullptr)
-			return cp.get();			   
+		if (pairs->ppAt(lon, lat) != nullptr)
+			return pairs.get();
 	}
 	return nullptr;
 }
