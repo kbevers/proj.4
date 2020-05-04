@@ -206,10 +206,10 @@ set(SRC_LIBPROJ_CORE
   aasincos.cpp
   adjlon.cpp
   auth.cpp
-  cplist.cpp
-  cplist.hpp
-  cps.cpp
-  cps.hpp
+  pps_set.hpp
+  pps_set.cpp
+  pps.hpp
+  pps.cpp
   ctx.cpp
   datum_set.cpp
   datums.cpp

@@ -29,8 +29,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "cplist.hpp"
-#include "cps.hpp"
+#include "pps.hpp"
+#include "pps_set.hpp"
 #include "filemanager.hpp"
 #include "proj/internal/internal.hpp"
 #include "proj.h"

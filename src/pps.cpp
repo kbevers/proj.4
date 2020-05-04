@@ -30,8 +30,8 @@
 #include <string.h>
 
 #include "proj_internal.h"
-#include "cps.hpp"
-#include "cplist.hpp"
+#include "pps.hpp"
+#include "pps_set.hpp"
 
 #include <algorithm>
 #include <cmath>

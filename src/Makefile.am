@@ -199,7 +199,7 @@ libproj_la_SOURCES = \
 	\
 	aasincos.cpp adjlon.cpp \
 	dmstor.cpp auth.cpp \
-	cplist.hpp cplist.cpp cps.hpp cps.cpp \
+	pps_set.hpp pps_set.cpp pps.hpp pps.cpp \
 	deriv.cpp ell_set.cpp ellps.cpp errno.cpp \
 	factors.cpp fwd.cpp init.cpp inv.cpp \
 	list.cpp malloc.cpp mlfn.cpp msfn.cpp proj_mdist.cpp \

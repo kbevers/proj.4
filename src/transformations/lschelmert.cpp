@@ -41,8 +41,8 @@
 #include "geocent.h"
 #include "point_in_polygon.h"
 #include "geojsonPolygon.hpp"
-#include "cps.hpp"
-#include "cplist.hpp"
+#include "pps.hpp"
+#include "pps_set.hpp"
 #include "proj\internal\nlohmann\json.hpp"
 #include "Eigen\Eigen"
 
@@ -227,7 +227,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Estimated Helmert parameters a, b, Tx, Ty: (%12.10f, %12.10f, %12.10f, %12.10f)", a, b, tx, ty);
 	
-	// Signal of commom points
+	// Signal of common points
 	MatrixXd snx(np, 1); MatrixXd sny(np, 1);
 
 	for (int i = 0; i < np; i++)
