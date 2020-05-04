@@ -85,7 +85,7 @@ namespace
 	};
 }
 
-MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<std::unique_ptr<LPZ_Pair>> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 { 
 	int i = 0;
 	int j = 0;
@@ -98,15 +98,12 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<std::unique_ptr<LPZ_Pair>> *c
 	for (auto&& pair1 : *commonPointList)
 	{  
 		j = 0;
-		auto pp1 = pair1.get(); 
-		
-		PJ_LPZ p1 = (direction == PJ_FWD) ? pp1->FromPoint() : pp1->ToPoint();
+
+		PJ_LPZ p1 = (direction == PJ_FWD) ? pair1.FromPoint() : pair1.ToPoint();
 
 		for (auto&& pair2 : *commonPointList)
-		{
-			auto pp2 = pair2.get();
-
-			PJ_LPZ p2 = (direction == PJ_FWD) ? pp2->FromPoint() : pp2->ToPoint();
+		{ 
+			PJ_LPZ p2 = (direction == PJ_FWD) ? pair2.FromPoint() : pair2.ToPoint();
 
 			double dist = hypot(p1.phi - p2.phi, (p1.lam * coslat) - (p2.lam * coslat));
 			double a = (M_PI / 2.0) * (dist / c);
@@ -117,7 +114,7 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<std::unique_ptr<LPZ_Pair>> *c
 	return cnn;
 }
 
-MatrixXd CovarianceMN(PJ_LP *lp, std::vector<std::unique_ptr<LPZ_Pair>> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
+MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.06900 * M_PI / 180.0)
 {
 	int i = 0;
 
@@ -130,10 +127,8 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<std::unique_ptr<LPZ_Pair>> *commonP
 	MatrixXd cmn(np, 1);
 
 	for (auto&& pair : *commonPointList)
-	{  
-		auto pp = pair.get();
-
-		PJ_LPZ p = (direction == PJ_FWD) ? pp->FromPoint() : pp->ToPoint();
+	{   
+		PJ_LPZ p = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 		
 		double dist = hypot(p.phi - x, (p.lam * coslat) - y);
 		double a = (M_PI / 2.0) * (dist / c);
@@ -146,7 +141,7 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<std::unique_ptr<LPZ_Pair>> *commonP
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
 /******************************************************************************************/
-static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<std::unique_ptr<LPZ_Pair>> *commonPointList, PJ_DIRECTION direction)
+static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *commonPointList, PJ_DIRECTION direction)
 { 
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
@@ -177,12 +172,11 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<std::unique_p
 	MatrixXd xT(np, 1); MatrixXd yT(np, 1);
 
 	int i = 0;
+
 	for (auto&& pair : *commonPointList)
 	{
-		auto pp = pair.get();
-
-		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pp->FromPoint() : pp->ToPoint();
-	    PJ_LPZ pointTo = (direction == PJ_FWD) ? pp->ToPoint() : pp->FromPoint();
+		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
+	    PJ_LPZ pointTo = (direction == PJ_FWD) ? pair.ToPoint() : pair.FromPoint();
 
 		xF(i, 0) = pointFrom.phi;
 		yF(i, 0) = pointFrom.lam * coslat;
@@ -263,35 +257,35 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<std::unique_p
 	return P;
 } 
 
-bool DistanceLess(const std::unique_ptr<LPZ_Pair>& lhs, const std::unique_ptr<LPZ_Pair>& rhs)
+bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 {
-	return lhs->Distance() < rhs->Distance();
+	return lhs.Distance() < rhs.Distance();
 }
 
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
 
-std::vector<std::unique_ptr<LPZ_Pair>> findClosestPoints(Common_Points *cpList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
+std::vector<LPZ_Pair> findClosestPoints(Common_Points *cpList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
 {
-	std::vector<std::unique_ptr<LPZ_Pair>> distances;	 
+	std::vector<LPZ_Pair> distances;
 
 	double coslat = cos(lp.phi);
 
 	for (auto&& pair : cpList->LpzPairList())
 	{
-		if (areaId != 0 && pair->Area() != areaId)
+		if (areaId != 0 && pair.Area() != areaId)
 			continue;
 
-		PJ_LPZ point = (direction == PJ_FWD) ? pair->FromPoint() : pair->ToPoint();
+		PJ_LPZ point = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 
 		double deltaPhi = point.phi - lp.phi;
 		double deltaLam = (point.lam - lp.lam) * coslat;
 
 		if (hypot(deltaPhi, deltaLam) > 1.0)
 			continue;
-
-		distances.push_back(std::unique_ptr<LPZ_Pair>(pair.get()));
+		
+		distances.push_back(pair);
 	}	 
 	std::sort(distances.begin(), distances.end(), DistanceLess);
 

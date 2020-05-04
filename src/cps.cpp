@@ -96,8 +96,8 @@ bool Common_Points::load(PJ_CONTEXT *ctx)
 
 	while (m_fp->read(pointPair, sizeof(LPZ_Pair) - offset) == sizeof(LPZ_Pair) - offset)
 	{
-		m_LpzPairList.push_back(std::unique_ptr<LPZ_Pair>(pointPair));
-		pointPair = new LPZ_Pair();		
+		m_LpzPairList.push_back(*pointPair);
+		pointPair = new LPZ_Pair();
 	}
 
 	if (m_LpzPairList.size() != NoOfPoints())
@@ -112,7 +112,7 @@ const Common_Points *Common_Points::cpAt(double lon, double lat) const
 	 
 	for (auto&& pair : m_LpzPairList)
 	{
-		auto point = pair->FromPoint();
+		auto point = pair.FromPoint();
 		double deltaPhi = point.phi - lat;
 		double deltaLam = (point.lam - lon) * coslat;
 
