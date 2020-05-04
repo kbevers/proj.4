@@ -295,8 +295,10 @@ std::vector<std::unique_ptr<LPZ_Pair>> findClosestPoints(Common_Points *cpList, 
 	}	 
 	std::sort(distances.begin(), distances.end(), DistanceLess);
 
-	// TODO: Check n.
-	distances.resize(n);
+	auto np = distances.size();
+
+	if (n < np)
+		distances.resize(n);
 
 	return distances;
 }
