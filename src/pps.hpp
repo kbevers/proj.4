@@ -78,7 +78,7 @@ public:
 	PROJ_FOR_TEST const std::vector<LPZ_Pair> &LpzPairList() const { return m_LpzPairList; }
     PROJ_FOR_TEST static PointPairs *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
 	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
-	PROJ_FOR_TEST const PointPairs *ppAt(double lon, double lat) const;
+	PROJ_FOR_TEST const PointPairs *pairsAt(double lon, double lat, double mindist = 0.1) const;
 };
 NS_PROJ_END
 

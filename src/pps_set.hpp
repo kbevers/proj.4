@@ -48,7 +48,7 @@ public:
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
 	PROJ_FOR_TEST const std::vector<std::unique_ptr<PointPairs>> & Pairs() const { return m_pairs; }
-	PROJ_FOR_TEST PointPairs *pairsAt(double lon, double lat) const;
+	PROJ_FOR_TEST PointPairs *pairsAt(double lon, double lat, double mindist) const;
 };
 
 // ---------------------------------------------------------------------------
@@ -61,7 +61,7 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey);
 
 // ---------------------------------------------------------------------------
 
-PointPairs *findPointPairs(const ListOfPpSet &cps, const PJ_LPZ &input);
+PointPairs *findPointPairs(const ListOfPpSet &cps, const PJ_LPZ &input, double mindist = 0.1);
 
 NS_PROJ_END
 

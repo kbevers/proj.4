@@ -136,39 +136,23 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 
 // ---------------------------------------------------------------------------
 
-PointPairs* findPointPairs(const ListOfPpSet &pps, const PJ_LPZ &input)
+PointPairs* findPointPairs(const ListOfPpSet &pps, const PJ_LPZ &input, double mindist)
 {
 	for (const auto &ppSet : pps)
 	{
-		if (ppSet->pairsAt(input.phi, input.phi) != nullptr)
-		{
-			return ppSet->pairsAt(input.phi, input.phi);
-		}
-		//return nullptr;
-		//	return cpSet;
-
-		/*
-		cpSetOut = cpSet.get();
-
-		if (cpSetOut == nullptr)
-			return nullptr;
-
-		if (cpSetOut->Cps().size() == 0)
-			return nullptr;
-		*/
-		// TODO: Add extent area in cpt-file.
-		//	return cpSet->Cps();
+		if (ppSet->pairsAt(input.lam, input.phi, mindist) != nullptr)		
+			return ppSet->pairsAt(input.lam, input.phi, mindist);
 	}
 	return nullptr;
 }
 
 // ---------------------------------------------------------------------------
 
-PointPairs *PointPairsSet::pairsAt(double lon, double lat) const
+PointPairs *PointPairsSet::pairsAt(double lon, double lat, double mindist) const
 {
 	for (const auto &pairs : m_pairs)
 	{ 
-		if (pairs->ppAt(lon, lat) != nullptr)
+		if (pairs->pairsAt(lon, lat, mindist) != nullptr)
 			return pairs.get();
 	}
 	return nullptr;
