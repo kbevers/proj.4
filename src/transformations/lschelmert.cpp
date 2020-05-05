@@ -385,6 +385,9 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	point.lp = helmert_apply(P, point.lp);
 	point.lp = collocation_apply(P, point.lp);
 	 
+	closestPoints->clear();
+	delete(closestPoints);
+	 
 	return point.xyz;
 }
 
@@ -456,17 +459,8 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	P->destructor = destructor;
 	P->reassign_context = reassign_context;	
 
-	if (Q == nullptr)
-	{
-		return pj_default_destructor(P, ENOMEM);
-	}
-
-	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
-	if (has_polygons == 0)
-	{
-		 proj_log_error(P, "pair_trans: +polygon parameter missing.");
-		 return pj_default_destructor(P, PJD_ERR_NO_ARGS);
-	}
+	if (Q == nullptr)	 
+		return destructor(P, ENOMEM);	
 
 	P->opaque = (void *)Q;
 	P->fwd4d = nullptr;
@@ -498,13 +492,20 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	if (pj_param_exists(P->params, "k_coll"))
 		Q->k_coll = pj_param(P->ctx, P->params, "dk_coll").f;
 
+	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
+	if (has_polygons == 0)
+	{
+		//proj_log_error(P, "pair_trans: +polygon parameter missing.");
+		//return destructor(P, PJD_ERR_NO_ARGS);
+	}
+	else
+		Q->polygons = pj_polygon_init(P, "polygons");
+
 	if (proj_errno(P))
 	{
 		// TODO: Feil meldingstekst her...
 		proj_log_error(P, "pair_trans: could not find required pair_trans file.");
-		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPT);
+		return destructor(P, PJD_ERR_FAILED_TO_LOAD_CPT);		 
 	}
-	Q->polygons = pj_polygon_init(P, "polygons");
-
 	return P;
 }
