@@ -2550,6 +2550,30 @@ TEST(crs, projectedCRS_identify_db) {
         EXPECT_EQ(res.front().first->getEPSGCode(), 2954);
         EXPECT_EQ(res.front().second, 100);
     }
+    {
+        // Test identification of LCC_2SP with switched standard parallels.
+        auto obj = WKTParser().attachDatabaseContext(dbContext).createFromWKT(
+            "PROJCS[\"foo\",\n"
+            "    GEOGCS[\"RGF93\",\n"
+            "        DATUM[\"Reseau_Geodesique_Francais_1993\",\n"
+            "            SPHEROID[\"GRS 1980\",6378137,298.257222101]],\n"
+            "        PRIMEM[\"Greenwich\",0],\n"
+            "        UNIT[\"degree\",0.0174532925199433]],\n"
+            "    PROJECTION[\"Lambert_Conformal_Conic_2SP\"],\n"
+            "    PARAMETER[\"latitude_of_origin\",46.5],\n"
+            "    PARAMETER[\"central_meridian\",3],\n"
+            "    PARAMETER[\"standard_parallel_1\",44],\n"
+            "    PARAMETER[\"standard_parallel_2\",49],\n"
+            "    PARAMETER[\"false_easting\",700000],\n"
+            "    PARAMETER[\"false_northing\",6600000],\n"
+            "    UNIT[\"metre\",1]]");
+        auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+        ASSERT_TRUE(crs != nullptr);
+        auto res = crs->identify(factoryEPSG);
+        ASSERT_EQ(res.size(), 1U);
+        EXPECT_EQ(res.front().first->getEPSGCode(), 2154);
+        EXPECT_EQ(res.front().second, 70);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -2870,17 +2894,18 @@ TEST(crs, Krovak_North_Orientated_as_WKT1_ESRI) {
     ASSERT_TRUE(crs != nullptr);
 
     auto expected = "PROJCS[\"unknown\",GEOGCS[\"GCS_unknown\","
-                    "DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\","
-                    "6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],"
+                    "DATUM[\"D_Unknown_based_on_Bessel_1841_ellipsoid\","
+                    "SPHEROID[\"Bessel_1841\",6377397.155,299.1528128]],"
+                    "PRIMEM[\"Greenwich\",0.0],"
                     "UNIT[\"Degree\",0.0174532925199433]],"
                     "PROJECTION[\"Krovak\"],"
                     "PARAMETER[\"False_Easting\",0.0],"
                     "PARAMETER[\"False_Northing\",0.0],"
                     "PARAMETER[\"Pseudo_Standard_Parallel_1\",78.5],"
-                    "PARAMETER[\"Scale_Factor\",1.0],"
+                    "PARAMETER[\"Scale_Factor\",0.9999],"
                     "PARAMETER[\"Azimuth\",30.2881397527778],"
-                    "PARAMETER[\"Longitude_Of_Center\",0.0],"
-                    "PARAMETER[\"Latitude_Of_Center\",0.0],"
+                    "PARAMETER[\"Longitude_Of_Center\",24.8333333333333],"
+                    "PARAMETER[\"Latitude_Of_Center\",49.5],"
                     "PARAMETER[\"X_Scale\",-1.0],"
                     "PARAMETER[\"Y_Scale\",1.0],"
                     "PARAMETER[\"XY_Plane_Rotation\",90.0],"
@@ -2902,17 +2927,18 @@ TEST(crs, Krovak_as_WKT1_ESRI) {
     ASSERT_TRUE(crs != nullptr);
 
     auto expected = "PROJCS[\"unknown\",GEOGCS[\"GCS_unknown\","
-                    "DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\","
-                    "6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],"
+                    "DATUM[\"D_Unknown_based_on_Bessel_1841_ellipsoid\","
+                    "SPHEROID[\"Bessel_1841\",6377397.155,299.1528128]],"
+                    "PRIMEM[\"Greenwich\",0.0],"
                     "UNIT[\"Degree\",0.0174532925199433]],"
                     "PROJECTION[\"Krovak\"],"
                     "PARAMETER[\"False_Easting\",0.0],"
                     "PARAMETER[\"False_Northing\",0.0],"
                     "PARAMETER[\"Pseudo_Standard_Parallel_1\",78.5],"
-                    "PARAMETER[\"Scale_Factor\",1.0],"
+                    "PARAMETER[\"Scale_Factor\",0.9999],"
                     "PARAMETER[\"Azimuth\",30.2881397527778],"
-                    "PARAMETER[\"Longitude_Of_Center\",0.0],"
-                    "PARAMETER[\"Latitude_Of_Center\",0.0],"
+                    "PARAMETER[\"Longitude_Of_Center\",24.8333333333333],"
+                    "PARAMETER[\"Latitude_Of_Center\",49.5],"
                     "PARAMETER[\"X_Scale\",1.0],"
                     "PARAMETER[\"Y_Scale\",1.0],"
                     "PARAMETER[\"XY_Plane_Rotation\",0.0],"

@@ -56,6 +56,7 @@ print_variable(ENABLE_IPO)
 
 set(SRC_LIBPROJ_PROJECTIONS
   projections/aeqd.cpp
+  projections/adams.cpp
   projections/gnom.cpp
   projections/laea.cpp
   projections/mod_ster.cpp
@@ -221,9 +222,7 @@ set(SRC_LIBPROJ_CORE
   factors.cpp
   fileapi.cpp
   fwd.cpp
-  gauss.cpp
-  geocent.cpp
-  geocent.h
+  gauss.cpp 
   geodesic.c 
   geojsonPolygon.hpp
   geojsonPolygon.cpp
@@ -308,6 +307,8 @@ source_group("CMake Files" FILES CMakeLists.txt)
 
 # Embed PROJ_LIB data files location
 add_definitions(-DPROJ_LIB="${CMAKE_INSTALL_PREFIX}/${DATADIR}")
+
+add_definitions(-DTARGET_CLONES_FMA_ALLOWED)
 
 #################################################
 ## targets: libproj and proj_config.h

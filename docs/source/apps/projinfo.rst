@@ -20,8 +20,9 @@ Synopsis
     |    [[--area name_or_code] | [--bbox west_long,south_lat,east_long,north_lat]]
     |    [--spatial-test contains|intersects]
     |    [--crs-extent-use none|both|intersection|smallest]
-    |    [--grid-check none|discard_missing|sort|known_available] [--show-superseded]
+    |    [--grid-check none|discard_missing|sort|known_available]
     |    [--pivot-crs always|if_no_direct_transformation|never|{auth:code[,auth:code]*}]
+    |    [--show-superseded] [--hide-ballpark]
     |    [--boundcrs-to-wgs84]
     |    [--main-db-path path] [--aux-db-path path]*
     |    [--identify] [--3d]
@@ -36,6 +37,8 @@ Synopsis
     - a WKT string,
     - an object code (like "EPSG:4326", "urn:ogc:def:crs:EPSG::4326",
       "urn:ogc:def:coordinateOperation:EPSG::1671"),
+    - an Object name. e.g "WGS 84", "WGS 84 / UTM zone 31N". In that case as
+      uniqueness is not guaranteed, heuristics are applied to determine the appropriate best match.
     - a OGC URN combining references for compound coordinate reference systems
       (e.g "urn:ogc:def:crs,crs:EPSG::2393,crs:EPSG::5717" or custom abbreviated
       syntax "EPSG:2393+5717"),
@@ -46,6 +49,7 @@ Synopsis
     - a OGC URN combining references for concatenated operations
       (e.g. "urn:ogc:def:coordinateOperation,coordinateOperation:EPSG::3895,coordinateOperation:EPSG::1618")
     - a PROJJSON string. The jsonschema is at https://proj.org/schemas/v0.1/projjson.schema.json (*added in 6.2*)
+    - a compound CRS made from two object names separated with " + ". e.g. "WGS 84 + EGM96 height" (*added in 7.1*)
 
     {object_reference} is a filename preceded by the '@' character.  The
     file referenced by the {object_reference} must contain a valid
@@ -174,16 +178,6 @@ The following control parameters can appear in any order:
 
     .. note:: only used for coordinate operation computation
 
-.. option:: -show-superseded
-
-    When enabled, coordinate operations that are superseded by others will be
-    listed. Note that supersession is not equivalent to deprecation: superseded
-    operations are still considered valid although they have a better equivalent,
-    whereas deprecated operations have been determined to be erroneous and are
-    not considered at all.
-
-    .. note:: only used for coordinate operation computation
-
 .. option:: --pivot-crs always|if_no_direct_transformation|never|{auth:code[,auth:code]*}
 
     Determine if intermediate (pivot) CRS can be used when researching coordinate
@@ -195,6 +189,25 @@ The following control parameters can appear in any order:
     even if there are direct transformations.
     It is also possible to restrict the pivot CRS to consider by specifying
     one or several CRS by their AUTHORITY:CODE.
+
+    .. note:: only used for coordinate operation computation
+
+.. option:: --show-superseded
+
+    When enabled, coordinate operations that are superseded by others will be
+    listed. Note that supersession is not equivalent to deprecation: superseded
+    operations are still considered valid although they have a better equivalent,
+    whereas deprecated operations have been determined to be erroneous and are
+    not considered at all.
+
+    .. note:: only used for coordinate operation computation
+
+.. option:: --hide-ballpark
+
+    .. versionadded:: 7.1
+
+    Hides any coordinate operation that is, or contains, a
+    :term:`Ballpark transformation`
 
     .. note:: only used for coordinate operation computation
 

@@ -93,6 +93,28 @@ int proj_angular_output (PJ *P, enum PJ_DIRECTION dir) {
     return proj_angular_input (P, opposite_direction(dir));
 }
 
+/*****************************************************************************/
+int proj_degree_input (PJ *P, enum PJ_DIRECTION dir) {
+/******************************************************************************
+    Returns 1 if the operator P expects degree input coordinates when
+    operating in direction dir, 0 otherwise.
+    dir: {PJ_FWD, PJ_INV}
+******************************************************************************/
+    if (PJ_FWD==dir)
+        return pj_left (P)==PJ_IO_UNITS_DEGREES;
+    return pj_right (P)==PJ_IO_UNITS_DEGREES;
+}
+
+/*****************************************************************************/
+int proj_degree_output (PJ *P, enum PJ_DIRECTION dir) {
+/******************************************************************************
+    Returns 1 if the operator P provides degree output coordinates when
+    operating in direction dir, 0 otherwise.
+    dir: {PJ_FWD, PJ_INV}
+******************************************************************************/
+    return proj_degree_input (P, opposite_direction(dir));
+}
+
 /* Geodesic distance (in meter) + fwd and rev azimuth between two points on the ellipsoid */
 PJ_COORD proj_geod (const PJ *P, PJ_COORD a, PJ_COORD b) {
     PJ_COORD c;
@@ -142,6 +164,8 @@ double proj_xy_dist (PJ_COORD a, PJ_COORD b) {
 double proj_xyz_dist (PJ_COORD a, PJ_COORD b) {
     return hypot (proj_xy_dist (a, b), a.xyz.z - b.xyz.z);
 }
+
+
 
 /* Measure numerical deviation after n roundtrips fwd-inv (or inv-fwd) */
 double proj_roundtrip (PJ *P, PJ_DIRECTION direction, int n, PJ_COORD *coord) {
@@ -1447,6 +1471,10 @@ PJ_CONTEXT *proj_context_destroy (PJ_CONTEXT *ctx) {
 }
 
 
+
+
+
+
 /*****************************************************************************/
 static char *path_append (char *buf, const char *app, size_t *buf_size) {
 /******************************************************************************
@@ -1548,6 +1576,7 @@ PJ_INFO proj_info (void) {
     return info;
 }
 
+
 /*****************************************************************************/
 PJ_PROJ_INFO proj_pj_info(PJ *P) {
 /******************************************************************************
@@ -1618,6 +1647,7 @@ PJ_PROJ_INFO proj_pj_info(PJ *P) {
     pjinfo.has_inverse = pj_has_inverse(P);
     return pjinfo;
 }
+
 
 /*****************************************************************************/
 PJ_GRID_INFO proj_grid_info(const char *gridname) {
@@ -1691,7 +1721,9 @@ PJ_GRID_INFO proj_grid_info(const char *gridname) {
     strcpy(grinfo.format, "missing");
     return grinfo;
 }
- 
+
+
+
 /*****************************************************************************/
 PJ_INIT_INFO proj_init_info(const char *initname){
 /******************************************************************************
@@ -1788,6 +1820,8 @@ PJ_INIT_INFO proj_init_info(const char *initname){
 
    return ininfo;
 }
+
+
 
 /*****************************************************************************/
 PJ_FACTORS proj_factors(PJ *P, PJ_COORD lp) {

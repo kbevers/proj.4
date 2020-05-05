@@ -48,6 +48,8 @@
 #include "proj_internal.h" // M_PI
 // clang-format on
 
+#include "proj_json_streaming_writer.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -1055,12 +1057,12 @@ void OperationMethod::_exportToWKT(io::WKTFormatter *formatter) const {
 void OperationMethod::_exportToJSON(
     io::JSONFormatter *formatter) const // throw(FormattingException)
 {
-    auto &writer = formatter->writer();
+    auto writer = formatter->writer();
     auto objectContext(formatter->MakeObjectContext("OperationMethod",
                                                     !identifiers().empty()));
 
-    writer.AddObjKey("name");
-    writer.Add(nameStr());
+    writer->AddObjKey("name");
+    writer->Add(nameStr());
 
     if (formatter->outputId()) {
         formatID(formatter);
@@ -1250,29 +1252,29 @@ void OperationParameterValue::_exportToWKT(io::WKTFormatter *formatter,
 //! @cond Doxygen_Suppress
 void OperationParameterValue::_exportToJSON(
     io::JSONFormatter *formatter) const {
-    auto &writer = formatter->writer();
+    auto writer = formatter->writer();
     auto objectContext(formatter->MakeObjectContext(
         "ParameterValue", !parameter()->identifiers().empty()));
 
-    writer.AddObjKey("name");
-    writer.Add(parameter()->nameStr());
+    writer->AddObjKey("name");
+    writer->Add(parameter()->nameStr());
 
     const auto &l_value(parameterValue());
     if (l_value->type() == ParameterValue::Type::MEASURE) {
-        writer.AddObjKey("value");
-        writer.Add(l_value->value().value(), 15);
-        writer.AddObjKey("unit");
+        writer->AddObjKey("value");
+        writer->Add(l_value->value().value(), 15);
+        writer->AddObjKey("unit");
         const auto &l_unit(l_value->value().unit());
         if (l_unit == common::UnitOfMeasure::METRE ||
             l_unit == common::UnitOfMeasure::DEGREE ||
             l_unit == common::UnitOfMeasure::SCALE_UNITY) {
-            writer.Add(l_unit.name());
+            writer->Add(l_unit.name());
         } else {
             l_unit._exportToJSON(formatter);
         }
     } else if (l_value->type() == ParameterValue::Type::FILENAME) {
-        writer.AddObjKey("value");
-        writer.Add(l_value->valueFile());
+        writer->AddObjKey("value");
+        writer->Add(l_value->valueFile());
     }
 
     if (formatter->outputId()) {
@@ -1797,6 +1799,14 @@ bool SingleOperation::_isEquivalentTo(const util::IComparable *other,
                  EPSG_CODE_METHOD_LAMBERT_AZIMUTHAL_EQUAL_AREA &&
              methodEPSGCode ==
                  EPSG_CODE_METHOD_LAMBERT_AZIMUTHAL_EQUAL_AREA_SPHERICAL) ||
+            (methodEPSGCode ==
+                 EPSG_CODE_METHOD_LAMBERT_CYLINDRICAL_EQUAL_AREA &&
+             otherMethodEPSGCode ==
+                 EPSG_CODE_METHOD_LAMBERT_CYLINDRICAL_EQUAL_AREA_SPHERICAL) ||
+            (otherMethodEPSGCode ==
+                 EPSG_CODE_METHOD_LAMBERT_CYLINDRICAL_EQUAL_AREA &&
+             methodEPSGCode ==
+                 EPSG_CODE_METHOD_LAMBERT_CYLINDRICAL_EQUAL_AREA_SPHERICAL) ||
             (methodEPSGCode == EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL &&
              otherMethodEPSGCode ==
                  EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL_SPHERICAL) ||
@@ -5759,28 +5769,28 @@ void Conversion::_exportToWKT(io::WKTFormatter *formatter) const {
 void Conversion::_exportToJSON(
     io::JSONFormatter *formatter) const // throw(FormattingException)
 {
-    auto &writer = formatter->writer();
+    auto writer = formatter->writer();
     auto objectContext(
         formatter->MakeObjectContext("Conversion", !identifiers().empty()));
 
-    writer.AddObjKey("name");
+    writer->AddObjKey("name");
     auto l_name = nameStr();
     if (l_name.empty()) {
-        writer.Add("unnamed");
+        writer->Add("unnamed");
     } else {
-        writer.Add(l_name);
+        writer->Add(l_name);
     }
 
-    writer.AddObjKey("method");
+    writer->AddObjKey("method");
     formatter->setOmitTypeInImmediateChild();
     formatter->setAllowIDInImmediateChild();
     method()->_exportToJSON(formatter);
 
     const auto &l_parameterValues = parameterValues();
     if (!l_parameterValues.empty()) {
-        writer.AddObjKey("parameters");
+        writer->AddObjKey("parameters");
         {
-            auto parametersContext(writer.MakeArrayContext(false));
+            auto parametersContext(writer->MakeArrayContext(false));
             for (const auto &genOpParamvalue : l_parameterValues) {
                 formatter->setAllowIDInImmediateChild();
                 formatter->setOmitTypeInImmediateChild();
@@ -5817,6 +5827,24 @@ static bool createPROJ4WebMercator(const Conversion *conv,
         return false;
     }
 
+    std::string units("m");
+    auto targetCRS = conv->targetCRS();
+    auto targetProjCRS =
+        dynamic_cast<const crs::ProjectedCRS *>(targetCRS.get());
+    if (targetProjCRS) {
+        const auto &axisList = targetProjCRS->coordinateSystem()->axisList();
+        const auto &unit = axisList[0]->unit();
+        if (!unit._isEquivalentTo(common::UnitOfMeasure::METRE,
+                                  util::IComparable::Criterion::EQUIVALENT)) {
+            auto projUnit = unit.exportToPROJString();
+            if (!projUnit.empty()) {
+                units = projUnit;
+            } else {
+                return false;
+            }
+        }
+    }
+
     formatter->addStep("merc");
     const double a = geogCRS->ellipsoid()->semiMajorAxis().getSIValue();
     formatter->addParam("a", a);
@@ -5826,7 +5854,7 @@ static bool createPROJ4WebMercator(const Conversion *conv,
     formatter->addParam("x_0", falseEasting);
     formatter->addParam("y_0", falseNorthing);
     formatter->addParam("k", 1.0);
-    formatter->addParam("units", "m");
+    formatter->addParam("units", units);
     formatter->addParam("nadgrids", "@null");
     formatter->addParam("wktext");
     formatter->addParam("no_defs");
@@ -6183,6 +6211,42 @@ void Conversion::_exportToPROJString(
         formatter->addParam("o_lat_p", -southPoleLat);
         formatter->addParam("lon_0", southPoleLon);
         bConversionDone = true;
+    } else if (ci_equal(methodName, "Adams_Square_II")) {
+        // Look for ESRI method and parameter names (to be opposed
+        // to the OGC WKT2 names we use elsewhere, because there's no mapping
+        // of those parameters to OGC WKT2)
+        // We also reject non-default values for a number of parameters,
+        // because they are not implemented on PROJ side. The subset we
+        // support can handle ESRI:54098 WGS_1984_Adams_Square_II, but not
+        // ESRI:54099 WGS_1984_Spilhaus_Ocean_Map_in_Square
+        const double falseEasting = parameterValueNumeric(
+            "False_Easting", common::UnitOfMeasure::METRE);
+        const double falseNorthing = parameterValueNumeric(
+            "False_Northing", common::UnitOfMeasure::METRE);
+        const double scaleFactor =
+            parameterValue("Scale_Factor", 0)
+                ? parameterValueNumeric("Scale_Factor",
+                                        common::UnitOfMeasure::SCALE_UNITY)
+                : 1.0;
+        const double azimuth =
+            parameterValueNumeric("Azimuth", common::UnitOfMeasure::DEGREE);
+        const double longitudeOfCenter = parameterValueNumeric(
+            "Longitude_Of_Center", common::UnitOfMeasure::DEGREE);
+        const double latitudeOfCenter = parameterValueNumeric(
+            "Latitude_Of_Center", common::UnitOfMeasure::DEGREE);
+        const double XYPlaneRotation = parameterValueNumeric(
+            "XY_Plane_Rotation", common::UnitOfMeasure::DEGREE);
+        if (scaleFactor != 1.0 || azimuth != 0.0 || latitudeOfCenter != 0.0 ||
+            XYPlaneRotation != 0.0) {
+            throw io::FormattingException("Unsupported value for one or "
+                                          "several parameters of "
+                                          "Adams_Square_II");
+        }
+        formatter->addStep("adams_ws2");
+        formatter->addParam("lon_0", longitudeOfCenter);
+        formatter->addParam("x_0", falseEasting);
+        formatter->addParam("y_0", falseNorthing);
+        bConversionDone = true;
     } else if (formatter->convention() ==
                    io::PROJStringFormatter::Convention::PROJ_5 &&
                isZUnitConversion) {
@@ -6316,10 +6380,9 @@ void Conversion::_exportToPROJString(
 
         auto derivedGeographicCRS =
             dynamic_cast<const crs::DerivedGeographicCRS *>(horiz);
-        if (derivedGeographicCRS) {
-            auto baseGeodCRS = derivedGeographicCRS->baseCRS();
+        if (!formatter->getCRSExport() && derivedGeographicCRS) {
             formatter->setOmitProjLongLatIfPossible(true);
-            baseGeodCRS->_exportToPROJString(formatter);
+            derivedGeographicCRS->addAngularUnitConvertAndAxisSwap(formatter);
             formatter->setOmitProjLongLatIfPossible(false);
         }
     }
@@ -8208,45 +8271,45 @@ void Transformation::_exportToWKT(io::WKTFormatter *formatter) const {
 void Transformation::_exportToJSON(
     io::JSONFormatter *formatter) const // throw(FormattingException)
 {
-    auto &writer = formatter->writer();
+    auto writer = formatter->writer();
     auto objectContext(formatter->MakeObjectContext(
         formatter->abridgedTransformation() ? "AbridgedTransformation"
                                             : "Transformation",
         !identifiers().empty()));
 
-    writer.AddObjKey("name");
+    writer->AddObjKey("name");
     auto l_name = nameStr();
     if (l_name.empty()) {
-        writer.Add("unnamed");
+        writer->Add("unnamed");
     } else {
-        writer.Add(l_name);
+        writer->Add(l_name);
     }
 
     if (!formatter->abridgedTransformation()) {
-        writer.AddObjKey("source_crs");
+        writer->AddObjKey("source_crs");
         formatter->setAllowIDInImmediateChild();
         sourceCRS()->_exportToJSON(formatter);
 
-        writer.AddObjKey("target_crs");
+        writer->AddObjKey("target_crs");
         formatter->setAllowIDInImmediateChild();
         targetCRS()->_exportToJSON(formatter);
 
         const auto &l_interpolationCRS = interpolationCRS();
         if (l_interpolationCRS) {
-            writer.AddObjKey("interpolation_crs");
+            writer->AddObjKey("interpolation_crs");
             formatter->setAllowIDInImmediateChild();
             l_interpolationCRS->_exportToJSON(formatter);
         }
     }
 
-    writer.AddObjKey("method");
+    writer->AddObjKey("method");
     formatter->setOmitTypeInImmediateChild();
     formatter->setAllowIDInImmediateChild();
     method()->_exportToJSON(formatter);
 
-    writer.AddObjKey("parameters");
+    writer->AddObjKey("parameters");
     {
-        auto parametersContext(writer.MakeArrayContext(false));
+        auto parametersContext(writer->MakeArrayContext(false));
         for (const auto &genOpParamvalue : parameterValues()) {
             formatter->setAllowIDInImmediateChild();
             formatter->setOmitTypeInImmediateChild();
@@ -8256,8 +8319,8 @@ void Transformation::_exportToJSON(
 
     if (!formatter->abridgedTransformation()) {
         if (!coordinateOperationAccuracies().empty()) {
-            writer.AddObjKey("accuracy");
-            writer.Add(coordinateOperationAccuracies()[0]->value());
+            writer->AddObjKey("accuracy");
+            writer->Add(coordinateOperationAccuracies()[0]->value());
         }
     }
 
@@ -10341,29 +10404,29 @@ void ConcatenatedOperation::_exportToWKT(io::WKTFormatter *formatter) const {
 void ConcatenatedOperation::_exportToJSON(
     io::JSONFormatter *formatter) const // throw(FormattingException)
 {
-    auto &writer = formatter->writer();
+    auto writer = formatter->writer();
     auto objectContext(formatter->MakeObjectContext("ConcatenatedOperation",
                                                     !identifiers().empty()));
 
-    writer.AddObjKey("name");
+    writer->AddObjKey("name");
     auto l_name = nameStr();
     if (l_name.empty()) {
-        writer.Add("unnamed");
+        writer->Add("unnamed");
     } else {
-        writer.Add(l_name);
+        writer->Add(l_name);
     }
 
-    writer.AddObjKey("source_crs");
+    writer->AddObjKey("source_crs");
     formatter->setAllowIDInImmediateChild();
     sourceCRS()->_exportToJSON(formatter);
 
-    writer.AddObjKey("target_crs");
+    writer->AddObjKey("target_crs");
     formatter->setAllowIDInImmediateChild();
     targetCRS()->_exportToJSON(formatter);
 
-    writer.AddObjKey("steps");
+    writer->AddObjKey("steps");
     {
-        auto parametersContext(writer.MakeArrayContext(false));
+        auto parametersContext(writer->MakeArrayContext(false));
         for (const auto &operation : operations()) {
             formatter->setAllowIDInImmediateChild();
             operation->_exportToJSON(formatter);
@@ -10464,6 +10527,7 @@ struct CoordinateOperationContext::Private {
     std::vector<std::pair<std::string, std::string>>
         intermediateCRSAuthCodes_{};
     bool discardSuperseded_ = true;
+    bool allowBallpark_ = true;
 };
 //! @endcond
 
@@ -10514,6 +10578,20 @@ double CoordinateOperationContext::getDesiredAccuracy() const {
 /** \brief Set the desired accuracy (in metre), or 0 */
 void CoordinateOperationContext::setDesiredAccuracy(double accuracy) {
     d->accuracy_ = accuracy;
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Return whether ballpark transformations are allowed */
+bool CoordinateOperationContext::getAllowBallparkTransformations() const {
+    return d->allowBallpark_;
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Set whether ballpark transformations are allowed */
+void CoordinateOperationContext::setAllowBallparkTransformations(bool allow) {
+    d->allowBallpark_ = allow;
 }
 
 // ---------------------------------------------------------------------------
@@ -11187,7 +11265,7 @@ struct FilterResults {
     const CoordinateOperationContext::SourceTargetCRSExtentUse
         sourceAndTargetCRSExtentUse;
 
-    bool hasOpThatContainsAreaOfInterest = false;
+    bool hasOpThatContainsAreaOfInterestAndNoGrid = false;
     std::vector<CoordinateOperationNNPtr> res{};
 
     // ----------------------------------------------------------------------
@@ -11233,12 +11311,16 @@ struct FilterResults {
                       STRICT_CONTAINMENT
                 : context->getSpatialCriterion();
         bool hasFoundOpWithExtent = false;
+        const bool allowBallpark = context->getAllowBallparkTransformations();
         for (const auto &op : sourceList) {
             if (desiredAccuracy != 0) {
                 const double accuracy = getAccuracy(op);
                 if (accuracy < 0 || accuracy > desiredAccuracy) {
                     continue;
                 }
+            }
+            if (!allowBallpark && op->hasBallparkTransformation()) {
+                continue;
             }
             if (areaOfInterest) {
                 bool emptyIntersection = false;
@@ -11248,9 +11330,11 @@ struct FilterResults {
                 hasFoundOpWithExtent = true;
                 bool extentContains =
                     extent->contains(NN_NO_CHECK(areaOfInterest));
-                if (extentContains) {
-                    if (!op->hasBallparkTransformation()) {
-                        hasOpThatContainsAreaOfInterest = true;
+                if (!hasOpThatContainsAreaOfInterestAndNoGrid &&
+                    extentContains) {
+                    if (!op->hasBallparkTransformation() &&
+                        op->gridsNeeded(nullptr, true).empty()) {
+                        hasOpThatContainsAreaOfInterestAndNoGrid = true;
                     }
                 }
                 if (spatialCriterion ==
@@ -11277,9 +11361,11 @@ struct FilterResults {
                     !extent1 || extent->contains(NN_NO_CHECK(extent1));
                 bool extentContainsExtent2 =
                     !extent2 || extent->contains(NN_NO_CHECK(extent2));
-                if (extentContainsExtent1 && extentContainsExtent2) {
-                    if (!op->hasBallparkTransformation()) {
-                        hasOpThatContainsAreaOfInterest = true;
+                if (!hasOpThatContainsAreaOfInterestAndNoGrid &&
+                    extentContainsExtent1 && extentContainsExtent2) {
+                    if (!op->hasBallparkTransformation() &&
+                        op->gridsNeeded(nullptr, true).empty()) {
+                        hasOpThatContainsAreaOfInterestAndNoGrid = true;
                     }
                 }
                 if (spatialCriterion ==
@@ -11312,6 +11398,9 @@ struct FilterResults {
                     if (accuracy < 0 || accuracy > desiredAccuracy) {
                         continue;
                     }
+                }
+                if (!allowBallpark && op->hasBallparkTransformation()) {
+                    continue;
                 }
                 res.emplace_back(op);
             }
@@ -11446,12 +11535,13 @@ struct FilterResults {
 
         // If we have more than one result, and than the last result is the
         // default "Ballpark geographic offset" or "Ballpark geocentric
-        // translation"
-        // operations we have synthetized, and that at least one operation
-        // has the desired area of interest, remove it as
-        // all previous results are necessarily better
-        if (hasOpThatContainsAreaOfInterest && res.size() > 1) {
-            const std::string &name = res.back()->nameStr();
+        // translation" operations we have synthetized, and that at least one
+        // operation has the desired area of interest and does not require the
+        // use of grids, remove it as all previous results are necessarily
+        // better
+        if (hasOpThatContainsAreaOfInterestAndNoGrid && res.size() > 1) {
+            const auto &opLast = res.back();
+            const std::string &name = opLast->nameStr();
             if (name.find(BALLPARK_GEOGRAPHIC_OFFSET) != std::string::npos ||
                 name.find(NULL_GEOGRAPHIC_OFFSET) != std::string::npos ||
                 name.find(NULL_GEOCENTRIC_TRANSLATION) != std::string::npos ||
@@ -14754,84 +14844,144 @@ void CoordinateOperationFactory::Private::createOperationsCompoundToCompound(
 
     const auto &componentsSrc = compoundSrc->componentReferenceSystems();
     const auto &componentsDst = compoundDst->componentReferenceSystems();
-    if (!componentsSrc.empty() &&
-        componentsSrc.size() == componentsDst.size()) {
-        if (componentsSrc[0]->extractGeographicCRS() &&
-            componentsDst[0]->extractGeographicCRS()) {
+    if (componentsSrc.empty() || componentsSrc.size() != componentsDst.size()) {
+        return;
+    }
+    const auto srcGeog = componentsSrc[0]->extractGeographicCRS();
+    const auto dstGeog = componentsDst[0]->extractGeographicCRS();
+    if (srcGeog == nullptr || dstGeog == nullptr) {
+        return;
+    }
 
-            std::vector<CoordinateOperationNNPtr> verticalTransforms;
-            if (componentsSrc.size() >= 2 &&
-                componentsSrc[1]->extractVerticalCRS() &&
-                componentsDst[1]->extractVerticalCRS()) {
-                if (!componentsSrc[1]->_isEquivalentTo(
-                        componentsDst[1].get())) {
-                    verticalTransforms = createOperations(
-                        componentsSrc[1], componentsDst[1], context);
+    std::vector<CoordinateOperationNNPtr> verticalTransforms;
+    if (componentsSrc.size() >= 2 && componentsSrc[1]->extractVerticalCRS() &&
+        componentsDst[1]->extractVerticalCRS()) {
+        if (!componentsSrc[1]->_isEquivalentTo(componentsDst[1].get())) {
+            verticalTransforms =
+                createOperations(componentsSrc[1], componentsDst[1], context);
+        }
+    }
+
+    // If we didn't find a non-ballpark transformation between
+    // the 2 vertical CRS, then try through intermediate geographic CRS
+    // For example
+    // WGS 84 + EGM96 --> ETRS89 + Belfast height where
+    // there is a geoid model for EGM96 referenced to WGS 84
+    // and a geoid model for Belfast height referenced to ETRS89
+    if (verticalTransforms.size() == 1 &&
+        verticalTransforms.front()->hasBallparkTransformation()) {
+        auto dbContext =
+            context.context->getAuthorityFactory()->databaseContext();
+        const auto intermGeogSrc =
+            srcGeog->promoteTo3D(std::string(), dbContext);
+        const bool intermGeogSrcIsSameAsIntermGeogDst =
+            srcGeog->_isEquivalentTo(dstGeog.get());
+        const auto intermGeogDst =
+            intermGeogSrcIsSameAsIntermGeogDst
+                ? intermGeogSrc
+                : dstGeog->promoteTo3D(std::string(), dbContext);
+        const auto opsSrcToGeog =
+            createOperations(sourceCRS, intermGeogSrc, context);
+        const auto opsGeogToTarget =
+            createOperations(intermGeogDst, targetCRS, context);
+        const bool hasNonTrivalSrcTransf =
+            !opsSrcToGeog.empty() &&
+            !opsSrcToGeog.front()->hasBallparkTransformation();
+        const bool hasNonTrivialTargetTransf =
+            !opsGeogToTarget.empty() &&
+            !opsGeogToTarget.front()->hasBallparkTransformation();
+        if (hasNonTrivalSrcTransf && hasNonTrivialTargetTransf) {
+            const auto opsGeogSrcToGeogDst =
+                createOperations(intermGeogSrc, intermGeogDst, context);
+            for (const auto &op1 : opsSrcToGeog) {
+                if (op1->hasBallparkTransformation()) {
+                    continue;
                 }
-            }
-
-            for (const auto &verticalTransform : verticalTransforms) {
-                auto interpolationGeogCRS =
-                    NN_NO_CHECK(componentsSrc[0]->extractGeographicCRS());
-                auto transformationVerticalTransform =
-                    dynamic_cast<const Transformation *>(
-                        verticalTransform.get());
-                if (transformationVerticalTransform) {
-                    auto interpTransformCRS =
-                        transformationVerticalTransform->interpolationCRS();
-                    if (interpTransformCRS) {
-                        auto nn_interpTransformCRS =
-                            NN_NO_CHECK(interpTransformCRS);
-                        if (dynamic_cast<const crs::GeographicCRS *>(
-                                nn_interpTransformCRS.get())) {
-                            interpolationGeogCRS = NN_NO_CHECK(
-                                util::nn_dynamic_pointer_cast<
-                                    crs::GeographicCRS>(nn_interpTransformCRS));
+                for (const auto &op2 : opsGeogSrcToGeogDst) {
+                    for (const auto &op3 : opsGeogToTarget) {
+                        if (op3->hasBallparkTransformation()) {
+                            continue;
                         }
-                    }
-                } else {
-                    auto compSrc0BoundCrs =
-                        dynamic_cast<crs::BoundCRS *>(componentsSrc[0].get());
-                    auto compDst0BoundCrs =
-                        dynamic_cast<crs::BoundCRS *>(componentsDst[0].get());
-                    if (compSrc0BoundCrs && compDst0BoundCrs &&
-                        dynamic_cast<crs::GeographicCRS *>(
-                            compSrc0BoundCrs->hubCRS().get()) &&
-                        compSrc0BoundCrs->hubCRS()->_isEquivalentTo(
-                            compDst0BoundCrs->hubCRS().get())) {
-                        interpolationGeogCRS = NN_NO_CHECK(
-                            util::nn_dynamic_pointer_cast<crs::GeographicCRS>(
-                                compSrc0BoundCrs->hubCRS()));
-                    }
-                }
-                auto opSrcCRSToGeogCRS = createOperations(
-                    componentsSrc[0], interpolationGeogCRS, context);
-                auto opGeogCRStoDstCRS = createOperations(
-                    interpolationGeogCRS, componentsDst[0], context);
-                for (const auto &opSrc : opSrcCRSToGeogCRS) {
-                    for (const auto &opDst : opGeogCRStoDstCRS) {
-
                         try {
-                            auto op = createHorizVerticalHorizPROJBased(
-                                sourceCRS, targetCRS, opSrc, verticalTransform,
-                                opDst, interpolationGeogCRS, true);
-                            res.emplace_back(op);
-                        } catch (const InvalidOperationEmptyIntersection &) {
-                        } catch (const io::FormattingException &) {
+                            res.emplace_back(
+                                ConcatenatedOperation::createComputeMetadata(
+                                    intermGeogSrcIsSameAsIntermGeogDst
+                                        ? std::vector<
+                                              CoordinateOperationNNPtr>{op1,
+                                                                        op3}
+                                        : std::vector<
+                                              CoordinateOperationNNPtr>{op1,
+                                                                        op2,
+                                                                        op3},
+                                    !allowEmptyIntersection));
+                        } catch (const std::exception &) {
                         }
                     }
                 }
             }
+        }
+        if (!res.empty()) {
+            return;
+        }
+    }
 
-            if (verticalTransforms.empty()) {
-                auto resTmp = createOperations(componentsSrc[0],
-                                               componentsDst[0], context);
-                for (const auto &op : resTmp) {
-                    auto opClone = op->shallowClone();
-                    setCRSs(opClone.get(), sourceCRS, targetCRS);
-                    res.emplace_back(opClone);
+    for (const auto &verticalTransform : verticalTransforms) {
+        auto interpolationGeogCRS = NN_NO_CHECK(srcGeog);
+        auto transformationVerticalTransform =
+            dynamic_cast<const Transformation *>(verticalTransform.get());
+        if (transformationVerticalTransform) {
+            auto interpTransformCRS =
+                transformationVerticalTransform->interpolationCRS();
+            if (interpTransformCRS) {
+                auto nn_interpTransformCRS = NN_NO_CHECK(interpTransformCRS);
+                if (dynamic_cast<const crs::GeographicCRS *>(
+                        nn_interpTransformCRS.get())) {
+                    interpolationGeogCRS = NN_NO_CHECK(
+                        util::nn_dynamic_pointer_cast<crs::GeographicCRS>(
+                            nn_interpTransformCRS));
                 }
             }
+        } else {
+            auto compSrc0BoundCrs =
+                dynamic_cast<crs::BoundCRS *>(componentsSrc[0].get());
+            auto compDst0BoundCrs =
+                dynamic_cast<crs::BoundCRS *>(componentsDst[0].get());
+            if (compSrc0BoundCrs && compDst0BoundCrs &&
+                dynamic_cast<crs::GeographicCRS *>(
+                    compSrc0BoundCrs->hubCRS().get()) &&
+                compSrc0BoundCrs->hubCRS()->_isEquivalentTo(
+                    compDst0BoundCrs->hubCRS().get())) {
+                interpolationGeogCRS = NN_NO_CHECK(
+                    util::nn_dynamic_pointer_cast<crs::GeographicCRS>(
+                        compSrc0BoundCrs->hubCRS()));
+            }
+        }
+        auto opSrcCRSToGeogCRS =
+            createOperations(componentsSrc[0], interpolationGeogCRS, context);
+        auto opGeogCRStoDstCRS =
+            createOperations(interpolationGeogCRS, componentsDst[0], context);
+        for (const auto &opSrc : opSrcCRSToGeogCRS) {
+            for (const auto &opDst : opGeogCRStoDstCRS) {
+
+                try {
+                    auto op = createHorizVerticalHorizPROJBased(
+                        sourceCRS, targetCRS, opSrc, verticalTransform, opDst,
+                        interpolationGeogCRS, true);
+                    res.emplace_back(op);
+                } catch (const InvalidOperationEmptyIntersection &) {
+                } catch (const io::FormattingException &) {
+                }
+            }
+        }
+    }
+
+    if (verticalTransforms.empty()) {
+        auto resTmp =
+            createOperations(componentsSrc[0], componentsDst[0], context);
+        for (const auto &op : resTmp) {
+            auto opClone = op->shallowClone();
+            setCRSs(opClone.get(), sourceCRS, targetCRS);
+            res.emplace_back(opClone);
         }
     }
 }
@@ -15313,39 +15463,39 @@ void PROJBasedOperation::_exportToWKT(io::WKTFormatter *formatter) const {
 void PROJBasedOperation::_exportToJSON(
     io::JSONFormatter *formatter) const // throw(FormattingException)
 {
-    auto &writer = formatter->writer();
+    auto writer = formatter->writer();
     auto objectContext(formatter->MakeObjectContext(
         (sourceCRS() && targetCRS()) ? "Transformation" : "Conversion",
         !identifiers().empty()));
 
-    writer.AddObjKey("name");
+    writer->AddObjKey("name");
     auto l_name = nameStr();
     if (l_name.empty()) {
-        writer.Add("unnamed");
+        writer->Add("unnamed");
     } else {
-        writer.Add(l_name);
+        writer->Add(l_name);
     }
 
     if (sourceCRS() && targetCRS()) {
-        writer.AddObjKey("source_crs");
+        writer->AddObjKey("source_crs");
         formatter->setAllowIDInImmediateChild();
         sourceCRS()->_exportToJSON(formatter);
 
-        writer.AddObjKey("target_crs");
+        writer->AddObjKey("target_crs");
         formatter->setAllowIDInImmediateChild();
         targetCRS()->_exportToJSON(formatter);
     }
 
-    writer.AddObjKey("method");
+    writer->AddObjKey("method");
     formatter->setOmitTypeInImmediateChild();
     formatter->setAllowIDInImmediateChild();
     method()->_exportToJSON(formatter);
 
     const auto &l_parameterValues = parameterValues();
     if (!l_parameterValues.empty()) {
-        writer.AddObjKey("parameters");
+        writer->AddObjKey("parameters");
         {
-            auto parametersContext(writer.MakeArrayContext(false));
+            auto parametersContext(writer->MakeArrayContext(false));
             for (const auto &genOpParamvalue : l_parameterValues) {
                 formatter->setAllowIDInImmediateChild();
                 formatter->setOmitTypeInImmediateChild();

@@ -38,7 +38,6 @@
 
 #include "proj.h"
 #include "proj_internal.h"
-#include "geocent.h"
 #include "point_in_polygon.h"
 #include "geojsonPolygon.hpp"
 #include "pps.hpp"
