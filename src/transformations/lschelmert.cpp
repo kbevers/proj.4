@@ -76,6 +76,7 @@ namespace
 		double yT0;
 		double signalx;
 		double signaly;
+		double sigmaHelmert;
 		int n_points;
 		double c_coll;
 		double k_coll;
@@ -149,10 +150,8 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		proj_log_error(P, "lschelemert: common points are less than 3.");		 
 		return nullptr;
 	}
-	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-	{
-		proj_log_trace(P, "Input phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);
-	}
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)	 
+		proj_log_trace(P, "Input phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);	 
 
 	double coslat = cos(lp->phi);
 	double k = Q->k_coll == HUGE_VAL ? 0.00039 : Q->k_coll;
@@ -227,7 +226,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Estimated Helmert parameters a, b, Tx, Ty: (%12.10f, %12.10f, %12.10f, %12.10f)", a, b, tx, ty);
 	
-	// Signal of common points
+	// Signal (residuals) of common points
 	MatrixXd snx(np, 1); MatrixXd sny(np, 1);
 
 	for (int i = 0; i < np; i++)
@@ -236,6 +235,24 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		sny(i) = dyT(i) + b * dxF(i) - a * dyF(i);
 	}
 
+	double sigma = 0.0;
+		
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+	{
+		for (int i = 0; i < np; i++)
+		{
+			for (int j = 0; j < np; j++)
+			{
+				sigma += snx(j) * snx(j) * p(j, i);
+				sigma += sny(j) * sny(j) * p(j, i);
+			}
+		}
+		sigma /= 2 * np;
+		sigma = sqrt(sigma);
+
+		proj_log_trace(P, "Estimated sigma Helmert transformation: (%12.10f radians)", sigma);
+	}
+		
 	// Signal of target point
 	double smx = (cmn.transpose() * p * snx).value();
 	double smy = (cmn.transpose() * p * sny).value();
@@ -250,6 +267,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	Q->yT0 = yT0;
 	Q->signalx = smx;
 	Q->signaly = smy;
+	Q->sigmaHelmert = sigma;
 
 	return P;
 } 
@@ -483,7 +501,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	if (proj_errno(P))
 	{
 		// TODO: Feil meldingstekst her...
-		proj_log_error(P, "pair_trans: could not find required pair_tran(s).");
+		proj_log_error(P, "pair_trans: could not find required pair_trans file.");
 		return pj_default_destructor(P, PJD_ERR_FAILED_TO_LOAD_CPT);
 	}
 	Q->polygons = pj_polygon_init(P, "polygons");

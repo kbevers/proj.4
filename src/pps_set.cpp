@@ -102,7 +102,7 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 		return {};
 	
 	auto list = internal::split(std::string(ppnames), ',');
-	ListOfPpSet cps;
+	ListOfPpSet pps;
 
 	for (const auto &ppnameStr : list)
 	{
@@ -128,10 +128,10 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 		}
 		else
 		{
-			cps.emplace_back(std::move(ppSet));
+			pps.emplace_back(std::move(ppSet));
 		}	
 	}
-	return cps;
+	return pps;
 } 
 
 // ---------------------------------------------------------------------------
