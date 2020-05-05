@@ -168,23 +168,23 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	// Vector To System:
 	MatrixXd xT(np, 1); MatrixXd yT(np, 1);
 
-	int i = 0;
+	int l = 0;
 
 	for (auto&& pair : *pairList)
 	{
 		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 	    PJ_LPZ pointTo = (direction == PJ_FWD) ? pair.ToPoint() : pair.FromPoint();
 
-		xF(i, 0) = pointFrom.phi;
-		yF(i, 0) = pointFrom.lam * coslat;
+		xF(l, 0) = pointFrom.phi;
+		yF(l, 0) = pointFrom.lam * coslat;
 
-		xT(i, 0) = pointTo.phi;
-		yT(i, 0) = pointTo.lam * coslat;
+		xT(l, 0) = pointTo.phi;
+		yT(l, 0) = pointTo.lam * coslat;
 
 		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 			proj_log_trace(P, "Source: (%10.8f, %10.8f) Target: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, pointTo.phi, pointTo.lam);
 	
-		i++;
+		l++;
 	}
 
 	MatrixXd p = cnn.inverse();
@@ -361,18 +361,19 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
 
-	PointPairs* pp = findPointPairs(Q->pps, lpz, Q->minimum_dist);
+	Q->minimum_dist = Q->minimum_dist == HUGE_VAL ? 0.1 : Q->minimum_dist;
 
-	if (pp == nullptr)
+	PointPairs* pointPairs = findPointPairs(Q->pps, lpz, Q->minimum_dist);
+	
+	if (pointPairs == nullptr)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
 
  	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
-	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
-	double mindist = Q->minimum_dist == HUGE_VAL ? 0.1 : Q->minimum_dist; // Default 0.1 radians
-	auto closestPoints = findClosestPoints(pp, point.lp, areaId, PJ_FWD, n, mindist);
+	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	 
+	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_FWD, n, Q->minimum_dist);
 	
 	if (closestPoints.size() == 0)
 	{
@@ -398,18 +399,19 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	point.xyz = xyz;
 	auto lpz = point.lpz;
 
-	PointPairs *pp = findPointPairs(Q->pps, lpz, Q->minimum_dist);
+	Q->minimum_dist = Q->minimum_dist == HUGE_VAL ? 0.1 : Q->minimum_dist; // Default 0.1 radians
 
-	if (pp == nullptr)
+	PointPairs *pointPairs = findPointPairs(Q->pps, lpz, Q->minimum_dist);
+
+	if (pointPairs == nullptr)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
 	}
 
 	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
-	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
-	double mindist = Q->minimum_dist == HUGE_VAL ? 0.1 : Q->minimum_dist; // Default 0.1 radians
-	auto closestPoints = findClosestPoints(pp, point.lp, areaId, PJ_FWD, n, mindist);	 
+	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	
+	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_INV, n, Q->minimum_dist);
 
 	if (closestPoints.size() == 0)
 	{
