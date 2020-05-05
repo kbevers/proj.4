@@ -281,9 +281,9 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
 
-std::vector<LPZ_Pair>* findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
+std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20)
 {
-	std::vector<LPZ_Pair> *distances = new std::vector<LPZ_Pair>{};
+	std::vector<LPZ_Pair> distances {};
 
 	double coslat = cos(lp.phi);
 
@@ -302,14 +302,14 @@ std::vector<LPZ_Pair>* findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 a
 
 		pair.SetDistance(hypot(deltaPhi, deltaLam));
 		
-		distances->push_back(pair);
+		distances.push_back(pair);
 	}	 
-	std::sort(distances->begin(), distances->end(), DistanceLess);
+	std::sort(distances.begin(), distances.end(), DistanceLess);
 
-	auto np = distances->size();
+	auto np = distances.size();
 
 	if (n < np)
-		distances->resize(n);
+		distances.resize(n);
 
 	return distances;
 }
@@ -372,21 +372,18 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
 	auto closestPoints = findClosestPoints(pp, point.lp, areaId, PJ_FWD, n);
 	
-	if (closestPoints->size() == 0)
+	if (closestPoints.size() == 0)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
-	if (!calculateHelmertParameter(P, &point.lp, closestPoints, PJ_FWD))
+	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_FWD))
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
 	point.lp = helmert_apply(P, point.lp);
 	point.lp = collocation_apply(P, point.lp);
-	 
-	closestPoints->clear();
-	delete(closestPoints);
 	 
 	return point.xyz;
 }
@@ -411,12 +408,12 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points;
 	auto closestPoints = findClosestPoints(pp, point.lp, areaId, PJ_INV, n);
 
-	if (closestPoints->size() == 0)
+	if (closestPoints.size() == 0)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
 	}
-	if (!calculateHelmertParameter(P, &point.lp, closestPoints, PJ_INV))
+	if (!calculateHelmertParameter(P, &point.lp, &closestPoints, PJ_INV))
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
