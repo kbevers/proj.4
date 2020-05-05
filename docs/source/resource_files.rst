@@ -107,6 +107,14 @@ Its default content is:
 
     cache_ttl_sec = 86400
 
+    ; Transverse Mercator (and UTM) default algorithm: auto, evenden_snyder or poder_engsager
+    ; * evenden_snyder is the fastest, but less accurate far from central meridian
+    ; * poder_engsager is slower, but more accurate far from central meridian
+    ; * default will auto-select between the two above depending on the coordinate
+    ;   to transform and will use evenden_snyder if the error in doing so is below
+    ;   0.1 mm (for an ellipsoid of the size of Earth)
+    tmerc_default_algo = poder_engsager
+
 
 Transformation grids
 -------------------------------------------------------------------------------
@@ -290,7 +298,7 @@ Getting crs2crs2grid.py
 ................................................................................
 
 The `crs2crs2grid.py` script can be found at
-https://github.com/OSGeo/gdal/tree/trunk/gdal/swig/python/samples/crs2crs2grid.py
+https://github.com/OSGeo/gdal/tree/master/gdal/swig/python/samples/crs2crs2grid.py
 
 The script depends on having the GDAL Python bindings operational; if they are not you
 will get an error such as:

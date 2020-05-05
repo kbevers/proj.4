@@ -174,7 +174,9 @@ enum pj_io_units {
     PJ_IO_UNITS_CLASSIC   = 1,  /* Scaled meters (right), projected system */
     PJ_IO_UNITS_PROJECTED = 2,  /* Meters, projected system */
     PJ_IO_UNITS_CARTESIAN = 3,  /* Meters, 3D cartesian system */
-    PJ_IO_UNITS_RADIANS   = 4   /* Radians */
+    PJ_IO_UNITS_RADIANS   = 4,  /* Radians */
+    PJ_IO_UNITS_DEGREES   = 5,  /* Degrees */
+
 };
 enum pj_io_units pj_left (PJ *P);
 enum pj_io_units pj_right (PJ *P);
@@ -335,6 +337,13 @@ struct CoordOperation
     {
         proj_destroy(pj);
     }
+};
+
+enum class TMercAlgo
+{
+    AUTO, // Poder/Engsager if far from central meridian, otherwise Evenden/Snyder
+    EVENDEN_SNYDER,
+    PODER_ENGSAGER,
 };
 
 /* base projection data structure */
@@ -738,6 +747,9 @@ struct projCtx_t {
     projGridChunkCache gridChunkCache{};
 
     int projStringParserCreateFromPROJStringRecursionCounter = 0; // to avoid potential infinite recursion in PROJStringParser::createFromPROJString()
+    int pipelineInitRecursiongCounter = 0; // to avoid potential infinite recursion in pipeline.cpp
+
+    TMercAlgo defaultTmercAlgo = TMercAlgo::PODER_ENGSAGER; // can be overridden by content of proj.ini
 
     projCtx_t() = default;
     projCtx_t(const projCtx_t&);
@@ -823,8 +835,8 @@ void     *pj_dealloc_params (projCtx_t *ctx, paralist *start, int errlev);
 
 
 double *pj_enfn(double);
-double  pj_mlfn(double, double, double, double *);
-double  pj_inv_mlfn(projCtx_t *, double, double, double *);
+double  pj_mlfn(double, double, double, const double *);
+double  pj_inv_mlfn(projCtx_t *, double, double, const double *);
 double  pj_qsfn(double, double, double);
 double  pj_tsfn(double, double, double);
 double  pj_msfn(double, double, double);
@@ -864,15 +876,12 @@ PJ *pj_create_internal (PJ_CONTEXT *ctx, const char *definition);
 PJ *pj_create_argv_internal (PJ_CONTEXT *ctx, int argc, char **argv);
 
 // For use by projinfo
-std::string PROJ_DLL pj_context_get_url_endpoint(PJ_CONTEXT* ctx);
-
 void pj_load_ini(PJ_CONTEXT* ctx);
 
 // Exported for testing purposes only
 std::string PROJ_DLL pj_context_get_grid_cache_filename(PJ_CONTEXT *ctx);
 
 // For use by projsync
-std::string PROJ_DLL pj_context_get_user_writable_directory(PJ_CONTEXT *ctx, bool create);
 void PROJ_DLL pj_context_set_user_writable_directory(PJ_CONTEXT* ctx, const std::string& path);
 std::string PROJ_DLL pj_get_relative_share_proj(PJ_CONTEXT *ctx);
 
@@ -889,6 +898,9 @@ int pj_get_suggested_operation(PJ_CONTEXT *ctx,
 
 const PJ_UNITS *pj_list_linear_units();
 const PJ_UNITS *pj_list_angular_units();
+
+void pj_clear_hgridshift_knowngrids_cache();
+void pj_clear_vgridshift_knowngrids_cache();
 
 /* classic public API */
 #include "proj_api.h"

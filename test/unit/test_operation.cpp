@@ -2653,12 +2653,12 @@ TEST(operation, imw_polyconic_export) {
 
 TEST(operation, krovak_north_oriented_export) {
     auto conv = Conversion::createKrovakNorthOriented(
-        PropertyMap(), Angle(49.5), Angle(42.5), Angle(30.28813972222222),
+        PropertyMap(), Angle(49.5), Angle(42.5), Angle(30.2881397527778),
         Angle(78.5), Scale(0.9999), Length(5), Length(6));
     EXPECT_TRUE(conv->validateParameters().empty());
 
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=krovak +lat_0=49.5 +lon_0=42.5 +alpha=30.2881397222222 "
+              "+proj=krovak +lat_0=49.5 +lon_0=42.5 +alpha=30.2881397527778 "
               "+k=0.9999 +x_0=5 +y_0=6");
 
     EXPECT_EQ(
@@ -2672,7 +2672,7 @@ TEST(operation, krovak_north_oriented_export) {
         "    PARAMETER[\"Longitude of origin\",42.5,\n"
         "        ANGLEUNIT[\"degree\",0.0174532925199433],\n"
         "        ID[\"EPSG\",8833]],\n"
-        "    PARAMETER[\"Co-latitude of cone axis\",30.2881397222222,\n"
+        "    PARAMETER[\"Co-latitude of cone axis\",30.2881397527778,\n"
         "        ANGLEUNIT[\"degree\",0.0174532925199433],\n"
         "        ID[\"EPSG\",1036]],\n"
         "    PARAMETER[\"Latitude of pseudo standard parallel\",78.5,\n"
@@ -2694,7 +2694,7 @@ TEST(operation, krovak_north_oriented_export) {
         "PROJECTION[\"Krovak\"],\n"
         "PARAMETER[\"latitude_of_center\",49.5],\n"
         "PARAMETER[\"longitude_of_center\",42.5],\n"
-        "PARAMETER[\"azimuth\",30.2881397222222],\n"
+        "PARAMETER[\"azimuth\",30.2881397527778],\n"
         "PARAMETER[\"pseudo_standard_parallel_1\",78.5],\n"
         "PARAMETER[\"scale_factor\",0.9999],\n"
         "PARAMETER[\"false_easting\",5],\n"
@@ -2705,13 +2705,13 @@ TEST(operation, krovak_north_oriented_export) {
 
 TEST(operation, krovak_export) {
     auto conv = Conversion::createKrovak(
-        PropertyMap(), Angle(49.5), Angle(42.5), Angle(30.28813972222222),
+        PropertyMap(), Angle(49.5), Angle(42.5), Angle(30.2881397527778),
         Angle(78.5), Scale(0.9999), Length(5), Length(6));
     EXPECT_TRUE(conv->validateParameters().empty());
 
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=krovak +axis=swu +lat_0=49.5 +lon_0=42.5 "
-              "+alpha=30.2881397222222 +k=0.9999 +x_0=5 "
+              "+alpha=30.2881397527778 +k=0.9999 +x_0=5 "
               "+y_0=6");
 
     EXPECT_EQ(
@@ -2725,7 +2725,7 @@ TEST(operation, krovak_export) {
         "    PARAMETER[\"Longitude of origin\",42.5,\n"
         "        ANGLEUNIT[\"degree\",0.0174532925199433],\n"
         "        ID[\"EPSG\",8833]],\n"
-        "    PARAMETER[\"Co-latitude of cone axis\",30.2881397222222,\n"
+        "    PARAMETER[\"Co-latitude of cone axis\",30.2881397527778,\n"
         "        ANGLEUNIT[\"degree\",0.0174532925199433],\n"
         "        ID[\"EPSG\",1036]],\n"
         "    PARAMETER[\"Latitude of pseudo standard parallel\",78.5,\n"
@@ -2747,7 +2747,7 @@ TEST(operation, krovak_export) {
         "PROJECTION[\"Krovak\"],\n"
         "PARAMETER[\"latitude_of_center\",49.5],\n"
         "PARAMETER[\"longitude_of_center\",42.5],\n"
-        "PARAMETER[\"azimuth\",30.2881397222222],\n"
+        "PARAMETER[\"azimuth\",30.2881397527778],\n"
         "PARAMETER[\"pseudo_standard_parallel_1\",78.5],\n"
         "PARAMETER[\"scale_factor\",0.9999],\n"
         "PARAMETER[\"false_easting\",5],\n"
@@ -4195,6 +4195,29 @@ TEST(operation, laborde_oblique_mercator) {
 
 // ---------------------------------------------------------------------------
 
+TEST(operation, adams_ws2_export) {
+    auto dbContext = DatabaseContext::create();
+    // ESRI:54098 WGS_1984_Adams_Square_II
+    auto crs = AuthorityFactory::create(dbContext, "ESRI")
+                   ->createProjectedCRS("54098");
+    EXPECT_EQ(crs->exportToPROJString(PROJStringFormatter::create().get()),
+              "+proj=adams_ws2 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m "
+              "+no_defs +type=crs");
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(operation, adams_ws2_export_failure) {
+    auto dbContext = DatabaseContext::create();
+    // ESRI:54099 WGS_1984_Spilhaus_Ocean_Map_in_Square
+    auto crs = AuthorityFactory::create(dbContext, "ESRI")
+                   ->createProjectedCRS("54099");
+    EXPECT_THROW(crs->exportToPROJString(PROJStringFormatter::create().get()),
+                 FormattingException);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(operation, PROJ_based) {
     auto conv = SingleOperation::createPROJBased(PropertyMap(), "+proj=merc",
                                                  nullptr, nullptr);
@@ -5109,7 +5132,7 @@ TEST(operation, geogCRS_to_geogCRS_init_IGNF_to_init_IGNF_context) {
     auto ctxt = CoordinateOperationContext::create(authFactory, nullptr, 0.0);
     auto list = CoordinateOperationFactory::create()->createOperations(
         NN_CHECK_ASSERT(sourceCRS), NN_CHECK_ASSERT(targetCRS), ctxt);
-    ASSERT_EQ(list.size(), 1U);
+    ASSERT_EQ(list.size(), 2U);
 
     EXPECT_EQ(list[0]->nameStr(),
               "NOUVELLE TRIANGULATION DE LA FRANCE (NTF) vers RGF93 (ETRS89)");
@@ -6552,7 +6575,7 @@ TEST(operation, ETRS89_3D_to_proj_string_with_geoidgrids_nadgrids) {
     auto ctxt = CoordinateOperationContext::create(authFactory, nullptr, 0.0);
     auto list = CoordinateOperationFactory::create()->createOperations(
         src, NN_NO_CHECK(dst), ctxt);
-    ASSERT_EQ(list.size(), 1U);
+    ASSERT_EQ(list.size(), 2U);
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline "
               "+step +proj=axisswap +order=2,1 "
@@ -7357,11 +7380,11 @@ TEST(operation, compoundCRS_to_compoundCRS_context_helmert_noop) {
     ctxt->setSpatialCriterion(
         CoordinateOperationContext::SpatialCriterion::PARTIAL_INTERSECTION);
     // WGS84 + EGM96
-    auto objSrc = createFromUserInput("EPSG:4326+3855", dbContext);
+    auto objSrc = createFromUserInput("EPSG:4326+5773", dbContext);
     auto srcCrs = nn_dynamic_pointer_cast<CompoundCRS>(objSrc);
     ASSERT_TRUE(srcCrs != nullptr);
     // ETRS89 + EGM96
-    auto objDest = createFromUserInput("EPSG:4258+3855", dbContext);
+    auto objDest = createFromUserInput("EPSG:4258+5773", dbContext);
     auto destCrs = nn_dynamic_pointer_cast<CompoundCRS>(objDest);
     ASSERT_TRUE(destCrs != nullptr);
     auto list = CoordinateOperationFactory::create()->createOperations(
@@ -7369,6 +7392,81 @@ TEST(operation, compoundCRS_to_compoundCRS_context_helmert_noop) {
     ASSERT_GE(list.size(), 1U);
     EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=noop");
+}
+
+// ---------------------------------------------------------------------------
+
+// EGM96 has a geoid model referenced to WGS84, and Belfast height has a
+// geoid model referenced to ETRS89
+TEST(operation, compoundCRS_to_compoundCRS_WGS84_EGM96_to_ETRS89_Belfast) {
+    auto dbContext = DatabaseContext::create();
+    auto authFactory = AuthorityFactory::create(dbContext, "EPSG");
+    auto ctxt = CoordinateOperationContext::create(authFactory, nullptr, 0.0);
+    ctxt->setGridAvailabilityUse(
+        CoordinateOperationContext::GridAvailabilityUse::
+            IGNORE_GRID_AVAILABILITY);
+    ctxt->setSpatialCriterion(
+        CoordinateOperationContext::SpatialCriterion::PARTIAL_INTERSECTION);
+    // WGS84 + EGM96
+    auto objSrc = createFromUserInput("EPSG:4326+5773", dbContext);
+    auto srcCrs = nn_dynamic_pointer_cast<CompoundCRS>(objSrc);
+    ASSERT_TRUE(srcCrs != nullptr);
+    // ETRS89 + Belfast height
+    auto objDest = createFromUserInput("EPSG:4258+5732", dbContext);
+    auto destCrs = nn_dynamic_pointer_cast<CompoundCRS>(objDest);
+    ASSERT_TRUE(destCrs != nullptr);
+    auto list = CoordinateOperationFactory::create()->createOperations(
+        NN_NO_CHECK(srcCrs), NN_NO_CHECK(destCrs), ctxt);
+    ASSERT_GE(list.size(), 1U);
+    EXPECT_EQ(list[0]->nameStr(), "Inverse of WGS 84 to EGM96 height (1) + "
+                                  "Inverse of ETRS89 to WGS 84 (1) + "
+                                  "ETRS89 to Belfast height (2)");
+    EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
+              "+proj=pipeline +step +proj=axisswap +order=2,1 "
+              "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
+              "+step +proj=vgridshift +grids=us_nga_egm96_15.tif +multiplier=1 "
+              "+step +inv +proj=vgridshift +grids=uk_os_OSGM15_Belfast.tif "
+              "+multiplier=1 +step "
+              "+proj=unitconvert +xy_in=rad +xy_out=deg "
+              "+step +proj=axisswap +order=2,1");
+}
+
+// ---------------------------------------------------------------------------
+
+// Variant of above where source intermediate geog3D CRS == target intermediate
+// geog3D CRS
+TEST(operation, compoundCRS_to_compoundCRS_WGS84_EGM96_to_WGS84_Belfast) {
+    auto dbContext = DatabaseContext::create();
+    auto authFactory = AuthorityFactory::create(dbContext, "EPSG");
+    auto ctxt = CoordinateOperationContext::create(authFactory, nullptr, 0.0);
+    ctxt->setGridAvailabilityUse(
+        CoordinateOperationContext::GridAvailabilityUse::
+            IGNORE_GRID_AVAILABILITY);
+    ctxt->setSpatialCriterion(
+        CoordinateOperationContext::SpatialCriterion::PARTIAL_INTERSECTION);
+    // WGS84 + EGM96
+    auto objSrc = createFromUserInput("EPSG:4326+5773", dbContext);
+    auto srcCrs = nn_dynamic_pointer_cast<CompoundCRS>(objSrc);
+    ASSERT_TRUE(srcCrs != nullptr);
+    // WGS84 + Belfast height
+    auto objDest = createFromUserInput("EPSG:4326+5732", dbContext);
+    auto destCrs = nn_dynamic_pointer_cast<CompoundCRS>(objDest);
+    ASSERT_TRUE(destCrs != nullptr);
+    auto list = CoordinateOperationFactory::create()->createOperations(
+        NN_NO_CHECK(srcCrs), NN_NO_CHECK(destCrs), ctxt);
+    ASSERT_GE(list.size(), 1U);
+    EXPECT_EQ(list[0]->nameStr(), "Inverse of WGS 84 to EGM96 height (1) + "
+                                  "Inverse of ETRS89 to WGS 84 (1) + "
+                                  "ETRS89 to Belfast height (2) + "
+                                  "ETRS89 to WGS 84 (1)");
+    EXPECT_EQ(list[0]->exportToPROJString(PROJStringFormatter::create().get()),
+              "+proj=pipeline +step +proj=axisswap +order=2,1 "
+              "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
+              "+step +proj=vgridshift +grids=us_nga_egm96_15.tif +multiplier=1 "
+              "+step +inv +proj=vgridshift +grids=uk_os_OSGM15_Belfast.tif "
+              "+multiplier=1 +step "
+              "+proj=unitconvert +xy_in=rad +xy_out=deg "
+              "+step +proj=axisswap +order=2,1");
 }
 
 // ---------------------------------------------------------------------------

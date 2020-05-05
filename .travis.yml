@@ -21,15 +21,22 @@ matrix:
         - docker
       env:
         - BUILD_NAME=linux_gcc
-        - DETAILS="linux, gcc"
+        - DETAILS="linux, gcc-4.8"
+        - CC=gcc-4.8
+        - CXX=g++-4.8
+      addons:
+        apt:
+          packages:
+            - g++-4.8
 
     - os: linux
-      dist: xenial
+      dist: bionic
       compiler: gcc
       services:
         - docker
       env:
         - BUILD_NAME=linux_gcc8
+        - DETAILS="linux, gcc8"
         - DETAILS="linux, gcc8, i386"
         - ARCH=i386
         - CC=gcc-8
@@ -43,7 +50,7 @@ matrix:
       addons:
         apt:
           sources:
-            - ubuntu-toolchain-r-test
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
             - g++-8-multilib
             - make

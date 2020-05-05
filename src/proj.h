@@ -512,6 +512,10 @@ int PROJ_DLL proj_context_is_network_enabled(PJ_CONTEXT* ctx);
 
 void PROJ_DLL proj_context_set_url_endpoint(PJ_CONTEXT* ctx, const char* url);
 
+const char PROJ_DLL *proj_context_get_url_endpoint(PJ_CONTEXT* ctx);
+
+const char PROJ_DLL *proj_context_get_user_writable_directory(PJ_CONTEXT *ctx, int create);
+
 void PROJ_DLL proj_grid_cache_set_enable(PJ_CONTEXT* ctx, int enabled);
 
 void PROJ_DLL proj_grid_cache_set_filename(PJ_CONTEXT* ctx, const char* fullname);
@@ -567,6 +571,8 @@ typedef enum PJ_DIRECTION PJ_DIRECTION;
 int PROJ_DLL proj_angular_input (PJ *P, enum PJ_DIRECTION dir);
 int PROJ_DLL proj_angular_output (PJ *P, enum PJ_DIRECTION dir);
 
+int PROJ_DLL proj_degree_input (PJ *P, enum PJ_DIRECTION dir);
+int PROJ_DLL proj_degree_output (PJ *P, enum PJ_DIRECTION dir);
 
 PJ_COORD PROJ_DLL proj_trans (PJ *P, PJ_DIRECTION direction, PJ_COORD coord);
 int PROJ_DLL proj_trans_array (PJ *P, PJ_DIRECTION direction, size_t n, PJ_COORD *coord);
@@ -1199,6 +1205,11 @@ void PROJ_DLL proj_operation_factory_context_set_discard_superseded(
     PJ_CONTEXT *ctx,
     PJ_OPERATION_FACTORY_CONTEXT *factory_ctx,
     int discard);
+
+void PROJ_DLL proj_operation_factory_context_set_allow_ballpark_transformations(
+    PJ_CONTEXT *ctx,
+    PJ_OPERATION_FACTORY_CONTEXT *factory_ctx,
+    int allow);
 
 /* ------------------------------------------------------------------------- */
 

@@ -427,7 +427,9 @@ PJ *proj_clone(PJ_CONTEXT *ctx, const PJ *obj) {
 
 /** \brief Instantiate an object from a WKT string, PROJ string, object code
  * (like "EPSG:4326", "urn:ogc:def:crs:EPSG::4326",
- * "urn:ogc:def:coordinateOperation:EPSG::1671") or PROJJSON string.
+ * "urn:ogc:def:coordinateOperation:EPSG::1671"), a PROJJSON string, an object
+ * name (e.g "WGS 84") of a compound CRS build from object names
+ * (e.g "WGS 84 + EGM96 height")
  *
  * This function calls osgeo::proj::io::createFromUserInput()
  *
@@ -7509,6 +7511,27 @@ void PROJ_DLL proj_operation_factory_context_set_discard_superseded(
     assert(factory_ctx);
     try {
         factory_ctx->operationContext->setDiscardSuperseded(discard != 0);
+    } catch (const std::exception &e) {
+        proj_log_error(ctx, __FUNCTION__, e.what());
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Set whether ballpark transformations are allowed.
+ *
+ * @param ctx PROJ context, or NULL for default context
+ * @param factory_ctx Operation factory context. must not be NULL
+ * @param allow set to TRUE to allow ballpark transformations.
+ * @since 7.1
+ */
+void PROJ_DLL proj_operation_factory_context_set_allow_ballpark_transformations(
+    PJ_CONTEXT *ctx, PJ_OPERATION_FACTORY_CONTEXT *factory_ctx, int allow) {
+    SANITIZE_CTX(ctx);
+    assert(factory_ctx);
+    try {
+        factory_ctx->operationContext->setAllowBallparkTransformations(allow !=
+                                                                       0);
     } catch (const std::exception &e) {
         proj_log_error(ctx, __FUNCTION__, e.what());
     }
