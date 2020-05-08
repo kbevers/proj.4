@@ -59,25 +59,41 @@ PointPairs::~PointPairs() = default;
  
 PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename)
 {
-	unsigned char header[160];
+	unsigned char header[404];
 
 	if (fp->read(header, sizeof(header)) != sizeof(header))
 	{
 		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return nullptr;
 	}
+	/*
+	char fname[128];
+	memcpy(&fname, header + 0, 128);
+	
+	char copyright[128];
+	memcpy(&copyright, header + 128, 128);
+
+	char licence[128];
+	memcpy(&licence, header + 256, 128);	   
+
+	double version;
+	memcpy(&version, header + 384, 8);
+
+	__int32 epsg1;
+	memcpy(&epsg1, header + 392, 4);
+
+	__int32 epsg2;
+	memcpy(&epsg2, header + 396, 4);
+	*/
 
 	__int32 noOfPoints;
-	memcpy(&noOfPoints, header + 0, 4);	
+	memcpy(&noOfPoints, header + 400, 4);	
 
 	if (noOfPoints < 4)
 		return nullptr;
-	
-	// TODO: Add name in CPT-file.
-	// TODO: Add licence in CPT-file.
+
 	 std::string name = filename;
-	 std::string format = "cpt";
-	//memcpy(&name, header + 4, 8);
+	 std::string format = "cpt";	
 
 	return new PointPairs(std::move(fp), name, format, noOfPoints);
 }
@@ -89,14 +105,15 @@ bool PointPairs::load(PJ_CONTEXT *ctx)
 	if (m_LpzPairList.size() == NoOfPoints())
 		return true;
 	
-	unsigned long offset = 4;
+	unsigned long offset = 404;
+	unsigned long asize = 4;
 
 	if (!m_fp->seek(offset))
 		return false;
 
 	auto pointPair = new LPZ_Pair();
 	
-	while (m_fp->read(pointPair = new LPZ_Pair(), sizeof(LPZ_Pair) - offset) == sizeof(LPZ_Pair) - offset)
+	while (m_fp->read(pointPair = new LPZ_Pair(), sizeof(LPZ_Pair) - asize) == sizeof(LPZ_Pair) - asize)
 	{
 		m_LpzPairList.push_back(*pointPair);
 		pointPair = new LPZ_Pair();
