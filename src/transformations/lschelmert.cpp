@@ -1,4 +1,10 @@
 /*****************************************************************************
+
+Documentation
+
+******************************************************************************
+
+******************************************************************************
 * Project:	PROJ
 * Purpose:	Helmert Least Squared Collocation
 * Author:	Sveinung Himle <sveinung.himle at kartverket.no>
@@ -280,7 +286,6 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-
 std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double mindist = 0.1)
 {
 	std::vector<LPZ_Pair> distances {};
@@ -443,6 +448,7 @@ static PJ *destructor(PJ *P, int errlev)
 	return pj_default_destructor(P, errlev);
 }
 
+// TODO: Static method might be deleted
 static void reassign_context(PJ* P, PJ_CONTEXT* ctx)
 {
 	auto Q = (struct pj_opaque_lschelmert *) P->opaque;
