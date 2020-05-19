@@ -66,6 +66,14 @@ matrix:
         - BUILD_NAME=linux_clang
         - DETAILS="linux, clang"
 
+    - os: linux
+      dist: bionic
+      compiler: gcc
+      arch: s390x
+      env:
+        - BUILD_NAME=linux_s390x
+        - DETAILS="linux, s390x"
+
     - os: osx
       env:
         - BUILD_NAME=osx
@@ -97,13 +105,13 @@ script:
 
 after_success: ./travis/${BUILD_NAME}/after_success.sh
 
-notifications:
-  #email:
-  #  recipients:
-  #    - gdal-commits@lists.osgeo.org
-
-  irc:
-    channels:
-      - "irc.freenode.org#gdal"
-      - "irc.freenode.org#proj"
-    use_notice: true
+#notifications:
+#  #email:
+#  #  recipients:
+#  #    - gdal-commits@lists.osgeo.org
+#
+#  irc:
+#    channels:
+#      - "irc.freenode.org#gdal"
+#      - "irc.freenode.org#proj"
+#    use_notice: true
