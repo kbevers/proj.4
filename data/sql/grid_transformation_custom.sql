@@ -99,26 +99,26 @@ INSERT INTO "grid_transformation" VALUES(
     NULL,NULL,NULL,NULL,NULL,NULL,NULL,0);
 
 
- INSERT INTO "grid_transformation" VALUES(
-    'PROJ','EPSG_5776_TO_EPSG_5941','ETRS89 to NN2000 height',
-    NULL,NULL,
-    'EPSG','9665','Geographic3D to GravityRelatedHeight (gtx)',
-    'EPSG','4937', -- source CRS (ETRS89 3D)
-    'EPSG','5941', -- target CRS (NN1954 height)
-    'EPSG','1352', -- area of use: Norway - Onshore
-    NULL,
-     'EPSG','8666','Geoid (height correction) model file','HREF2018B_NN2000_EUREF89.gtx',
-    NULL,NULL,NULL,NULL,NULL,NULL,NULL,0);
+ -- INSERT INTO "grid_transformation" VALUES(
+ --    'PROJ','EPSG_5776_TO_EPSG_5941','ETRS89 to NN2000 height',
+ --    NULL,NULL,
+ --    'EPSG','9665','Geographic3D to GravityRelatedHeight (gtx)',
+ --    'EPSG','4937', -- source CRS (ETRS89 3D)
+ --    'EPSG','5941', -- target CRS (NN1954 height)
+ --    'EPSG','1352', -- area of use: Norway - Onshore
+ --    NULL,
+ --     'EPSG','8666','Geoid (height correction) model file','HREF2018B_NN2000_EUREF89.gtx',
+ --    NULL,NULL,NULL,NULL,NULL,NULL,NULL,0);
 
 
- INSERT INTO "grid_transformation" VALUES(
-    'PROJ','EPSG_5941_TO_EPSG_4937','NN1954 to NN2000 height',
-    NULL,NULL,
-    'EPSG','9665','Geographic3D to GravityRelatedHeight (gtx)',
-    'EPSG','5941', -- source CRS (NN2000 height)
-    'EPSG','4937', -- target CRS (NN1954 height)
-    'EPSG','1352', -- area of use: Norway - Onshore
-    NULL,
-     'EPSG','8666','Geoid (height correction) model file','NNTrans2018B.gtx',
-    NULL,NULL,NULL,NULL,NULL,NULL,NULL,0);
+ -- INSERT INTO "grid_transformation" VALUES(
+ --    'PROJ','EPSG_5941_TO_EPSG_4937','NN1954 to NN2000 height',
+ --    NULL,NULL,
+ --    'EPSG','9665','Geographic3D to GravityRelatedHeight (gtx)',
+ --    'EPSG','5941', -- source CRS (NN2000 height)
+ --    'EPSG','4937', -- target CRS (NN1954 height)
+ --    'EPSG','1352', -- area of use: Norway - Onshore
+ --    NULL,
+ --     'EPSG','8666','Geoid (height correction) model file','NNTrans2018B.gtx',
+--    NULL,NULL,NULL,NULL,NULL,NULL,NULL,0);
  

@@ -90,7 +90,7 @@ is an easy way to inspect such grid files:
   half-pixel shift regarding to the coordinates stored in the original grid file. On
   the reading side, PROJ will accept both conventions (for equivalent georeferencing,
   the value of the origin in a PixelIsArea convention is shifted by a half-pixel
-  towards the upper-left direction). Unspecified behaviour if this GeoKey is absent.
+  towards the upper-left direction). Unspecified behavior if this GeoKey is absent.
 
 - Files hosted on the CDN will be tiled, presumably with 256x256 tiles (small
   grids that are smaller than 256x256 will use a single strip). On the reading
@@ -137,9 +137,9 @@ is an easy way to inspect such grid files:
 
     * SamplesPerPixel = 1 for vertical shift grids.
 
-   In the future, different values of SamplesPerPixel may be used to accommodate
-   for other needs. For example for deformation models, SamplesPerPixel = 3 to combine
-   horizontal and vertical adjustments.
+    * SamplesPerPixel = 3 for deformation models combining
+      horizontal and vertical adjustments.
+
    And even for the current identified needs of horizontal or vertical shifts,
    more samples may be present (to indicate for example uncertainties), but
    will be ignored by PROJ.
@@ -215,28 +215,32 @@ is an easy way to inspect such grid files:
     - ``HORIZONTAL_OFFSET``: implies the presence of at least two samples.
       The first sample must contain the latitude offset and the second
       sample must contain the longitude offset.
-      Corresponds to PROJ ``hgridshift`` method.
+      Corresponds to PROJ :ref:`hgridshift` method.
 
     - ``VERTICAL_OFFSET_GEOGRAPHIC_TO_VERTICAL``: implies the presence of at least one sample.
       The first sample must contain the vertical adjustment. Must be used when
       the source/interpolation CRS is a Geographic CRS and the target CRS a Vertical CRS.
-      Corresponds to PROJ ``vgridshift`` method.
+      Corresponds to PROJ  :ref:`vgridshift` method.
 
     - ``VERTICAL_OFFSET_VERTICAL_TO_VERTICAL``: implies the presence of at least one sample.
       The first sample must contain the vertical adjustment. Must be used when
       the source and target CRS are Vertical CRS.
-      Corresponds to PROJ ``vgridshift`` method.
+      Corresponds to PROJ :ref:`vgridshift` method.
 
     - ``GEOCENTRIC_TRANSLATION``: implies the presence of at least 3 samples.
       The first 3 samples must be respectively the geocentric adjustments along
       the X, Y and Z axis. Must be used when the source and target CRS are
       geocentric CRS. The interpolation CRS must be a geographic CRS.
-      Corresponds to PROJ ``xyzgridshift`` method.
+      Corresponds to PROJ :ref:`xyzgridshift` method.
 
     - ``VELOCITY``: implies the presence of at least 3 samples.
       The first 3 samples must be respectively the velocities along
       the E(ast), N(orth), U(p) axis in the local topocentric coordinate system.
-      Corresponds to PROJ ``deformation`` method.
+      Corresponds to PROJ :ref:`deformation` method.
+
+    - ``DEFORMATION_MODEL``: implies the presence of the ``DISPLACEMENT_TYPE``
+      and ``UNCERTAINTY_TYPE`` metadata items.
+      Corresponds to PROJ :ref:`defmodel` method.
 
     For example:
 
@@ -283,6 +287,11 @@ is an easy way to inspect such grid files:
       TYPE=VELOCITY.
       Sample values should be the velocity in a linear/time unit in a ENU local
       topocentric coordinate system.
+
+    + ``east_offset`` / ``north_offset`` / ``vertical_offset``: valid for
+      TYPE=DEFORMATION_MODEL.
+      For east_offset and north_offset, the unit might be degree or metre.
+      For vertical_offset, the unit must be metre.
 
     For example:
 
@@ -336,6 +345,16 @@ is an easy way to inspect such grid files:
 
         <Item name="UNITTYPE" sample="0" role="unittype">arc-second</Item>
         <Item name="UNITTYPE" sample="1" role="unittype">arc-second</Item>
+
+  * For TYPE=DEFORMATION_MODEL, the type of the displacement must be specified
+    with a `Item` whose ``name`` is set to ``DISPLACEMENT_TYPE``.
+
+    The accepted values are: ``HORIZONTAL``, ``VERTICAL``, ``3D`` or ``NONE``
+
+  * For TYPE=DEFORMATION_MODEL, the type of the uncertainty must be specified
+    with a `Item` whose ``name`` is set to ``UNCERTAINTY_TYPE``.
+
+    The accepted values are: ``HORIZONTAL``, ``VERTICAL``, ``3D`` or ``NONE``
 
   * The ``target_crs_epsg_code`` metadata item should be present.
     For a horizontal shift grid, this is the EPSG
@@ -601,9 +620,9 @@ will be followed by:
 .. note::
 
     TIFF has another mechanism to link IFDs, the SubIFD tag. This potentially
-    enables to define a hiearchy of IFDs (similar to HDF5 groups). There is no
+    enables to define a hierarchy of IFDs (similar to HDF5 groups). There is no
     support for that in most TIFF-using software, notably GDAL, and no compelling
-    need to have a nested hiearchy, so "flat" organization with the standard IFD chaining
+    need to have a nested hierarchy, so "flat" organization with the standard IFD chaining
     mechanism is adopted.
 
 Examples of multi-grid dataset
