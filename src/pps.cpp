@@ -105,7 +105,7 @@ bool PointPairs::load(PJ_CONTEXT *ctx)
 	return true;
 }
 
-const PointPairs *PointPairs::pairsAt(double lon, double lat, double mindist) const
+const PointPairs *PointPairs::pairsAt(double lon, double lat, double maxdist) const
 {
 	double coslat = cos(lat);
 	 
@@ -115,7 +115,7 @@ const PointPairs *PointPairs::pairsAt(double lon, double lat, double mindist) co
 		double deltaPhi = point.phi - lat;
 		double deltaLam = (point.lam - lon) * coslat;
 
-		if (hypot(deltaPhi, deltaLam) < mindist)
+		if (hypot(deltaPhi, deltaLam) < maxdist)
 			return this;
 	}	
 	return nullptr;

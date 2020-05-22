@@ -83,7 +83,7 @@ namespace
 		double signaly;
 		double sigmaHelmert;
 		int n_points;
-		double minimum_dist;
+		double maximum_dist;
 		double c_coll;
 		double k_coll;
 
@@ -153,10 +153,10 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 
 	if (np < 3)
 	{
-		proj_log_error(P, "lschelemert: common points are less than 3.");		 
+		proj_log_error(P, "lschelemert: common point pairs are less than 3.");		 
 		return nullptr;
 	}
-	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)	 
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Input phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);	 
 
 	double coslat = cos(lp->phi);
@@ -286,7 +286,7 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 /***********************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /***********************************************************************/
-std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double mindist = 0.1)
+std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 0.1)
 {
 	std::vector<LPZ_Pair> distances {};
 
@@ -302,7 +302,7 @@ std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 ar
 		double deltaPhi = point.phi - lp.phi;
 		double deltaLam = (point.lam - lp.lam) * coslat;
 
-		if (hypot(deltaPhi, deltaLam) > mindist)
+		if (hypot(deltaPhi, deltaLam) > maximum_dist)
 			continue;
 
 		pair.SetDistance(hypot(deltaPhi, deltaLam));
@@ -365,9 +365,9 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
 
-	Q->minimum_dist = Q->minimum_dist == HUGE_VAL ? 0.1 : Q->minimum_dist;
+	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 0.1 : Q->maximum_dist;
 
-	PointPairs* pointPairs = findPointPairs(Q->pps, lpz, Q->minimum_dist);
+	PointPairs* pointPairs = findPointPairs(Q->pps, lpz, Q->maximum_dist);
 	
 	if (pointPairs == nullptr)
 	{
@@ -377,7 +377,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
  	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	 
-	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_FWD, n, Q->minimum_dist);
+	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_FWD, n, Q->maximum_dist);
 	
 	if (closestPoints.size() == 0)
 	{
@@ -403,9 +403,9 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	point.xyz = xyz;
 	auto lpz = point.lpz;
 
-	Q->minimum_dist = Q->minimum_dist == HUGE_VAL ? 0.1 : Q->minimum_dist; // Default 0.1 radians
+	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 0.1 : Q->maximum_dist; // Default 0.1 radians
 
-	PointPairs *pointPairs = findPointPairs(Q->pps, lpz, Q->minimum_dist);
+	PointPairs *pointPairs = findPointPairs(Q->pps, lpz, Q->maximum_dist);
 
 	if (pointPairs == nullptr)
 	{
@@ -415,7 +415,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 
 	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	
-	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_INV, n, Q->minimum_dist);
+	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_INV, n, Q->maximum_dist);
 
 	if (closestPoints.size() == 0)
 	{
@@ -491,9 +491,9 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	if (pj_param_exists(P->params, "n_points"))	
 		Q->n_points = pj_param(P->ctx, P->params, "in_points").i;
 
-	Q->minimum_dist = HUGE_VAL;
-	if (pj_param_exists(P->params, "min_dist"))
-		Q->minimum_dist = pj_param(P->ctx, P->params, "dmin_dist").f;
+	Q->maximum_dist = HUGE_VAL;
+	if (pj_param_exists(P->params, "max_dist"))
+		Q->maximum_dist = pj_param(P->ctx, P->params, "dmax_dist").f;
 
 	Q->c_coll = HUGE_VAL;
 	if (pj_param_exists(P->params, "c_coll"))
@@ -504,22 +504,13 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		Q->k_coll = pj_param(P->ctx, P->params, "dk_coll").f;
 
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
-	if (has_polygons == 0)
-	{
-		// No areas defined.
-		//proj_log_error(P, "pair_trans: +polygon parameter missing.");
-		//return destructor(P, PJD_ERR_NO_ARGS);
-	}
-	else
-	{
-		Q->polygons = pj_polygon_init(P, "polygons");
-	}		
+	if (has_polygons > 1)	 
+		Q->polygons = pj_polygon_init(P, "polygons");	  
 
 	if (proj_errno(P))
-	{
-		// TODO: Feil meldingstekst her...
+	{		 
 		proj_log_error(P, "pair_trans: could not find required pair_trans file.");
-		return destructor(P, PJD_ERR_FAILED_TO_LOAD_CPT);		 
+		return destructor(P, PJD_ERR_FAILED_TO_LOAD_CPT);
 	}
 	return P;
 }

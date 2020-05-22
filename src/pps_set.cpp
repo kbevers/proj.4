@@ -136,23 +136,23 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 
 // ---------------------------------------------------------------------------
 
-PointPairs* findPointPairs(const ListOfPpSet &pps, const PJ_LPZ &input, double mindist)
+PointPairs* findPointPairs(const ListOfPpSet &pps, const PJ_LPZ &input, double maxdist)
 {
 	for (const auto &ppSet : pps)
 	{
-		if (ppSet->pairsAt(input.lam, input.phi, mindist) != nullptr)		
-			return ppSet->pairsAt(input.lam, input.phi, mindist);
+		if (ppSet->pairsAt(input.lam, input.phi, maxdist) != nullptr)
+			return ppSet->pairsAt(input.lam, input.phi, maxdist);
 	}
 	return nullptr;
 }
 
 // ---------------------------------------------------------------------------
 
-PointPairs *PointPairsSet::pairsAt(double lon, double lat, double mindist) const
+PointPairs *PointPairsSet::pairsAt(double lon, double lat, double maxdist) const
 {
 	for (const auto &pairs : m_pairs)
 	{ 
-		if (pairs->pairsAt(lon, lat, mindist) != nullptr)
+		if (pairs->pairsAt(lon, lat, maxdist) != nullptr)
 			return pairs.get();
 	}
 	return nullptr;
