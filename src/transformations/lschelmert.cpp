@@ -49,7 +49,7 @@ Documentation
 #include "pps.hpp"
 #include "pps_set.hpp"
 #include "proj\internal\nlohmann\json.hpp"
-#include "Eigen\Eigen"
+#include <eigen3/Eigen/Dense>
 
 using namespace NS_PROJ;
 using namespace Eigen;

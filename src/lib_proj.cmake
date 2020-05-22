@@ -414,6 +414,9 @@ endif()
 
 target_include_directories(${PROJ_CORE_TARGET} PRIVATE ${SQLITE3_INCLUDE_DIR})
 target_link_libraries(${PROJ_CORE_TARGET} ${SQLITE3_LIBRARY})
+
+target_include_directories(${PROJ_CORE_TARGET} PRIVATE ${EIGEN3_INCLUDE_DIR})
+target_link_libraries(${PROJ_CORE_TARGET} ${EIGEN3_LIBRARY})
  
 if(TIFF_ENABLED)
   target_compile_definitions(${PROJ_CORE_TARGET} PRIVATE -DTIFF_ENABLED)

@@ -124,21 +124,13 @@ include(policies)
 ################################################################################
 # Check for eigen3
 ################################################################################
-
-# examples
-#set(LAPACK_LIBRARIES "C:/Tools/vcpkg/installed/x64-windows/lib/lapack.lib")
-#set(BLAS_LIBRARIES "C:/Tools/vcpkg/installed/x64-windows/lib/lapack.lib")
-#set(TIFF_LIBRARY "C:/Tools/vcpkg/installed/x64-windows/lib/tiff.lib") 
-#set(BLAS_LIBRARIES "C:/Users/himsve/Miniconda3/Library/lib/openblas.lib")
-#find_package(BLAS REQUIRED)
-#find_package(OpenBLAS REQUIRED)
-#find_package(lapack REQUIRED)
-# find_package(clapack REQUIRED)
-#target_link_libraries(main PRIVATE f2c lapack)
-
-# hack: Must fixed another way
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+# hack: Might fixed in another way
+#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(Eigen3 REQUIRED)
+if (NOT Eigen3_FOUND)
+  MESSAGE( STATUS "Eigen not found.")
+endif(NOT Eigen3_FOUND)
+
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 ################################################################################
