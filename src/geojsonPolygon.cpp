@@ -85,10 +85,9 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 {
 	if (filename == "null")
 	{
-		auto polygonSet = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
+		auto polygonSet = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet(ctx));
 		polygonSet->m_name = filename;
-		polygonSet->m_format = "null";
-		//set->m_polygons.push_back(std::unique_ptr<NullVerticalShiftGrid>(new NullVerticalShiftGrid()));
+		polygonSet->m_format = "null";	 
 		return polygonSet;
 	}
 	auto fp = FileManager::open_resource_file(ctx, filename.c_str());
@@ -100,7 +99,6 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 	if (ends_with(tolower(actualName), "geojson"))
 	{	 
 		auto polygonSet = GeoJsonMultiPolygonSet::parse(ctx, std::move(fp));
-		//auto polygon = GeoJsonMultiPolygon::open(ctx, std::move(fp), actualName);
 
 	 	if (!polygonSet)
 	 		return nullptr;
@@ -134,15 +132,13 @@ bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx)
 // ---------------------------------------------------------------------------
 
 std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
-{
-	// TODO: Refactor this parcing method.
-
+{	
 	pj_acquire_lock();
 	
-	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
+	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet(ctx));
 
 	fp->seek(0, SEEK_END);
-	long fsize = fp->tell();
+	unsigned long long fsize = fp->tell();
 	fp->seek(0, SEEK_SET);
 
 	char *string = (char *)malloc(fsize + 1);
@@ -212,6 +208,13 @@ void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
 
 // ---------------------------------------------------------------------------
 
+GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet(PJ_CONTEXT *ctx)
+{
+	m_ctx = ctx;
+}  
+
+// ---------------------------------------------------------------------------
+
 GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
 
 // ---------------------------------------------------------------------------
@@ -220,7 +223,10 @@ GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
 
 // ---------------------------------------------------------------------------
 
-Polygon::Polygon(const __int32 &areaid) {};
+Polygon::Polygon(const __int32 &areaid) 
+{
+	m_areaid = areaid;
+};
 
 // ---------------------------------------------------------------------------
 
@@ -238,17 +244,15 @@ GeoJsonMultiPolygon::GeoJsonMultiPolygon(__int32 &areaid) : Polygon(areaid)
 GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
 
 // ---------------------------------------------------------------------------
-
+// NOTE: Not in use
 GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name)
 {
-	const char *cstr = name.c_str();
-
-	FILE *f = fopen(cstr, "rb");
+	auto file = NS_PROJ::FileManager::open(ctx, name.c_str(),
+		NS_PROJ::FileAccess::READ_ONLY);
 	 
 	__int32 testId = 2;
-	auto set = new GeoJsonMultiPolygon(testId);
 
-	fclose(f);
+	auto set = new GeoJsonMultiPolygon(testId);
 
 	return set;
 }
@@ -257,6 +261,7 @@ GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<
 
 void GeoJsonMultiPolygon::reassign_context(PJ_CONTEXT *ctx)
 {
+	m_ctx = ctx;
 }
 
 // ---------------------------------------------------------------------------

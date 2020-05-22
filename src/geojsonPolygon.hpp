@@ -39,6 +39,7 @@ NS_PROJ_START
 class PROJ_GCC_DLL Polygon
 {
 protected:
+	PJ_CONTEXT *m_ctx;
 	__int32 m_areaid;
 public:
 	PROJ_FOR_TEST Polygon(const __int32 &areaid);
@@ -67,14 +68,15 @@ public:
 // ---------------------------------------------------------------------------
 
 class PROJ_GCC_DLL GeoJsonMultiPolygonSet
-{
-	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
+{	
 protected:
+	PJ_CONTEXT *m_ctx;
 	std::string m_name{};
 	std::string m_format{};
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_polygons{};
 
 	GeoJsonMultiPolygonSet();
+	GeoJsonMultiPolygonSet(PJ_CONTEXT *ctx);
 
 public:
     PROJ_FOR_TEST virtual ~GeoJsonMultiPolygonSet();

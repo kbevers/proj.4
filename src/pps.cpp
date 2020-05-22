@@ -28,13 +28,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
+#include <cmath>
 
 #include "proj_internal.h"
 #include "pps.hpp"
 #include "pps_set.hpp"
-
-#include <algorithm>
-#include <cmath>
 
 NS_PROJ_START
 
@@ -66,25 +65,6 @@ PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const st
 		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return nullptr;
 	}
-	/*
-	char fname[128];
-	memcpy(&fname, header + 0, 128);
-	
-	char copyright[128];
-	memcpy(&copyright, header + 128, 128);
-
-	char licence[128];
-	memcpy(&licence, header + 256, 128);	   
-
-	double version;
-	memcpy(&version, header + 384, 8);
-
-	__int32 epsg1;
-	memcpy(&epsg1, header + 392, 4);
-
-	__int32 epsg2;
-	memcpy(&epsg2, header + 396, 4);
-	*/
 
 	__int32 noOfPoints;
 	memcpy(&noOfPoints, header + 400, 4);	
