@@ -100,7 +100,7 @@ The selected covariance function for this operation a modified first Gauss Marko
 
 .. math:: 
 
-    C{d} = X_{in} + \Delta X
+    /C{d} = X_{in} + \Delta X
 	 
 
 
