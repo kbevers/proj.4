@@ -99,7 +99,7 @@ Least Squared Colloction
 The selected covariance function for this operation a modified first Gauss Markov.
 
 .. math::
-    :label: covariancefunction
+    :label: covfunc
 	
 	C{d} = X_{in} + \Delta X
 	 
