@@ -84,8 +84,8 @@ namespace
 		double sigmaHelmert;
 		int n_points;
 		double maximum_dist;
-		double c_coll;
-		double k_coll;
+		double ccoll;
+		double kcoll;
 
 		ListOfMultiPolygons polygons{};
 		ListOfPpSet pps{};
@@ -168,8 +168,8 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		proj_log_trace(P, "Input phi, lam: (%12.10f, %12.10f)", lp->phi, lp->lam);	 
 
 	double coslat = cos(lp->phi);
-	double k = Q->k_coll == HUGE_VAL ? 0.00039 : Q->k_coll;
-	double c = Q->c_coll == HUGE_VAL ? 7.7 : Q->c_coll;
+	double k = Q->kcoll == HUGE_VAL ? 0.00039 : Q->kcoll;
+	double c = Q->ccoll == HUGE_VAL ? 7.7 : Q->ccoll;
 
     // Covariance matrices:
 	MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);
@@ -503,13 +503,13 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	if (pj_param_exists(P->params, "max_dist"))
 		Q->maximum_dist = pj_param(P->ctx, P->params, "dmax_dist").f;
 
-	Q->c_coll = HUGE_VAL;
-	if (pj_param_exists(P->params, "c_coll"))
-		Q->c_coll = pj_param(P->ctx, P->params, "dc_coll").f;
+	Q->ccoll = HUGE_VAL;
+	if (pj_param_exists(P->params, "ccoll"))
+		Q->ccoll = pj_param(P->ctx, P->params, "dccoll").f;
 
-	Q->k_coll = HUGE_VAL;
-	if (pj_param_exists(P->params, "k_coll"))
-		Q->k_coll = pj_param(P->ctx, P->params, "dk_coll").f;
+	Q->kcoll = HUGE_VAL;
+	if (pj_param_exists(P->params, "kcoll"))
+		Q->kcoll = pj_param(P->ctx, P->params, "dkcoll").f;
 
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
 	if (has_polygons > 1)	 

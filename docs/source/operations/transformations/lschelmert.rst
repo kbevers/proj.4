@@ -57,17 +57,17 @@ Optional
     The maximum distance between input point and selected point candidate. Unit of the
 	distance is radians. Default is 0.1 radians.
 
-.. option:: +c_coll=<value>
+.. option:: +ccoll=<value>
     
-	The c_coll value is the distance where the empirical covariance touches zero. The
-	unit c_coll is in km.
+	The ccoll value is the distance where the empirical covariance touches zero. The
+	unit ccoll is in km. 
 
     Default is 7.7.
 	
 
-.. option:: +k_coll=<value>
+.. option:: +kcoll=<value>
 
-    The k_coll coefficient is simular to C0 in a standard Gauss Markov first order covariance
+    The kcoll coefficient is simular to C0 in a standard Gauss Markov first order covariance
 	function.
 	
 	Default is 0.00039.
@@ -84,6 +84,12 @@ this is huge planar gaps in some counties and municipalities. The gaps are upon
 2-3 meters on borders. Description and evaluation of the method are further
 documented in the articles see :cite:`OMathisen2002` and :cite:`OMathisen2003`.
 
+The processing is done in two steps:
+
+	1. 2D Helmert transformation
+	2. Smoothing Least Squared Collocation
+
+
 2D Helmert transformation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -91,17 +97,20 @@ In the first step 2D Helmert transformation parameters are computed based on a
 certain number of selected common points (point pairs).
 
 
-
-
-Least Squared Colloction
+Least Squared Collocation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The selected covariance function for this operation a modified first Gauss Markov.
 
 .. math::
     :label: covariancefunction
-	
-	C{d} = X_{in} + \Delta X
 	 
+\[C({d}) = k\ e^{{-c}/{d}}\ \cos({c}/{d})]\\
 
-
+where:\\*
+ 
+ {d} is distance in km\\*
+ 
+ {c} is the ccoll parameter\\*
+ 
+ {k} is the kcoll parameter\\*
