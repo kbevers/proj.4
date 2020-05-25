@@ -124,14 +124,17 @@ include(policies)
 ################################################################################
 # Check for eigen3
 ################################################################################
-# hack: Might fixed in another way
-#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-find_package(Eigen3 REQUIRED)
-if (NOT Eigen3_FOUND)
-  MESSAGE( STATUS "Eigen not found.")
-endif(NOT Eigen3_FOUND)
-
-include_directories(${EIGEN3_INCLUDE_DIR})
+option(ENABLE_EIGEN3 "Enable Eigen3 support. For linear algebra" ON)
+set(EIGEN3_ENABLED FALSE)
+if(ENABLE_EIGEN3)
+  find_package(Eigen3 REQUIRED)
+  if (EIGEN3_FOUND)
+    set(EIGEN3_ENABLED TRUE)
+	include_directories(${EIGEN3_INCLUDE_DIR})
+  else()
+    MESSAGE(STATUS "Eigen3 not found.")
+  endif()
+endif()
 
 ################################################################################
 # Check for sqlite3

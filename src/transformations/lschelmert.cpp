@@ -92,15 +92,18 @@ namespace
 	};
 }
 
-MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
+MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
 { 
 	int i = 0;
 	int j = 0;
 	auto np = pairList->size();
 	double coslat = cos(lp->phi);
 	
+	// Scaled to radians
+	c *= 2.0 / (M_PI * 6390.0);
+
 	MatrixXd cnn(np, np);
-	
+
 	for (auto&& pair1 : *pairList)
 	{  
 		j = 0;
@@ -112,21 +115,25 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIREC
 			PJ_LPZ p2 = (direction == PJ_FWD) ? pair2.FromPoint() : pair2.ToPoint();
 
 			double dist = hypot(p1.phi - p2.phi, (p1.lam * coslat) - (p2.lam * coslat));
-			double a = (M_PI / 2.0) * (dist / c);
-			cnn(i, j++) = k * exp(-a) * cos(a);		
+			double a = (dist / c);
+
+			cnn(i, j++) = k * exp(-a) * cos(a);
 		}
 		i++;
 	}
 	return cnn;
 }
 
-MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 0.001204)
+MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
 {	
 	int i = 0;	
 	double coslat = cos(lp->phi);
 	double x = lp->phi;
 	double y = lp->lam * coslat;
 	auto np = pairList->size();
+	
+	// Scaled to radians
+	c *= 2.0 / (M_PI * 6390.0);
 
 	MatrixXd cmn(np, 1);
 
@@ -135,8 +142,9 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION d
 		PJ_LPZ p = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 		
 		double dist = hypot(p.phi - x, (p.lam * coslat) - y);
-		double a = (M_PI / 2.0) * (dist / c);
-		cmn(i++, 0) = k * exp(-a) * cos(a); 
+		double a = (dist / c);
+
+		cmn(i++, 0) = k * exp(-a) * cos(a);
 	}
 	return cmn;
 }
@@ -161,7 +169,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 
 	double coslat = cos(lp->phi);
 	double k = Q->k_coll == HUGE_VAL ? 0.00039 : Q->k_coll;
-	double c = Q->c_coll == HUGE_VAL ? 0.001204 : Q->c_coll;
+	double c = Q->c_coll == HUGE_VAL ? 7.7 : Q->c_coll;
 
     // Covariance matrices:
 	MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);

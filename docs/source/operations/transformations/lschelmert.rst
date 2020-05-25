@@ -41,10 +41,10 @@ Optional
 
 .. option:: +polygons=<File>
 
-    A link to geojson multipolygons. The operation tests if the input coordinates are
-	within some of the multipolygons. Multipolygons have a foreignkey areaid which
-	is a field in the point pair object from the cpt-file. Point pairs are selected
-	based on selected multipolygon.
+    A link to geojson multipolygons. The operation tests if the input coordinates
+	are within some of the multipolygons. Multipolygons have a foreignkey areaid
+	which is a field in the point pair object from the cpt-file. Point pairs are
+	selected based on selected multipolygon.
 
 .. option:: +points=<value>
 
@@ -58,13 +58,19 @@ Optional
 	distance is radians. Default is 0.1 radians.
 
 .. option:: +c_coll=<value>
- 
-	Default is 0.00039.
+    
+	The c_coll value is the distance where the empirical covariance touches zero. The
+	unit c_coll is in km.
+
+    Default is 7.7.
+	
 
 .. option:: +k_coll=<value>
-    
-	....
-	Default is 0.001204.
+
+    The k_coll coefficient is simular to C0 in a standard Gauss Markov first order covariance
+	function.
+	
+	Default is 0.00039.
 
 
 Mathematical description
@@ -76,11 +82,26 @@ geodetic datum NGO1948 to the EUREF89. NGO1948 was significant deformated, hereb
 it was computed and realized in different areas of the country. A consequence of
 this is huge planar gaps in some counties and municipalities. The gaps are upon
 2-3 meters on borders. Description and evaluation of the method are further
-documented in the articles :cite:`OMathisen2002` and :cite:`OMathisen2003`.
+documented in the articles see :cite:`OMathisen2002` and :cite:`OMathisen2003`.
 
 2D Helmert transformation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+In the first step 2D Helmert transformation parameters are computed based on a
+certain number of selected common points (point pairs).
+
+
+
+
 Least Squared Colloction
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The selected covariance function for this operation a modified first Gauss Markov.
+
+.. math::
+    :label: covariancefunction
+	
+	C{d} = X_{in} + \Delta X
+	 
+
 
