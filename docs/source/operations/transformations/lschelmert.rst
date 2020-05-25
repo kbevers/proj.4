@@ -98,10 +98,9 @@ Least Squared Colloction
 
 The selected covariance function for this operation a modified first Gauss Markov.
 
-.. math::
-    :label: covfunc
-	
-	C{d} = X_{in} + \Delta X
+.. math:: 
+
+    C{d} = X_{in} + \Delta X
 	 
 
 
