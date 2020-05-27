@@ -75,10 +75,10 @@ namespace
 		double b;
 		double tx;
 		double ty;
-		double xF0;
-		double yF0;
-		double xT0;
-		double yT0;
+		double xA0;
+		double yA0;
+		double xB0;
+		double yB0;
 		double signalx;
 		double signaly;
 		double sigmaHelmert;
@@ -152,6 +152,7 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION d
 /******************************************************************************************
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
+*https://elib.uni-stuttgart.de/bitstream/11682/10584/1/MscThesis_Dalu_Dong_GIS_04_09_2019.pdf
 /******************************************************************************************/
 static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction)
 { 
@@ -161,7 +162,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 
 	if (np < 3)
 	{
-		proj_log_error(P, "lschelemert: common point pairs are less than 3.");		 
+		proj_log_error(P, "lschelmert: common point pairs are less than 3.");		 
 		return nullptr;
 	}
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
@@ -175,11 +176,11 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);
 	MatrixXd cmn = CovarianceMN(lp, pairList, direction, k, c);
  
-	// Vector From System:
-	MatrixXd xF(np, 1); MatrixXd yF(np, 1);
-
-	// Vector To System:
-	MatrixXd xT(np, 1); MatrixXd yT(np, 1);
+	// Vector source system:
+	MatrixXd xA(np, 1); MatrixXd yA(np, 1);
+	
+	// Vector target system:
+	MatrixXd xB(np, 1); MatrixXd yB(np, 1);
 
 	int l = 0;
 
@@ -188,54 +189,60 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 	    PJ_LPZ pointTo = (direction == PJ_FWD) ? pair.ToPoint() : pair.FromPoint();
 
-		xF(l, 0) = pointFrom.phi;
-		yF(l, 0) = pointFrom.lam * coslat;
+		xA(l, 0) = pointFrom.phi;
+		yA(l, 0) = pointFrom.lam * coslat;
 
-		xT(l, 0) = pointTo.phi;
-		yT(l, 0) = pointTo.lam * coslat;
+		xB(l, 0) = pointTo.phi;
+		yB(l, 0) = pointTo.lam * coslat;
 
 		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 			proj_log_trace(P, "Source: (%10.8f, %10.8f) Target: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, pointTo.phi, pointTo.lam);
 	
 		l++;
 	}
-
+	
+	// Weight matrix p is the inverted cnn
 	MatrixXd p = cnn.inverse();
 
-	// N, sum of p:	
-	auto sump = p.sum();
+	// W, sum of weight p:	
+	auto w_sum = p.sum();
 
-	// sep, row sum of p:	
-	ArrayXXd sep = p * MatrixXd::Ones(np, 1);
+	// Weight for each point:
+	ArrayXXd w_points = p * MatrixXd::Ones(np, 1);
 
-	// Mass center:
-	double xF0 = (MatrixXd::Ones(1, np) * p * xF / sump).value();
-	double yF0 = (MatrixXd::Ones(1, np) * p * yF / sump).value();
-	double xT0 = (MatrixXd::Ones(1, np) * p * xT / sump).value();
-	double yT0 = (MatrixXd::Ones(1, np) * p * yT / sump).value();
+	// Transposed w_points
+	MatrixXd w_pointsTrans = w_points.transpose();
+	 
+ 	// Mass center:
+	double xA0 = (w_pointsTrans * xA / w_sum).value();
+	double yA0 = (w_pointsTrans * yA / w_sum).value();
+	double xB0 = (w_pointsTrans * xB / w_sum).value();
+	double yB0 = (w_pointsTrans * yB / w_sum).value();
 
 	// Coordinates in Mass center origin:
-	ArrayXXd dxF = xF - MatrixXd::Ones(np, 1) * xF0;
-	ArrayXXd dyF = yF - MatrixXd::Ones(np, 1) * yF0;
-	ArrayXXd dxT = xT - MatrixXd::Ones(np, 1) * xT0;
-	ArrayXXd dyT = yT - MatrixXd::Ones(np, 1) * yT0;
+	ArrayXXd xA_ = xA - MatrixXd::Ones(np, 1) * xA0;
+	ArrayXXd yA_ = yA - MatrixXd::Ones(np, 1) * yA0;
+	ArrayXXd xB_ = xB - MatrixXd::Ones(np, 1) * xB0;
+	ArrayXXd yB_ = yB - MatrixXd::Ones(np, 1) * yB0;
 
-	// Normal equation:
+	// Normal equation parameters:
 	double n = 0.0;
 	double t1 = 0.0;
 	double t2 = 0.0;
 
+	// Putting values into normal equation
 	for (int i = 0; i < np; i++)
 	{
-		n += (pow(dxF(i), 2) * sep(i)) + (pow(dyF(i), 2) * sep(i));
-		t1 += (dxF(i) * dxT(i) + dyF(i) * dyT(i)) * sep(i);
-		t2 += (dyF(i) * dxT(i) - dxF(i) * dyT(i)) * sep(i);
+		n += (pow(xA_(i), 2) * w_points(i)) + (pow(yA_(i), 2) * w_points(i));
+		t1 += (xA_(i) * xB_(i) + yA_(i) * yB_(i)) * w_points(i);
+		t2 += (yA_(i) * xB_(i) - xA_(i) * yB_(i)) * w_points(i);
 	}
 
+	// Estimated Helmert parameters
 	double a = t1 / n;
 	double b = t2 / n;
-	double tx = xT0 - a * xF0 - b * yF0;
-	double ty = yT0 + b * xF0 - a * yF0;
+	double tx = xB0 - a * xA0 - b * yA0;
+	double ty = yB0 + b * xA0 - a * yA0;
 
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Estimated Helmert parameters a, b, Tx, Ty: (%12.10f, %12.10f, %12.10f, %12.10f)", a, b, tx, ty);
@@ -243,10 +250,11 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	// Signal (residuals) of common points
 	MatrixXd snx(np, 1); MatrixXd sny(np, 1);
 
+	// Residuals referred in mass center origin
 	for (int i = 0; i < np; i++)
 	{
-		snx(i) = dxT(i) - a * dxF(i) - b * dyF(i);
-		sny(i) = dyT(i) + b * dxF(i) - a * dyF(i);
+		snx(i) = xB_(i) - a * xA_(i) - b * yA_(i);
+		sny(i) = yB_(i) + b * xA_(i) - a * yA_(i);
 	}
 
 	double sigma = 0.0;
@@ -275,10 +283,10 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	Q->b = b;
 	Q->tx = tx;
 	Q->ty = ty;
-	Q->xF0 = xF0;
-	Q->yF0 = yF0;
-	Q->xT0 = xT0;
-	Q->yT0 = yT0;
+	Q->xA0 = xA0;
+	Q->yA0 = yA0;
+	Q->xB0 = xB0;
+	Q->yB0 = yB0;
 	Q->signalx = smx;
 	Q->signaly = smy;
 	Q->sigmaHelmert = sigma;
@@ -336,8 +344,8 @@ PJ_LP helmert_apply(PJ *P, PJ_LP lp)
 
 	double coslat = cos(lp.phi);
 
-	double xTrans = Q->xT0 - Q->a * (Q->xF0 - lp.phi) - Q->b * (Q->yF0 - lp.lam * coslat);
-	double yTrans = Q->yT0 + Q->b * (Q->xF0 - lp.phi) - Q->a * (Q->yF0 - lp.lam * coslat);
+	double xTrans = Q->xB0 - Q->a * (Q->xA0 - lp.phi) - Q->b * (Q->yA0 - lp.lam * coslat);
+	double yTrans = Q->yB0 + Q->b * (Q->xA0 - lp.phi) - Q->a * (Q->yA0 - lp.lam * coslat);
 	
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Helmert transformated phi, lam: (%12.10f, %12.10f)", xTrans, yTrans / coslat);
