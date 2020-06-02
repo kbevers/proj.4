@@ -8,7 +8,6 @@ Least Squares Collaction with Helmert 2D Transformation
 
 .. note::
 
-
 +---------------------+----------------------------------------------------------+
 | **Alias**           | lschelmert                                               |
 +---------------------+----------------------------------------------------------+
@@ -94,23 +93,260 @@ The processing is done in two steps:
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 In the first step 2D Helmert transformation parameters are computed based on a
-certain number of selected common points (point pairs).
+certain number of selected common points (point pairs). 2D Helmert transformation
+consist of four parameters and those are solved by Least Squares Method. The inverted
+covariance matrix from LSC is used as weight matrix. That means closer points gets
+higher weight.
+ 
+A standard 2D Helmert is described as:
 
+.. math::
+    :label: 4param
+	
+	\[
+	\left[\begin{array}{cc}
+	x \\
+	y
+	\end{array}\right]+\ \left[\begin{array}{cc}
+	v_x \\
+	v_y
+	\end{array}\right]=\left[\begin{array}{cc}
+	a & b \\
+	-b & a
+	\end{array}\right]\left[\begin{array}{cc}
+	u \\
+	v
+	\end{array}\right]+\left[\begin{array}{cc}
+	T_x \\
+	T_y
+	\end{array}\right]
+	\]
 
-Least Squared Collocation
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Where u og v is 2D coordinates in source coodinate system and x og y in target coordinate system.
+
 
 The selected covariance function for this operation a modified first Gauss Markov.
 
-.. math::
-    :label: covariancefunction
-	 
-\[C({d}) = k\ e^{{-c}/{d}}\ \cos({c}/{d})]\\
+
+Covariance matrix of the given common points:
+
+\[
+C_{nn}=ke^{-\frac{\pi{}}{2}\bullet{}\frac{d}{c}}\cos{\frac{\pi{}}{2}\bullet{}\frac{d}{c}}
+\]
 
 where:\\*
+ {n} is the number of common points\\*
  
  {d} is distance in km\\*
  
  {c} is the ccoll parameter\\*
  
  {k} is the kcoll parameter\\*
+ 
+
+Covariance matrix of the input point:
+
+\[
+C_{mn}=ke^{-\frac{\pi{}}{2}\bullet{}\frac{d}{c}}\cos{\frac{\pi{}}{2}\bullet{}\frac{d}{c}}
+\]
+
+where:\\*
+ {m} is the number of transformed and predicted points. {m} is mainly 1. \\*
+ 
+ {d} is distance in km\\*
+ 
+ {c} is the ccoll parameter\\*
+ 
+ {k} is the kcoll parameter\\*
+
+Further mass center points are computed for both coordinate systems with
+weight from the inverted covariance function. The weights are noted w.
+
+Weight matrix:
+
+\[
+W={C_{nn}}^{-1}
+\]
+
+
+Ws is the sum of the entired weight matrix:
+
+\[
+w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}
+\]
+
+
+Sum weight for each point:
+
+\[
+w=W\ \vec{1}
+\]
+
+
+Mass center computed based on weighed centroid:
+
+\[
+u_0=\frac{w^Tu}{w_s}
+\]
+
+\[
+v_0=\frac{w^Tv}{w_s}
+\]
+
+\[
+x_0=\frac{w^Tx}{w_s}
+\]
+
+\[
+y_0=\frac{w^Ty}{w_s}
+\]
+
+
+Target and source points moved to mass center as centroids:
+
+\[
+\bar{u}=u-\vec{1}u_0
+\]
+
+\[
+\bar{v}=v-\vec{1}v_0
+\]
+
+\[
+\bar{x}=x-\vec{1}x_0
+\]
+
+\[
+\bar{y}=y-\vec{1}y_0
+\]
+
+
+The modified observation equation is now transformed with centroids as input and output.
+ 
+ \[
+ \left[\begin{array}{cc}
+ \bar{x} \\
+ \bar{y}
+ \end{array}\right]+\ \left[\begin{array}{cc}
+ v_x \\
+ v_y
+ \end{array}\right]=\left[\begin{array}{cc}
+ a & b \\
+ -b & a
+ \end{array}\right]\left[\begin{array}{cc}
+ \bar{u} \\
+ \bar{v}
+ \end{array}\right]+\left[\begin{array}{cc}
+ T_x \\
+ T_y
+ \end{array}\right]
+ \]
+
+
+Least Squares Estimation of Helmert 2D parameter based on simplified inversed normal equation.
+
+
+
+\[
+\left[\begin{array}{
+cc}
+\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2) & 0 \\
+0 & \sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)
+\end{array}\right]\left[\begin{array}{
+cc}
+a \\
+b
+\end{array}\right]=\left[\begin{array}{
+cc}
+\sum_{i=1}^nw_i({\bar{u}}_i{\bar{x}}_i+{\bar{v}}_i{\bar{y}}_i) \\
+\sum_{i=1}^nw_i({\bar{v}}_i{\bar{x}}_i-{\bar{u}}_i{\bar{y}}_i)
+\end{array}\right]
+\]
+
+Solved Helmert parameters a and b:
+
+\[
+a=\frac{\sum_{i=1}^nw_i({\bar{u}}_i{\bar{x}}_i+{\bar{v}}_i{\bar{y}}_i)}{\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)}
+\]
+
+\[
+b=\frac{\sum_{i=1}^nw_i({\bar{v}}_i{\bar{x}}_i-{\bar{u}}_i{\bar{y}}_i)}{\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)}
+\]
+
+
+Solving translation parameters:
+
+\[
+t_x=x_0-u_0a-v_0b
+\]
+
+\[
+t_y=y_0+u_0b-v_0a
+\]
+
+
+Residuals from least squares 2D Helmert: 
+
+\[
+v_x=\bar{x}-a\bar{u}-b\bar{v}
+\]
+
+
+\[
+v_y=\bar{y}+b\bar{u}-a\bar{v}
+\]
+
+
+Input coordinate transformed to the target coordinate system:
+
+\[
+{\varphi{}}_H=x_0-a\left(u_0-{\varphi{}}_{in}\right)-b(v_0-{\lambda{}}_{in}\cos{{\varphi{}}_{in}})
+\]
+
+\[
+{\lambda{}}_H=\frac{y_0+b\left(u_0-{\varphi{}}_{in}\right)-a(v_0-{\lambda{}}_{in}\cos{{\varphi{}}_{in}})}{\cos{{\varphi{}}_{in}}}
+\]
+ 
+
+Least Squared Collocation
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The signal of the given common points are set as the same as the computed residuals from
+the least squares 2D Helmert.
+
+
+\[
+s_{nx}=v_x
+\]
+
+\[
+s_{ny}=v_y
+\]
+
+Then the signal of the transformed points is given by:
+
+
+\[
+s_{mx}=C_{mn}W\ s_{nx}
+\]
+
+
+\[
+s_{my}=C_{mn}W\ s_{ny}
+\]
+
+The signal from Least Squares Collocation is added to the tranformed point. The location is called predicted point.
+
+
+Predicted output latitude:
+
+\[
+{\varphi{}}_{out}={\varphi{}}_H+s_{mx}
+\]
+
+
+Predicted output longitude:
+
+\[
+{\lambda{}}_{out}={\lambda{}}_H+\frac{s_{my}}{\cos{{\varphi{}}_{in}}}
+\]

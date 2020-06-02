@@ -75,10 +75,10 @@ namespace
 		double b;
 		double tx;
 		double ty;
-		double xA0;
-		double yA0;
-		double xB0;
-		double yB0;
+		double u0;
+		double v0;
+		double x0;
+		double y0;
 		double signalx;
 		double signaly;
 		double sigmaHelmert;
@@ -177,10 +177,10 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	MatrixXd cmn = CovarianceMN(lp, pairList, direction, k, c);
  
 	// Vector source system:
-	MatrixXd xA(np, 1); MatrixXd yA(np, 1);
+	MatrixXd u(np, 1); MatrixXd v(np, 1);
 	
 	// Vector target system:
-	MatrixXd xB(np, 1); MatrixXd yB(np, 1);
+	MatrixXd x(np, 1); MatrixXd y(np, 1);
 
 	int l = 0;
 
@@ -189,11 +189,11 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		PJ_LPZ pointFrom = (direction == PJ_FWD) ? pair.FromPoint() : pair.ToPoint();
 	    PJ_LPZ pointTo = (direction == PJ_FWD) ? pair.ToPoint() : pair.FromPoint();
 
-		xA(l, 0) = pointFrom.phi;
-		yA(l, 0) = pointFrom.lam * coslat;
+		u(l, 0) = pointFrom.phi;
+		v(l, 0) = pointFrom.lam * coslat;
 
-		xB(l, 0) = pointTo.phi;
-		yB(l, 0) = pointTo.lam * coslat;
+		x(l, 0) = pointTo.phi;
+		y(l, 0) = pointTo.lam * coslat;
 
 		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 			proj_log_trace(P, "Source: (%10.8f, %10.8f) Target: (%10.8f, %10.8f)", pointFrom.phi, pointFrom.lam, pointTo.phi, pointTo.lam);
@@ -201,29 +201,29 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		l++;
 	}
 	
-	// Weight matrix p is the inverted cnn
-	MatrixXd p = cnn.inverse();
+	// Weight matrix w is the inverted cnn
+	MatrixXd w = cnn.inverse();
 
-	// W, sum of weight p:	
-	auto w_sum = p.sum();
+	// W, sum of weight W:
+	auto w_sum = w.sum();
 
 	// Weight for each point:
-	ArrayXXd w_points = p * MatrixXd::Ones(np, 1);
+	ArrayXXd w_points = w * MatrixXd::Ones(np, 1);
 
 	// Transposed w_points
 	MatrixXd w_pointsTrans = w_points.transpose();
 	 
  	// Mass center:
-	double xA0 = (w_pointsTrans * xA / w_sum).value();
-	double yA0 = (w_pointsTrans * yA / w_sum).value();
-	double xB0 = (w_pointsTrans * xB / w_sum).value();
-	double yB0 = (w_pointsTrans * yB / w_sum).value();
+	double u0 = (w_pointsTrans * u / w_sum).value();
+	double v0 = (w_pointsTrans * v / w_sum).value();
+	double x0 = (w_pointsTrans * x / w_sum).value();
+	double y0 = (w_pointsTrans * y / w_sum).value();
 
 	// Coordinates in Mass center origin:
-	ArrayXXd xA_ = xA - MatrixXd::Ones(np, 1) * xA0;
-	ArrayXXd yA_ = yA - MatrixXd::Ones(np, 1) * yA0;
-	ArrayXXd xB_ = xB - MatrixXd::Ones(np, 1) * xB0;
-	ArrayXXd yB_ = yB - MatrixXd::Ones(np, 1) * yB0;
+	ArrayXXd u_ = u - MatrixXd::Ones(np, 1) * u0;
+	ArrayXXd v_ = v - MatrixXd::Ones(np, 1) * v0;
+	ArrayXXd x_ = x - MatrixXd::Ones(np, 1) * x0;
+	ArrayXXd y_ = y - MatrixXd::Ones(np, 1) * y0;
 
 	// Normal equation parameters:
 	double n = 0.0;
@@ -233,16 +233,16 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	// Putting values into normal equation
 	for (int i = 0; i < np; i++)
 	{
-		n += (pow(xA_(i), 2) * w_points(i)) + (pow(yA_(i), 2) * w_points(i));
-		t1 += (xA_(i) * xB_(i) + yA_(i) * yB_(i)) * w_points(i);
-		t2 += (yA_(i) * xB_(i) - xA_(i) * yB_(i)) * w_points(i);
+		n += (pow(u_(i), 2) * w_points(i)) + (pow(v_(i), 2) * w_points(i));
+		t1 += (u_(i) * x_(i) + v_(i) * y_(i)) * w_points(i);
+		t2 += (v_(i) * x_(i) - u_(i) * y_(i)) * w_points(i);
 	}
 
 	// Estimated Helmert parameters
 	double a = t1 / n;
 	double b = t2 / n;
-	double tx = xB0 - a * xA0 - b * yA0;
-	double ty = yB0 + b * xA0 - a * yA0;
+	double tx = x0 - a * u0 - b * v0;
+	double ty = y0 + b * u0 - a * v0;
 
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Estimated Helmert parameters a, b, Tx, Ty: (%12.10f, %12.10f, %12.10f, %12.10f)", a, b, tx, ty);
@@ -253,8 +253,8 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	// Residuals referred in mass center origin
 	for (int i = 0; i < np; i++)
 	{
-		snx(i) = xB_(i) - a * xA_(i) - b * yA_(i);
-		sny(i) = yB_(i) + b * xA_(i) - a * yA_(i);
+		snx(i) = x_(i) - a * u_(i) - b * v_(i);
+		sny(i) = y_(i) + b * u_(i) - a * v_(i);
 	}
 
 	double sigma = 0.0;
@@ -265,8 +265,8 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		{
 			for (int j = 0; j < np; j++)
 			{
-				sigma += snx(j) * snx(j) * p(j, i);
-				sigma += sny(j) * sny(j) * p(j, i);
+				sigma += snx(j) * snx(j) * w(j, i);
+				sigma += sny(j) * sny(j) * w(j, i);
 			}
 		}
 		sigma /= 2 * np;
@@ -276,17 +276,17 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	}
 		
 	// Signal of target point
-	double smx = (cmn.transpose() * p * snx).value();
-	double smy = (cmn.transpose() * p * sny).value();
+	double smx = (cmn.transpose() * w * snx).value();
+	double smy = (cmn.transpose() * w * sny).value();
 	 
 	Q->a = a;
 	Q->b = b;
 	Q->tx = tx;
 	Q->ty = ty;
-	Q->xA0 = xA0;
-	Q->yA0 = yA0;
-	Q->xB0 = xB0;
-	Q->yB0 = yB0;
+	Q->u0 = u0;
+	Q->v0 = v0;
+	Q->x0 = x0;
+	Q->y0 = y0;
 	Q->signalx = smx;
 	Q->signaly = smy;
 	Q->sigmaHelmert = sigma;
@@ -344,8 +344,8 @@ PJ_LP helmert_apply(PJ *P, PJ_LP lp)
 
 	double coslat = cos(lp.phi);
 
-	double xTrans = Q->xB0 - Q->a * (Q->xA0 - lp.phi) - Q->b * (Q->yA0 - lp.lam * coslat);
-	double yTrans = Q->yB0 + Q->b * (Q->xA0 - lp.phi) - Q->a * (Q->yA0 - lp.lam * coslat);
+	double xTrans = Q->x0 - Q->a * (Q->u0 - lp.phi) - Q->b * (Q->v0 - lp.lam * coslat);
+	double yTrans = Q->y0 + Q->b * (Q->u0 - lp.phi) - Q->a * (Q->v0 - lp.lam * coslat);
 	
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
 		proj_log_trace(P, "Helmert transformated phi, lam: (%12.10f, %12.10f)", xTrans, yTrans / coslat);
