@@ -122,16 +122,15 @@ A standard 2D Helmert is described as:
 	\end{array}\right]
 	\]
 
-Where u og v is 2D coordinates in source coodinate system and x og y in target coordinate system.
-
+Where u og v is 2D coordinates in source coodinate system and x og y in target
+coordinate system.
 
 The selected covariance function for this operation a modified first Gauss Markov.
-
 
 Covariance matrix of the given common points:
 
 \[
-C_{nn}=ke^{-\frac{\pi{}}{2}\bullet{}\frac{d}{c}}\cos{\frac{\pi{}}{2}\bullet{}\frac{d}{c}}
+C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
 \]
 
 where:\\*
@@ -147,7 +146,7 @@ where:\\*
 Covariance matrix of the input point:
 
 \[
-C_{mn}=ke^{-\frac{\pi{}}{2}\bullet{}\frac{d}{c}}\cos{\frac{\pi{}}{2}\bullet{}\frac{d}{c}}
+C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
 \]
 
 where:\\*
@@ -246,7 +245,6 @@ The modified observation equation is now transformed with centroids as input and
 Least Squares Estimation of Helmert 2D parameter based on simplified inversed normal equation.
 
 
-
 \[
 \left[\begin{array}{
 cc}
@@ -290,7 +288,6 @@ Residuals from least squares 2D Helmert:
 \[
 v_x=\bar{x}-a\bar{u}-b\bar{v}
 \]
-
 
 \[
 v_y=\bar{y}+b\bar{u}-a\bar{v}
