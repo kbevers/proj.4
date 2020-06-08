@@ -113,7 +113,6 @@ INSERT INTO "grid_transformation" VALUES(
 
   INSERT INTO "grid_transformation" VALUES(
      'PROJ','EPSG_5941_TO_EPSG_5776','NN1954 to NN2000 height',
-
      NULL,NULL, 
 	 'EPSG','1084', 'Vertical Offset by Grid Interpolation (tif)',
      'EPSG','5941', -- source CRS (NN2000 height)
