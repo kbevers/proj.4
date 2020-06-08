@@ -545,8 +545,8 @@ PJ *TRANSFORMATION(lschelmert, 0)
 		Q->kcoll = pj_param(P->ctx, P->params, "dkcoll").f;
 
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
-	if (has_polygons > 1)	 
-		Q->polygons = pj_polygon_init(P, "polygons");	  
+	if (has_polygons > 0)
+		Q->polygons = pj_polygon_init(P, "polygons");
 
 	if (proj_errno(P))
 	{		 
