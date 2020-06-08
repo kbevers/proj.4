@@ -322,18 +322,27 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 
 // ---------------------------------------------------------------------------
 
-__int32 areaIdPoint(const ListOfMultiPolygons &polygonList, PJ_LP *lp)
+__int32 areaIdPoint(PJ *P, const ListOfMultiPolygons &polygonList, PJ_LP *lp)
 { 
 	for (const auto& polygonSet : polygonList)
 	{ 
 		for (const auto& polygon : polygonSet->polygons())
 		{
-			auto areaid = polygon->Id();
+			auto areaId = polygon->Id();
 
 			if (polygon->IsPointInArea(lp))
-				return areaid;
+			{
+				if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+					proj_log_trace(P, "Input point was found in area with id %d", areaId);	
+
+				return areaId;
+			}
+				
 		}
 	} 
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+		proj_log_trace(P, "Input point was not found in any areas");
+
 	return 0;
 }
 NS_PROJ_END

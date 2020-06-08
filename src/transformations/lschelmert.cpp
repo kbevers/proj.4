@@ -110,7 +110,7 @@ namespace
 		double ccoll;
 		double kcoll;
 
-		ListOfMultiPolygons polygons{};
+		ListOfMultiPolygons polygonsets{};
 		ListOfPpSet pps{};
 	};
 }
@@ -327,7 +327,7 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 /***************************************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /**************************************************************************************/
-std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 0.1)
+std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 0.1)
 {
 	std::vector<LPZ_Pair> distances {};
 
@@ -356,6 +356,12 @@ std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 ar
 
 	if (n < np)
 		distances.resize(n);
+
+	if (np < 3)
+		proj_log_error(P, "findClosestPoints() did not find any point pairs");
+
+	//if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+	//	proj_log_trace(P, "%d out of %d point pairs were found", n, np);
 
 	return distances;
 }
@@ -416,12 +422,12 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 		return point.xyz;
 	}
 
- 	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
+ 	__int32 areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	 
-	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_FWD, n, Q->maximum_dist);
+	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_FWD, n, Q->maximum_dist);
 	
-	if (closestPoints.size() == 0)
-	{
+	if (closestPoints.size() < 3)
+	{		
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
@@ -454,11 +460,11 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 		return point.lpz;
 	}
 
-	__int32 areaId = areaIdPoint(Q->polygons, &point.lp);
+	__int32 areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	
-	auto closestPoints = findClosestPoints(pointPairs, point.lp, areaId, PJ_INV, n, Q->maximum_dist);
+	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_INV, n, Q->maximum_dist);
 
-	if (closestPoints.size() == 0)
+	if (closestPoints.size() < 3)
 	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.lpz;
@@ -493,7 +499,7 @@ static PJ *destructor(PJ *P, int errlev)
 static void reassign_context(PJ* P, PJ_CONTEXT* ctx)
 {
 	auto Q = (struct pj_opaque_lschelmert *) P->opaque;
-	for (auto& poly : Q->polygons)
+	for (auto& poly : Q->polygonsets)
 	{
 		poly->reassign_context(ctx);
 	}
@@ -546,7 +552,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
 	if (has_polygons > 0)
-		Q->polygons = pj_polygon_init(P, "polygons");
+		Q->polygonsets = pj_polygon_init(P, "polygons");
 
 	if (proj_errno(P))
 	{		 

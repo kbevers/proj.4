@@ -94,6 +94,6 @@ public:
 
 typedef std::vector<std::unique_ptr<GeoJsonMultiPolygonSet>> ListOfMultiPolygons;
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey);
-__int32 areaIdPoint(const ListOfMultiPolygons &, PJ_LP *);
+__int32 areaIdPoint(PJ *P, const ListOfMultiPolygons &, PJ_LP *);
  
 NS_PROJ_END

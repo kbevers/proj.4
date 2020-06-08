@@ -85,8 +85,8 @@ documented in the articles see :cite:`OMathisen2002` and :cite:`OMathisen2003`.
 
 The processing is done in two steps:
 
-	1. 2D Helmert transformation
-	2. Smoothing Least Squared Collocation
+	1. Deterministic step: 2D Helmert transformation
+	2. Statistic step: Smoothing Least Squared Collocation
 
 
 2D Helmert transformation
