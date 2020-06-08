@@ -1,15 +1,38 @@
 /*****************************************************************************
+		
+	    	2D Helmert estimation with Squares Collocation 
 
-Documentation
+/*****************************************************************************
 
-******************************************************************************
+    This method was basically implemented around 2000 in Norway after the
+	realisation of EUREF89. The old datum NGO1948 was and is still used in many
+	municipalities in Norway. Many differents methods were tested and evaluated,
+	but based on the deformation in NGO1948 Kartverket this method.
 
-******************************************************************************
+	The processing is done in three steps:
+
+		1. Selecting common points based on the distance from the target point.
+		2. Deterministic step, 2D Helmert transformation
+		3. Statistic step, Smoothing Least Squared Collocation
+
+	Two articles written by Prof. Olav Mathisen (NMBU) descrip the method more closely:
+	
+	https://urn.nb.no/URN:NBN:no-nb_digitidsskrift_2013061382122_001
+	https://urn.nb.no/URN:NBN:no-nb_digitidsskrift_2013042481002_001
+	
+
+	Marcin Ligas and Piotr Banasik at AGU in Krakow has implemented and tested a simular application:
+
+	https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
+
+******************************************************************************/
+ 
+/******************************************************************************
 * Project:	PROJ
 * Purpose:	Helmert Least Squared Collocation
 * Author:	Sveinung Himle <sveinung.himle at kartverket.no>
 *
-******************************************************************************
+*******************************************************************************
 * Copyright (c) 2020, Sveinung Himle <sveinung.himle at kartverket.no>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
@@ -149,11 +172,13 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION d
 	return cmn;
 }
 
-/******************************************************************************************
+/******************************************************************************
+* The notation in code is choosen based on the following article
+* by R. E. Deakin at RMIT:
+*
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
-* https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf
-*https://elib.uni-stuttgart.de/bitstream/11682/10584/1/MscThesis_Dalu_Dong_GIS_04_09_2019.pdf
-/******************************************************************************************/
+* 
+********************************************************************************/
 static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction)
 { 
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
@@ -299,9 +324,9 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 	return lhs.Distance() < rhs.Distance();
 }
 
-/***********************************************************************
+/***************************************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
-/***********************************************************************/
+/**************************************************************************************/
 std::vector<LPZ_Pair> findClosestPoints(PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 0.1)
 {
 	std::vector<LPZ_Pair> distances {};
