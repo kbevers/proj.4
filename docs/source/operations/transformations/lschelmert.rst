@@ -48,21 +48,24 @@ Optional
 .. option:: +points=<value>
 
     The number of maximum selected point candidates used in Least Square Collocation
-	and 2D Helmert. Default is 20.  Units of latitude and longitude is in radians, and
+	and 2D Helmert.  Units of latitude and longitude is in radians, and
 	height in meters.
+	
+	Default is 20. 
 
 .. option:: +maximum_dist=<value>
 
     The maximum distance between input point and selected point candidate. Unit of the
-	distance is radians. Default is 0.1 radians.
+	distance is km. 
+	
+	Default is 100.0 km.
 
 .. option:: +ccoll=<value>
     
 	The ccoll value is the distance where the empirical covariance touches zero. The
 	unit ccoll is in km. 
 
-    Default is 7.7.
-	
+    Default is 7.7.	
 
 .. option:: +kcoll=<value>
 

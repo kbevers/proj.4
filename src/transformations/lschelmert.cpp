@@ -15,11 +15,10 @@
 		2. Deterministic step, 2D Helmert transformation
 		3. Statistic step, Smoothing Least Squared Collocation
 
-	Two articles written by Prof. Olav Mathisen (NMBU) descrip the method more closely:
+	Two articles written by Prof. Olav Mathisen (NMBU) describe the method more closely:
 	
 	https://urn.nb.no/URN:NBN:no-nb_digitidsskrift_2013061382122_001
 	https://urn.nb.no/URN:NBN:no-nb_digitidsskrift_2013042481002_001
-	
 
 	Marcin Ligas and Piotr Banasik at AGU in Krakow has implemented and tested a simular application:
 
@@ -173,9 +172,9 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION d
 }
 
 /******************************************************************************
-* The notation in code is choosen based on the following article
-* by R. E. Deakin at RMIT:
 *
+* The notation in code is choosen based on the following article by
+* R. E. Deakin at RMIT:
 * http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf
 * 
 ********************************************************************************/
@@ -185,9 +184,9 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 
 	auto np = pairList->size();
 
-	if (np < 3)
+	if (np < 5)
 	{
-		proj_log_error(P, "lschelmert: common point pairs are less than 3.");		 
+		proj_log_error(P, "lschelmert: common point pairs are less than 5.");		 
 		return nullptr;
 	}
 	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
@@ -327,12 +326,15 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 /***************************************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /**************************************************************************************/
-std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 0.1)
+std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 100.0)
 {
 	std::vector<LPZ_Pair> distances {};
 
 	double coslat = cos(lp.phi);
 
+	// Scaling distance from km to radians
+	maximum_dist /= 6371.0;
+	
 	for (auto pair : ppList->LpzPairList())
 	{
 		if (areaId != 0 && pair.Area() != areaId)
@@ -342,11 +344,12 @@ std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, __i
 
 		double deltaPhi = point.phi - lp.phi;
 		double deltaLam = (point.lam - lp.lam) * coslat;
+		double distance = hypot(deltaPhi, deltaLam);
 
-		if (hypot(deltaPhi, deltaLam) > maximum_dist)
+		if (distance > maximum_dist)
 			continue;
 
-		pair.SetDistance(hypot(deltaPhi, deltaLam));
+		pair.SetDistance(distance);
 		
 		distances.push_back(pair);
 	}	 
@@ -357,11 +360,11 @@ std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, __i
 	if (n < np)
 		distances.resize(n);
 
-	if (np < 3)
+	if (np < 5)
 		proj_log_error(P, "findClosestPoints() did not find any point pairs");
-
-	//if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-	//	proj_log_trace(P, "%d out of %d point pairs were found", n, np);
+	
+	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+	 	proj_log_trace(P, "%d point pairs were found", np);
 
 	return distances;
 }
@@ -412,7 +415,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	PJ_COORD point = { {0,0,0,0} };
 	point.lpz = lpz;
 
-	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 0.1 : Q->maximum_dist;
+	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 100.0 : Q->maximum_dist;
 
 	PointPairs* pointPairs = findPointPairs(Q->pps, lpz, Q->maximum_dist);
 	
@@ -426,7 +429,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	 
 	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_FWD, n, Q->maximum_dist);
 	
-	if (closestPoints.size() < 3)
+	if (closestPoints.size() < 5)
 	{		
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
@@ -450,7 +453,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	point.xyz = xyz;
 	auto lpz = point.lpz;
 
-	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 0.1 : Q->maximum_dist; // Default 0.1 radians
+	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 0.1 : Q->maximum_dist; // Default 100 km
 
 	PointPairs *pointPairs = findPointPairs(Q->pps, lpz, Q->maximum_dist);
 
@@ -461,7 +464,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 	}
 
 	__int32 areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
-	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	
+	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
 	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_INV, n, Q->maximum_dist);
 
 	if (closestPoints.size() < 3)
