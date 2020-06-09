@@ -1057,6 +1057,38 @@ TEST(crs, EPSG_5042_projected_south_pole_east_north) {
 
 // ---------------------------------------------------------------------------
 
+TEST(crs, EPSG_5482_projected_south_pole_south_west) {
+    auto dbContext = DatabaseContext::create();
+    auto factory = AuthorityFactory::create(dbContext, "EPSG");
+    auto crs = factory->createCoordinateReferenceSystem("5482");
+    auto proj_crs = nn_dynamic_pointer_cast<ProjectedCRS>(crs);
+    ASSERT_TRUE(proj_crs != nullptr);
+    auto op = CoordinateOperationFactory::create()->createOperation(
+        factory->createCoordinateReferenceSystem("4764"),
+        NN_NO_CHECK(proj_crs));
+    ASSERT_TRUE(op != nullptr);
+    auto proj_string = "+proj=pipeline "
+                       "+step +proj=axisswap +order=2,1 "
+                       "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
+                       "+step +proj=stere +lat_0=-90 +lon_0=180 +k=0.994 "
+                       "+x_0=5000000 +y_0=1000000 +ellps=GRS80 "
+                       "+step +proj=axisswap +order=2,1";
+    EXPECT_EQ(op->exportToPROJString(PROJStringFormatter::create().get()),
+              proj_string);
+
+    auto opNormalized = op->normalizeForVisualization();
+    auto proj_string_normalized =
+        "+proj=pipeline "
+        "+step +proj=unitconvert +xy_in=deg +xy_out=rad "
+        "+step +proj=stere +lat_0=-90 +lon_0=180 +k=0.994 "
+        "+x_0=5000000 +y_0=1000000 +ellps=GRS80";
+    EXPECT_EQ(
+        opNormalized->exportToPROJString(PROJStringFormatter::create().get()),
+        proj_string_normalized);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(crs, geodetic_crs_both_datum_datum_ensemble_null) {
     EXPECT_THROW(GeodeticCRS::create(
                      PropertyMap(), nullptr, nullptr,
@@ -2523,7 +2555,7 @@ TEST(crs, projectedCRS_identify_db) {
         auto res = crs->identify(factoryAll);
         ASSERT_EQ(res.size(), 1U);
         EXPECT_EQ(res.front().first->getEPSGCode(), 6670);
-        EXPECT_EQ(res.front().second, 70);
+        EXPECT_EQ(res.front().second, 90);
     }
     {
         // Test case of https://github.com/OSGeo/PROJ/issues/2116
@@ -2615,6 +2647,30 @@ TEST(crs, projectedCRS_identify_db) {
         ASSERT_EQ(res.size(), 1U);
         EXPECT_EQ(res.front().first->getEPSGCode(), 32631);
         EXPECT_EQ(res.front().second, 60);
+    }
+    {
+        // Test case of https://github.com/qgis/QGIS/issues/36111
+        // The name of the CRS to identify is
+        // ETRS89_LAEA_Europe
+        // We identify it through a registered EPSG alias "ETRS89 / LAEA Europe"
+        auto obj = WKTParser().attachDatabaseContext(dbContext).createFromWKT(
+            "PROJCS[\"ETRS89_LAEA_Europe\","
+            "GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\","
+            "SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],"
+            "PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],"
+            "PROJECTION[\"Lambert_Azimuthal_Equal_Area\"],"
+            "PARAMETER[\"false_easting\",4321000.0],"
+            "PARAMETER[\"false_northing\",3210000.0],"
+            "PARAMETER[\"central_meridian\",10.0],"
+            "PARAMETER[\"latitude_of_origin\",52.0],"
+            "UNIT[\"Meter\",1.0]]");
+        auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+        ASSERT_TRUE(crs != nullptr);
+        auto factoryAll = AuthorityFactory::create(dbContext, std::string());
+        auto res = crs->identify(factoryAll);
+        ASSERT_EQ(res.size(), 1U);
+        EXPECT_EQ(res.front().first->getEPSGCode(), 3035);
+        EXPECT_EQ(res.front().second, 90);
     }
 }
 

@@ -224,8 +224,9 @@ set(SRC_LIBPROJ_CORE
   factors.cpp
   fileapi.cpp
   fwd.cpp
-  gauss.cpp 
-  geodesic.c 
+  gauss.cpp
+  generic_inverse.cpp
+  geodesic.c
   geojsonPolygon.hpp
   geojsonPolygon.cpp
   init.cpp
