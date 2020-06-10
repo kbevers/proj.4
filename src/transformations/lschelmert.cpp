@@ -425,7 +425,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 		return point.xyz;
 	}
 
- 	__int32 areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
+ 	int areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	 
 	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_FWD, n, Q->maximum_dist);
 	

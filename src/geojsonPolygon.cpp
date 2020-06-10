@@ -321,7 +321,7 @@ ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
 
 // ---------------------------------------------------------------------------
 
-__int32 areaIdPoint(PJ *P, const ListOfMultiPolygons &polygonList, PJ_LP *lp)
+int areaIdPoint(PJ *P, const ListOfMultiPolygons &polygonList, PJ_LP *lp)
 { 
 	for (const auto& polygonSet : polygonList)
 	{ 
