@@ -43,14 +43,14 @@ private:
 	char name[8];
 	PJ_LPZ m_fromPoint;
 	PJ_LPZ m_toPoint;
-	__int32 m_area = 0;
+	int m_area = 0;
 	double m_dist = 0.0;
 protected:
 public:
 	PROJ_FOR_TEST LPZ_Pair();
 	PROJ_FOR_TEST const PJ_LPZ &FromPoint() const { return m_fromPoint; }
 	PROJ_FOR_TEST const PJ_LPZ &ToPoint() const { return m_toPoint; }
-	PROJ_FOR_TEST const __int32 &Area() const { return m_area; }
+	PROJ_FOR_TEST const int &Area() const { return m_area; }
 	PROJ_FOR_TEST const double Distance() const { return m_dist; }
 	PROJ_FOR_TEST void SetDistance(double dist) { m_dist = dist; }
 };
