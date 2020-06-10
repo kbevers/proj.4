@@ -97,7 +97,7 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 	const auto actualName(fp->name());
 	
 	if (ends_with(tolower(actualName), "geojson"))
-	{	 
+	{
 		auto polygonSet = GeoJsonMultiPolygonSet::parse(ctx, std::move(fp));
 
 	 	if (!polygonSet)
@@ -133,6 +133,8 @@ bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx)
 
 std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
 {	
+	// TODO: Parsing method is very slow. 
+
 	pj_acquire_lock();
 	
 	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet(ctx));
@@ -181,11 +183,8 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 					recursive_iterate(el, pointVector, [](json::const_iterator it) {});
 					polygon->m_pointList = pointVector;
 				}
-				if (isMultiPolygon)
-				{
-					// set->m_polygons->push_back(polygon);
+				if (isMultiPolygon)						
 					set->m_polygons.push_back(std::unique_ptr<GeoJsonMultiPolygon>(polygon));
-				}
 			}		
 		}
 	}
