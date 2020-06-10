@@ -326,7 +326,7 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 /***************************************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 /**************************************************************************************/
-std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, __int32 areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 100.0)
+std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, int areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 100.0)
 {
 	std::vector<LPZ_Pair> distances {};
 
@@ -463,7 +463,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 		return point.lpz;
 	}
 
-	__int32 areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
+	int areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
 	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_INV, n, Q->maximum_dist);
 
