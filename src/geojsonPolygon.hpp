@@ -40,11 +40,11 @@ class PROJ_GCC_DLL Polygon
 {
 protected:
 	PJ_CONTEXT *m_ctx;
-	__int32 m_areaid;
+	int m_areaid;
 public:
-	PROJ_FOR_TEST Polygon(const __int32 &areaid);
+	PROJ_FOR_TEST Polygon(const int &areaid);
 	PROJ_FOR_TEST virtual ~Polygon();
-	PROJ_FOR_TEST const __int32 &Id() const { return m_areaid; }
+	PROJ_FOR_TEST const int &Id() const { return m_areaid; }
 	PROJ_FOR_TEST vector<PolygonPoint> m_pointList;
 	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
@@ -57,7 +57,7 @@ protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
 	//GeoJsonMultiPolygon(__int32 &areaid);
 public:
-	PROJ_FOR_TEST GeoJsonMultiPolygon(__int32 &areaid);
+	PROJ_FOR_TEST GeoJsonMultiPolygon(int &areaid);
 	PROJ_FOR_TEST static GeoJsonMultiPolygon *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
 	PROJ_FOR_TEST bool IsPointInArea(PJ_LP *lp);
