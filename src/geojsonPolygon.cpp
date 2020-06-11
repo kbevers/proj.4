@@ -166,7 +166,7 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 		
 		if (area.value().is_number_integer())
 		{
-			__int32 areaid = area.value();
+			int areaid = area.value();
 			auto polygon = new GeoJsonMultiPolygon(areaid);
 			
 			auto geo = (*it)["geometry"];
@@ -222,7 +222,7 @@ GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
 
 // ---------------------------------------------------------------------------
 
-Polygon::Polygon(const __int32 &areaid) 
+Polygon::Polygon(const int &areaid) 
 {
 	m_areaid = areaid;
 };
@@ -233,7 +233,7 @@ Polygon::~Polygon() = default;
 
 // ---------------------------------------------------------------------------
 
-GeoJsonMultiPolygon::GeoJsonMultiPolygon(__int32 &areaid) : Polygon(areaid)
+GeoJsonMultiPolygon::GeoJsonMultiPolygon(int &areaid) : Polygon(areaid)
 {
 	m_areaid = areaid;
 };
@@ -244,12 +244,13 @@ GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
 
 // ---------------------------------------------------------------------------
 // NOTE: Not in use
+// TODO: Delete the method
 GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name)
 {
 	auto file = NS_PROJ::FileManager::open(ctx, name.c_str(),
 		NS_PROJ::FileAccess::READ_ONLY);
 	 
-	__int32 testId = 2;
+	int testId = 2;
 
 	auto set = new GeoJsonMultiPolygon(testId);
 

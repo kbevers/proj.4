@@ -118,7 +118,7 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIREC
 { 
 	int i = 0;
 	int j = 0;
-	auto np = pairList->size();
+	auto np = (int)pairList->size();
 	double coslat = cos(lp->phi);
 	
 	// Scaled to radians
@@ -152,7 +152,7 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION d
 	double coslat = cos(lp->phi);
 	double x = lp->phi;
 	double y = lp->lam * coslat;
-	auto np = pairList->size();
+	auto np = (int)pairList->size();
 	
 	// Scaled to radians
 	c *= 2.0 / (M_PI * 6390.0);
@@ -355,7 +355,7 @@ std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, int
 	}	 
 	std::sort(distances.begin(), distances.end(), DistanceLess);
 
-	auto np = distances.size();
+	auto np = (int)distances.size();
 
 	if (n < np)
 		distances.resize(n);
