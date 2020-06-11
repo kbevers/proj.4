@@ -41,7 +41,7 @@ class PROJ_GCC_DLL Polygon
 protected:
 	PJ_CONTEXT *m_ctx;
 	int m_areaid;
-	vector<PolygonPoint> m_pointList;
+	vector<PolygonPoint> m_pointList { };
 public:
 	PROJ_FOR_TEST Polygon(const int &areaid);
 	PROJ_FOR_TEST virtual ~Polygon();
