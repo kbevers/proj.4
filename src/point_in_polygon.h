@@ -2,14 +2,6 @@
 
 #define PJ_LIB__
 
-//#include <istream>
-//#include <iostream> 
-//#include <string>
-//#include <vector>
-//#include <stdlib.h>
-//#include <stdio.h>
-//#include "proj.h"
-
 using namespace std;
 
 #define INF 10000

@@ -40,12 +40,14 @@ class PROJ_GCC_DLL Polygon
 {
 protected:
 	PJ_CONTEXT *m_ctx;
-	int m_areaid;
+	int m_areaid; 
+	vector<PolygonPoint> m_pointList;
 public:
 	PROJ_FOR_TEST Polygon(const int &areaid);
 	PROJ_FOR_TEST virtual ~Polygon();
 	PROJ_FOR_TEST const int &Id() const { return m_areaid; }
-	PROJ_FOR_TEST vector<PolygonPoint> m_pointList;
+	PROJ_FOR_TEST void SetPointList(vector<PolygonPoint> &pointList);
+	//PROJ_FOR_TEST vector<PolygonPoint> m_pointList;
 	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
 };
 

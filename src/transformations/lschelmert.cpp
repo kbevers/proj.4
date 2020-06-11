@@ -325,7 +325,7 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 
 /***************************************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
-/**************************************************************************************/
+***************************************************************************************/
 std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, int areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 100.0)
 {
 	std::vector<LPZ_Pair> distances {};
