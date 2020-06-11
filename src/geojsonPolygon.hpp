@@ -55,7 +55,6 @@ class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon
 {
 protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
-	//GeoJsonMultiPolygon(int &areaid);
 public:
 	PROJ_FOR_TEST GeoJsonMultiPolygon(int &areaid);
 	PROJ_FOR_TEST static GeoJsonMultiPolygon *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name);
@@ -94,6 +93,6 @@ public:
 
 typedef std::vector<std::unique_ptr<GeoJsonMultiPolygonSet>> ListOfMultiPolygons;
 ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey);
-int areaIdPoint(PJ *P, const ListOfMultiPolygons &, PJ_LP *);
- 
+int areaIdPoint(PJ *P, const ListOfMultiPolygons &polygonList, PJ_LP *lp);
+
 NS_PROJ_END
