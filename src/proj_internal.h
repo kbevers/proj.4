@@ -485,7 +485,7 @@ struct PJconsts {
     PJ *helmert = nullptr;
     PJ *hgridshift = nullptr;
     PJ *vgridshift = nullptr;
-	//PJ *lschelmert = nullptr;
+	PJ *lschelmert = nullptr;
 
     /*************************************************************************************
 

@@ -4,6 +4,9 @@
 
 using namespace std;
 
+#include <algorithm>
+#include <math.h>
+
 #define INF 10000
 
 /*************************************************************************************
