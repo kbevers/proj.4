@@ -2,7 +2,7 @@
 		
 	    	2D Helmert estimation with Squares Collocation 
 
-/*****************************************************************************
+******************************************************************************
 
     This method was basically implemented around 2000 in Norway after the
 	realisation of EUREF89. The old datum NGO1948 was and is still used in many
@@ -182,7 +182,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 { 
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
-	auto np = pairList->size();
+	auto np = (int)pairList->size();
 
 	if (np < 5)
 	{

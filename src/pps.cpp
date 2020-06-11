@@ -66,7 +66,7 @@ PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const st
 		return nullptr;
 	}
 
-	__int32 noOfPoints;
+	int noOfPoints = 0;
 	memcpy(&noOfPoints, header + 400, 4);	
 
 	if (noOfPoints < 4)
@@ -82,7 +82,7 @@ PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const st
 
 bool PointPairs::load(PJ_CONTEXT *ctx)
 {
-	if (m_LpzPairList.size() == NoOfPoints())
+	if ((int)m_LpzPairList.size() == NoOfPoints())
 		return true;
 	
 	unsigned long offset = 404;
@@ -99,7 +99,7 @@ bool PointPairs::load(PJ_CONTEXT *ctx)
 		pointPair = new LPZ_Pair();
 	}
 
-	if (m_LpzPairList.size() != NoOfPoints())
+	if ((int)m_LpzPairList.size() != NoOfPoints())
 		return false;
 
 	return true;
