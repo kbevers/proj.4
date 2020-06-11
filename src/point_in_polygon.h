@@ -21,8 +21,8 @@ namespace
 
 	bool onSegment(PolygonPoint p, PolygonPoint q, PolygonPoint r)
 	{
-		if (q.x <= fmax(p.x, r.x) && q.x >= fmin(p.x, r.x) &&
-			q.y <= fmax(p.y, r.y) && q.y >= fmin(p.y, r.y))
+		if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
+			q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y))
 			return true;
 
 		return false;
