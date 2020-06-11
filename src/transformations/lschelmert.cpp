@@ -114,7 +114,7 @@ namespace
 	};
 }
 
-MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
+Eigen::MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
 { 
 	int i = 0;
 	int j = 0;
@@ -124,7 +124,7 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIREC
 	// Scaled to radians
 	c *= 2.0 / (M_PI * 6390.0);
 
-	MatrixXd cnn(np, np);
+	Eigen::MatrixXd cnn(np, np);
 
 	for (auto&& pair1 : *pairList)
 	{  
@@ -146,7 +146,7 @@ MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIREC
 	return cnn;
 }
 
-MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
+Eigen::MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
 {	
 	int i = 0;	
 	double coslat = cos(lp->phi);
@@ -157,7 +157,7 @@ MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION d
 	// Scaled to radians
 	c *= 2.0 / (M_PI * 6390.0);
 
-	MatrixXd cmn(np, 1);
+	Eigen::MatrixXd cmn(np, 1);
 
 	for (auto&& pair : *pairList)
 	{   
@@ -197,14 +197,14 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	double c = Q->ccoll == HUGE_VAL ? 7.7 : Q->ccoll;
 
     // Covariance matrices:
-	MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);
-	MatrixXd cmn = CovarianceMN(lp, pairList, direction, k, c);
+	Eigen::MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);
+	Eigen::MatrixXd cmn = CovarianceMN(lp, pairList, direction, k, c);
  
 	// Vector source system:
-	MatrixXd u(np, 1); MatrixXd v(np, 1);
+	Eigen::MatrixXd u(np, 1); MatrixXd v(np, 1);
 	
 	// Vector target system:
-	MatrixXd x(np, 1); MatrixXd y(np, 1);
+	Eigen::MatrixXd x(np, 1); MatrixXd y(np, 1);
 
 	int l = 0;
 
@@ -226,16 +226,16 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	}
 	
 	// Weight matrix w is the inverted cnn
-	MatrixXd w = cnn.inverse();
+	Eigen::MatrixXd w = cnn.inverse();
 
 	// W, sum of weight W:
 	auto w_sum = w.sum();
 
 	// Weight for each point:
-	ArrayXXd w_points = w * MatrixXd::Ones(np, 1);
+	Eigen::ArrayXXd w_points = w * MatrixXd::Ones(np, 1);
 
 	// Transposed w_points
-	MatrixXd w_pointsTrans = w_points.transpose();
+	Eigen::MatrixXd w_pointsTrans = w_points.transpose();
 	 
  	// Mass center:
 	double u0 = (w_pointsTrans * u / w_sum).value();
@@ -244,10 +244,10 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	double y0 = (w_pointsTrans * y / w_sum).value();
 
 	// Coordinates in Mass center origin:
-	ArrayXXd u_ = u - MatrixXd::Ones(np, 1) * u0;
-	ArrayXXd v_ = v - MatrixXd::Ones(np, 1) * v0;
-	ArrayXXd x_ = x - MatrixXd::Ones(np, 1) * x0;
-	ArrayXXd y_ = y - MatrixXd::Ones(np, 1) * y0;
+	Eigen::ArrayXXd u_ = u - MatrixXd::Ones(np, 1) * u0;
+	Eigen::ArrayXXd v_ = v - MatrixXd::Ones(np, 1) * v0;
+	Eigen::ArrayXXd x_ = x - MatrixXd::Ones(np, 1) * x0;
+	Eigen::ArrayXXd y_ = y - MatrixXd::Ones(np, 1) * y0;
 
 	// Normal equation parameters:
 	double n = 0.0;
@@ -272,7 +272,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 		proj_log_trace(P, "Estimated Helmert parameters a, b, Tx, Ty: (%12.10f, %12.10f, %12.10f, %12.10f)", a, b, tx, ty);
 	
 	// Signal (residuals) of common points
-	MatrixXd snx(np, 1); MatrixXd sny(np, 1);
+	Eigen::MatrixXd snx(np, 1); MatrixXd sny(np, 1);
 
 	// Residuals referred in mass center origin
 	for (int i = 0; i < np; i++)

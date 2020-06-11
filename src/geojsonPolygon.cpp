@@ -181,7 +181,7 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 				if (el.key() == "coordinates")
 				{
 					recursive_iterate(el, pointVector, [](json::const_iterator it) {});
-					polygon->SetPointList(pointVector); 
+					polygon->SetPointList(pointVector);
 				}
 				if (isMultiPolygon)
 					set->m_polygons.push_back(std::unique_ptr<GeoJsonMultiPolygon>(polygon));
