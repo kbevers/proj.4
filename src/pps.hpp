@@ -80,7 +80,6 @@ public:
 	PROJ_FOR_TEST const PointPairs *pairsAt(double lon, double lat, double maxdist = 0.1) const;
 };
 
-
 class PROJ_GCC_DLL TestClass
 {
 private:

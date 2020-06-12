@@ -73,7 +73,7 @@ PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const st
 		return nullptr;
 
 	 std::string name = filename;
-	 std::string format = "cpt";	
+	 std::string format = "cpt";
 
 	return new PointPairs(std::move(fp), name, format, noOfPoints);
 }
@@ -122,5 +122,9 @@ const PointPairs *PointPairs::pairsAt(double lon, double lat, double maxdist) co
 	}	
 	return nullptr;
 }; 
+
+TestClass::TestClass() = default;
+
+TestClass::~TestClass() = default;
 
 NS_PROJ_END
