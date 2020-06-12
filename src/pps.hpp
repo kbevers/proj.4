@@ -62,11 +62,11 @@ class PROJ_GCC_DLL PointPairs
 private:
 protected:	 
 	int m_noOfPoints = 0;
-	std::string m_name { }; 
-	std::string m_format { };
-	std::vector<LPZ_Pair> m_LpzPairList { };
+	std::string m_name{ }; 
+	std::string m_format{ };
+	std::vector<LPZ_Pair> m_LpzPairList{ };
 
-	std::unique_ptr<File> m_fp;
+	std::unique_ptr<File> m_fp{ };
 public:
 	PROJ_FOR_TEST PointPairs();
 	PROJ_FOR_TEST PointPairs(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints);
@@ -89,7 +89,7 @@ protected:
 	std::string m_format{ };
 	std::vector<LPZ_Pair> m_LpzPairList{ };
 
-	std::unique_ptr<File> m_fp{};
+	std::unique_ptr<File> m_fp{ };
 public:
 	PROJ_FOR_TEST TestClass();
 	PROJ_FOR_TEST TestClass(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints);
