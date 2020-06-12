@@ -63,9 +63,9 @@ private:
 protected:	
 	PJ_CONTEXT *m_ctx;
 	int m_noOfPoints = 0;
-	std::string m_name;// { };
-	std::string m_format;// { };
-	std::vector<LPZ_Pair> m_LpzPairList;// { };
+	std::string m_name { };
+	std::string m_format { };
+	std::vector<LPZ_Pair> m_LpzPairList { };
 
 	std::unique_ptr<File> m_fp;
 public:
@@ -77,6 +77,31 @@ public:
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
 	PROJ_FOR_TEST const std::vector<LPZ_Pair> &LpzPairList() const { return m_LpzPairList; }
     PROJ_FOR_TEST static PointPairs *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
+	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
+	PROJ_FOR_TEST const PointPairs *pairsAt(double lon, double lat, double maxdist = 0.1) const;
+};
+
+
+class PROJ_GCC_DLL TestClass
+{
+private:
+protected:
+	PJ_CONTEXT *m_ctx;
+	int m_noOfPoints = 0;
+	std::string m_name{ };
+	std::string m_format{ };
+	std::vector<LPZ_Pair> m_LpzPairList{ };
+
+	std::unique_ptr<File> m_fp;
+public:
+	PROJ_FOR_TEST TestClass();
+	PROJ_FOR_TEST TestClass(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints);
+	PROJ_FOR_TEST virtual ~TestClass();
+	PROJ_FOR_TEST int NoOfPoints() const { return m_noOfPoints; }
+	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
+	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
+	PROJ_FOR_TEST const std::vector<LPZ_Pair> &LpzPairList() const { return m_LpzPairList; }
+	PROJ_FOR_TEST static PointPairs *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
 	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
 	PROJ_FOR_TEST const PointPairs *pairsAt(double lon, double lat, double maxdist = 0.1) const;
 };
