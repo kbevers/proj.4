@@ -51,7 +51,7 @@ public:
 	PROJ_FOR_TEST const PJ_LPZ &FromPoint() const { return m_fromPoint; }
 	PROJ_FOR_TEST const PJ_LPZ &ToPoint() const { return m_toPoint; }
 	PROJ_FOR_TEST const int &Area() const { return m_area; }
-	PROJ_FOR_TEST const double Distance() const { return m_dist; }
+	PROJ_FOR_TEST const double &Distance() const { return m_dist; }
 	PROJ_FOR_TEST void SetDistance(double dist) { m_dist = dist; }
 };
 
