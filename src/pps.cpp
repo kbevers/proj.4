@@ -100,8 +100,10 @@ bool PointPairs::load(PJ_CONTEXT *ctx)
 	}
 
 	if ((int)m_LpzPairList.size() != NoOfPoints())
+	{
+		pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return false;
-
+	}
 	return true;
 }
 
