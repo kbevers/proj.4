@@ -14,15 +14,15 @@ using namespace std;
 *  https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/
 *
 **************************************************************************************/
-namespace
-{	
+//namespace
+//{	
 	struct PolygonPoint
 	{
 		double x;
 		double y;
 	};
 
-	bool onSegment(PolygonPoint p, PolygonPoint q, PolygonPoint r)
+	static bool onSegment(PolygonPoint p, PolygonPoint q, PolygonPoint r)
 	{
 		if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
 			q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y))
@@ -31,7 +31,7 @@ namespace
 		return false;
 	}
 
-	double orientation(PolygonPoint p, PolygonPoint q, PolygonPoint r)
+	static double orientation(PolygonPoint p, PolygonPoint q, PolygonPoint r)
 	{
 		double val = (q.y - p.y) * (r.x - q.x) -
 			(q.x - p.x) * (r.y - q.y);
@@ -42,7 +42,7 @@ namespace
 		return (val > 0) ? 1 : 2;
 	}
 
-	bool doIntersect(PolygonPoint p1, PolygonPoint q1, PolygonPoint p2, PolygonPoint q2)
+	static bool doIntersect(PolygonPoint p1, PolygonPoint q1, PolygonPoint p2, PolygonPoint q2)
 	{
 		double o1 = orientation(p1, q1, p2);
 		double o2 = orientation(p1, q1, q2);
@@ -67,7 +67,7 @@ namespace
 		return false;
 	}
 
-	bool isInside(PolygonPoint polygon[], int n, PolygonPoint p)
+	static bool isInside(PolygonPoint polygon[], int n, PolygonPoint p)
 	{
 		if (n < 3)
 			return false;
@@ -92,4 +92,4 @@ namespace
 
 		return count & 1;
 	}
-}
+//}
