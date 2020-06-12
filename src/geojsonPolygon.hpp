@@ -58,7 +58,6 @@ protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
 public:
 	PROJ_FOR_TEST GeoJsonMultiPolygon(int &areaid);
-	PROJ_FOR_TEST static GeoJsonMultiPolygon *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
 	PROJ_FOR_TEST bool IsPointInArea(PJ_LP *lp);
 	PROJ_FOR_TEST void reassign_context(PJ_CONTEXT *ctx);

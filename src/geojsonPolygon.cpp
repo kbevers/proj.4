@@ -250,21 +250,6 @@ GeoJsonMultiPolygon::GeoJsonMultiPolygon(int &areaid) : Polygon(areaid)
 GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
 
 // ---------------------------------------------------------------------------
-// NOTE: Not in use
-// TODO: Delete the method
-GeoJsonMultiPolygon *GeoJsonMultiPolygon::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &name)
-{
-	auto file = NS_PROJ::FileManager::open(ctx, name.c_str(),
-		NS_PROJ::FileAccess::READ_ONLY);
-	 
-	int testId = 2;
-
-	auto set = new GeoJsonMultiPolygon(testId);
-
-	return set;
-}
-
-// ---------------------------------------------------------------------------
 
 void GeoJsonMultiPolygon::reassign_context(PJ_CONTEXT *ctx)
 {
