@@ -57,7 +57,7 @@ class PROJ_GCC_DLL GeoJsonMultiPolygon : public Polygon
 protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_children{};
 public:
-	PROJ_FOR_TEST GeoJsonMultiPolygon(int &areaid);
+	PROJ_FOR_TEST GeoJsonMultiPolygon(const int &areaid);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
 	PROJ_FOR_TEST bool IsPointInArea(PJ_LP *lp);
 	PROJ_FOR_TEST void reassign_context(PJ_CONTEXT *ctx);

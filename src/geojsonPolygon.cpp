@@ -240,7 +240,7 @@ void Polygon::SetPointList(vector<PolygonPoint> &pointList)
 
 // ---------------------------------------------------------------------------
 
-GeoJsonMultiPolygon::GeoJsonMultiPolygon(int &areaid) : Polygon(areaid)
+GeoJsonMultiPolygon::GeoJsonMultiPolygon(const int &areaid) : Polygon(areaid)
 {
 	m_areaid = areaid;
 };
