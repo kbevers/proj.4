@@ -60,13 +60,13 @@ public:
 class PROJ_GCC_DLL PointPairs
 {
 private:
-protected:
+protected:	
+	//PJ_CONTEXT *m_ctx;
 	int m_noOfPoints = 0;
 	std::string m_name { };
 	std::string m_format { };
 	std::vector<LPZ_Pair> m_LpzPairList { };
-	
-	PJ_CONTEXT *m_ctx;
+
 	std::unique_ptr<File> m_fp;
 public:
 	PROJ_FOR_TEST PointPairs();
