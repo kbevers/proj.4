@@ -67,7 +67,7 @@ using namespace std;
 		return false;
 	}
 
-	static bool isInside(PolygonPoint polygon[], int n, PolygonPoint p)
+	static inline bool isInside(PolygonPoint polygon[], int n, PolygonPoint p)
 	{
 		if (n < 3)
 			return false;
