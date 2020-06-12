@@ -63,9 +63,9 @@ private:
 protected:	
 	PJ_CONTEXT *m_ctx;
 	int m_noOfPoints = 0;
-	std::string m_name { };
-	std::string m_format { };
-	std::vector<LPZ_Pair> m_LpzPairList { };
+	std::string m_name;// { };
+	std::string m_format;// { };
+	std::vector<LPZ_Pair> m_LpzPairList;// { };
 
 	std::unique_ptr<File> m_fp;
 public:
