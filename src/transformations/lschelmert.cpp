@@ -320,6 +320,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	return P;
 } 
 
+inline
 bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 {
 	return lhs.Distance() < rhs.Distance();
@@ -328,6 +329,7 @@ bool DistanceLess(const LPZ_Pair& lhs, const LPZ_Pair& rhs)
 /***************************************************************************************
 * https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way
 ***************************************************************************************/
+inline
 std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, int areaId, PJ_DIRECTION direction, int n = 20, double maximum_dist = 100.0)
 {
 	std::vector<LPZ_Pair> distances {};
@@ -371,7 +373,7 @@ std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, int
 	return distances;
 }
 
-PJ_LP helmert_apply(PJ *P, PJ_LP lp)
+static PJ_LP helmert_apply(PJ *P, PJ_LP lp)
 {
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
@@ -392,7 +394,7 @@ PJ_LP helmert_apply(PJ *P, PJ_LP lp)
 	return out;
 }
 
-PJ_LP collocation_apply(PJ *P, PJ_LP lp)
+static PJ_LP collocation_apply(PJ *P, PJ_LP lp)
 {
 	struct pj_opaque_lschelmert *Q = (struct pj_opaque_lschelmert *) P->opaque;
 
