@@ -86,7 +86,7 @@ class PROJ_GCC_DLL TestClass
 {
 private:
 protected:
-	PJ_CONTEXT *m_ctx;
+	//PJ_CONTEXT *m_ctx;
 	int m_noOfPoints = 0;
 	std::string m_name{ };
 	std::string m_format{ };
