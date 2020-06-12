@@ -42,7 +42,7 @@ class PROJ_GCC_DLL LPZ_Pair
 private:
 	char name[8];
 	PJ_LPZ m_fromPoint { };
-	PJ_LPZ m_toPoint;
+	PJ_LPZ m_toPoint { };
 	int m_area = 0;
 	double m_dist = 0.0;
 protected:
