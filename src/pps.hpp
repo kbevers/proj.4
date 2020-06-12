@@ -89,7 +89,7 @@ protected:
 	std::string m_format{ };
 	std::vector<LPZ_Pair> m_LpzPairList{ };
 
-	std::unique_ptr<File> m_fp;
+	std::unique_ptr<File> m_fp{};
 public:
 	PROJ_FOR_TEST TestClass();
 	PROJ_FOR_TEST TestClass(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints);
@@ -102,7 +102,6 @@ public:
 	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
 	PROJ_FOR_TEST const PointPairs *pairsAt(double lon, double lat, double maxdist = 0.1) const;
 };
-
 
 NS_PROJ_END
 
