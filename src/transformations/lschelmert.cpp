@@ -114,6 +114,7 @@ namespace
 	};
 }
 
+inline
 Eigen::MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
 { 
 	int i = 0;
@@ -146,6 +147,7 @@ Eigen::MatrixXd CovarianceNN(PJ_LP *lp, const std::vector<LPZ_Pair> *pairList, P
 	return cnn;
 }
 
+inline
 Eigen::MatrixXd CovarianceMN(PJ_LP *lp, std::vector<LPZ_Pair> *pairList, PJ_DIRECTION direction, double k = 0.00039, double c = 7.7)
 {	
 	int i = 0;	
