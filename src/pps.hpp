@@ -62,7 +62,7 @@ class PROJ_GCC_DLL PointPairs
 private:
 protected:	 
 	int m_noOfPoints = 0;
-	std::string m_name;//{ }; 
+	std::string m_name{ };
 	std::string m_format{ };
 	std::vector<LPZ_Pair> m_LpzPairList{ };
 

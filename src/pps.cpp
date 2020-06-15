@@ -47,7 +47,7 @@ PointPairs::PointPairs() = default;
 
 PointPairs::PointPairs(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints)
 	: m_fp(std::move(fp)), m_name(nameIn), m_format(format), m_noOfPoints(noOfPoints)
-{	
+{
 }
 
 // ---------------------------------------------------------------------------
