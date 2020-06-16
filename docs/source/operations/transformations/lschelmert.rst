@@ -20,73 +20,6 @@ Least Squares Collaction with Helmert 2D Transformation
 | **output type**     | Geodetic coordinates                                     |
 +---------------------+----------------------------------------------------------+
 
-Examples
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-The most simple proj string refers to a binary file with list of common points.
-A common point is defined by two sets of coordinates, one for the source 
-coordinate system and one for the target coodinate system:
-
-::
-
-    proj=lschelmert pp_trans=EUREF89_NGO48_20081014.cpt
-
-More advanced:
-
-::
-    proj=lschelmert pp_trans=EUREF89_NGO48_20081014.cpt polygons=Flater.geojson ellps=GRS80
-
-Parameters
-###############################################################################
-
-Required
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-.. option:: +pp_trans=<list>
-
-    A link to file with list of point pairs. A point pair is a object with
-	coordinates referred in two geodetic datums. The file itselfs is in binary
-	format.
-
-Optional
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-.. option:: +polygons=<list>
-
-    A link to geojson multipolygons. The operation tests if the input coordinates
-	are within some of the multipolygons. Multipolygons have a foreignkey areaid
-	which is a field in the point pair object from the cpt-file. Point pairs are
-	selected based on selected multipolygon.
-
-.. option:: +points=<value>
-
-    The number of maximum selected point candidates used in Least Square 
-	Collocation and 2D Helmert.  Units of latitude and longitude is in radians,
-	and height in meters.
-	
-	Default is 20. 
-
-.. option:: +maximum_dist=<value>
-
-    The maximum distance between input point and selected point candidate. Unit of the
-	distance is km. 
-	
-	Default is 100.0 km.
-
-.. option:: +ccoll=<value>
-    
-	The ccoll value is the distance where the empirical covariance touches zero. The
-	unit ccoll is in km. 
-
-    Default is 7.7.	
-
-.. option:: +kcoll=<value>
-
-    The kcoll coefficient is simular to C0 in a standard Gauss Markov first order covariance
-	function.
-	
-	Default is 0.00039.
-
 
 Mathematical description
 ################################################################################
@@ -145,18 +78,18 @@ The selected covariance function for this operation a modified first Gauss Marko
 
 Covariance matrix of the given common points:
 
-\[
-C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
-\]
+.. math::
+    :label: covfunc
 
-where:\\*
- {n} is the number of common points\\*
- 
- {d} is distance in km\\*
- 
- {c} is the ccoll parameter\\*
- 
- {k} is the kcoll parameter\\*
+	\[
+	C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
+	\]
+	
+	where:\\*
+	{n} is the number of common points\\*
+	{d} is distance in km\\*
+	{c} is the ccoll parameter\\*
+	{k} is the kcoll parameter\\*
  
 
 Covariance matrix of the input point:
@@ -363,3 +296,73 @@ Predicted output longitude:
 \[
 {\lambda{}}_{out}={\lambda{}}_H+\frac{s_{my}}{\cos{{\varphi{}}_{in}}}
 \]
+
+
+Examples
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The most simple proj string refers to a binary file with list of common points.
+A common point is defined by two sets of coordinates, one for the source 
+coordinate system and one for the target coodinate system:
+
+::
+
+    +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt
+
+By adding the parameter `+polygons` :
+
+::
+
+    +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt +polygons=Flater.geojson 
+	+ellps=GRS80
+
+Parameters
+###############################################################################
+
+Required
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. option:: +pp_trans=<list>
+
+    A link to file with list of point pairs. A point pair is a object with
+	coordinates referred in two geodetic datums. The file itselfs is in binary
+	format.
+
+Optional
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. option:: +polygons=<list>
+
+    A link to geojson multipolygons. The operation tests if the input coordinates
+	are within some of the multipolygons. Multipolygons have a foreignkey areaid
+	which is a field in the point pair object from the cpt-file. Point pairs are
+	selected based on selected multipolygon.
+
+.. option:: +points=<value>
+
+    The number of maximum selected point candidates used in Least Square 
+	Collocation and 2D Helmert.  Units of latitude and longitude is in radians,
+	and height in meters.
+	
+	Default is 20. 
+
+.. option:: +maximum_dist=<value>
+
+    The maximum distance between input point and selected point candidate. Unit of the
+	distance is km. 
+	
+	Default is 100.0 km.
+
+.. option:: +ccoll=<value>
+    
+	The ccoll value is the distance where the empirical covariance touches zero. The
+	unit ccoll is in km. 
+
+    Default is 7.7.	
+
+.. option:: +kcoll=<value>
+
+    The kcoll coefficient is simular to C0 in a standard Gauss Markov first order covariance
+	function.
+	
+	Default is 0.00039.
