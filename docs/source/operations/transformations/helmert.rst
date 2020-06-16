@@ -227,7 +227,7 @@ the `s` parameters.
 Mathematically the 2D Helmert is described as:
 
 .. math::
-    :label: 4param
+    :label: 4_param
 
     \begin{align}
         \begin{bmatrix}
