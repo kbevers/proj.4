@@ -16,6 +16,7 @@ systems are based on different datums.
    geogoffset
    helmert
    horner
+   lschelmert
    molodensky
    molobadekas
    hgridshift
