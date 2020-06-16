@@ -4,9 +4,10 @@
 Least Squares Collaction with Helmert 2D Transformation
 ================================================================================
 
-.. versionadded:: X.X.X
+.. versionadded:: 7.1.0
 
 .. note::
+	Least Squares Collaction with Helmert 2D Transformation transforms ...
 
 +---------------------+----------------------------------------------------------+
 | **Alias**           | lschelmert                                               |
