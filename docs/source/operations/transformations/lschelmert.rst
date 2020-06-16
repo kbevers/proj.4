@@ -56,7 +56,7 @@ A standard 2D Helmert is described as:
 	\left[\begin{array}{cc}
 	x \\
 	y
-	\end{array}\right]+\ \left[\begin{array}{cc}
+	\end{array}\right]+\left[\begin{array}{cc}
 	v_x \\
 	v_y
 	\end{array}\right]=\left[\begin{array}{cc}
@@ -79,7 +79,7 @@ The selected covariance function for this operation a modified first Gauss Marko
 Covariance matrix of the given common points:
 
 .. math::
-    :label: covfunc
+    :label: covfuncnn
 
 	\[
 	C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
@@ -94,27 +94,27 @@ Covariance matrix of the given common points:
 
 Covariance matrix of the input point:
 
-\[
-C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
-\]
+.. math::
+    :label: covfuncnmn
 
-where:\\*
- {m} is the number of transformed and predicted points. {m} is mainly 1. \\*
- 
- {d} is distance in km\\*
- 
- {c} is the ccoll parameter\\*
- 
- {k} is the kcoll parameter\\*
+	\[
+	C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
+	\]
+	
+	where:\\*
+	{m} is the number of transformed and predicted points. {m} is mainly 1. \\* 
+	{d} is distance in km\\*
+	{c} is the ccoll parameter\\*
+	{k} is the kcoll parameter\\*
 
 Further mass center points are computed for both coordinate systems with
 weight from the inverted covariance function. The weights are noted w.
 
-Weight matrix:
+Weight matrix, inverse of Cnn:
 
-\[
-W={C_{nn}}^{-1}
-\]
+	\[
+	W={C_{nn}}^{-1}
+	\]
 
 
 Ws is the sum of the entired weight matrix:
