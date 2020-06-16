@@ -7,7 +7,8 @@ Least Squares Collaction with Helmert 2D Transformation
 .. versionadded:: 7.1.0
 
 .. note::
-	Least Squares Collaction with Helmert 2D Transformation transforms ...
+	The operation Helmert 2D TransformationLeast with Squares Collocation is
+	processes once for each point. 
 
 +---------------------+----------------------------------------------------------+
 | **Alias**           | lschelmert                                               |
@@ -20,26 +21,37 @@ Least Squares Collaction with Helmert 2D Transformation
 +---------------------+----------------------------------------------------------+
 
 Examples
-###############################################################################
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt +polygons=Flater.geojson +ellps=GRS80
+The most simple proj string refers to a binary file with list of common points.
+A common point is defined by two sets of coordinates, one for the source 
+coordinate system and one for the target coodinate system:
 
+::
+
+    proj=lschelmert pp_trans=EUREF89_NGO48_20081014.cpt
+
+More advanced:
+
+::
+    proj=lschelmert pp_trans=EUREF89_NGO48_20081014.cpt polygons=Flater.geojson ellps=GRS80
 
 Parameters
-################################################################################
+###############################################################################
 
 Required
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. option:: +pp_trans=<File>
+.. option:: +pp_trans=<list>
 
-    A link to file with list of point pairs. A point pair is a object with coordinates
-	referred in two geodetic datums. The file itselfs is in binary format.
+    A link to file with list of point pairs. A point pair is a object with
+	coordinates referred in two geodetic datums. The file itselfs is in binary
+	format.
 
 Optional
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. option:: +polygons=<File>
+.. option:: +polygons=<list>
 
     A link to geojson multipolygons. The operation tests if the input coordinates
 	are within some of the multipolygons. Multipolygons have a foreignkey areaid
@@ -48,9 +60,9 @@ Optional
 
 .. option:: +points=<value>
 
-    The number of maximum selected point candidates used in Least Square Collocation
-	and 2D Helmert.  Units of latitude and longitude is in radians, and
-	height in meters.
+    The number of maximum selected point candidates used in Least Square 
+	Collocation and 2D Helmert.  Units of latitude and longitude is in radians,
+	and height in meters.
 	
 	Default is 20. 
 
