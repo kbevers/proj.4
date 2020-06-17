@@ -7,7 +7,7 @@ Least Squares Collaction with Helmert 2D Transformation
 .. versionadded:: 7.1.0
 
 .. note::
-	The operation Helmert 2D TransformationLeast with Squares Collocation is
+	The operation Helmert 2D Transformation Least with Squares Collocation is
 	processes once for each point. 
 
 +---------------------+----------------------------------------------------------+
@@ -50,9 +50,7 @@ higher weight.
 A standard 2D Helmert is described as:
 
 .. math::
-    :label: 4param
-	
-	\[
+    :label: helmert2D
 	\left[\begin{array}{cc}
 	x \\
 	y
@@ -69,68 +67,63 @@ A standard 2D Helmert is described as:
 	T_x \\
 	T_y
 	\end{array}\right]
-	\]
+	 
 
 Where u og v is 2D coordinates in source coodinate system and x og y in target
 coordinate system.
 
 The selected covariance function for this operation a modified first Gauss Markov.
 
+
 Covariance matrix of the given common points:
 
 .. math::
-    :label: covfuncnn
-
-	\[
-	C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
-	\]
+    :label: cov_nn
+	C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}\\*
 	
-	where:\\*
-	{n} is the number of common points\\*
-	{d} is distance in km\\*
-	{c} is the ccoll parameter\\*
-	{k} is the kcoll parameter\\*
+    where:\\*
+    {n} is the number of common points\\*
+    {d} is distance in km\\*
+    {c} is the ccoll parameter \\*
+    {k} is the kcoll parameter\\*
  
 
 Covariance matrix of the input point:
 
 .. math::
-    :label: covfuncnmn
-
-	\[
+    :label: cov_mn
 	C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
-	\]
-	
-	where:\\*
-	{m} is the number of transformed and predicted points. {m} is mainly 1. \\* 
-	{d} is distance in km\\*
-	{c} is the ccoll parameter\\*
-	{k} is the kcoll parameter\\*
+		
+    where:\\*
+    {n} is the number of common points\\*
+    {m} is the number of transformed and predicted points. {m} is mainly 1. \\* 
+    {d} is distance in km\\*
+    {c} is the ccoll parameter\\*
+    {k} is the kcoll parameter\\*
 
 Further mass center points are computed for both coordinate systems with
 weight from the inverted covariance function. The weights are noted w.
 
 Weight matrix, inverse of Cnn:
 
-	\[
+.. math::
+    :label: weight_mat
 	W={C_{nn}}^{-1}
-	\]
 
 
 Ws is the sum of the entired weight matrix:
 
-\[
-w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}
-\]
+
+.. math::
+    :label: weight_sum
+	w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}
 
 
 Sum weight for each point:
 
-\[
-w=W\ \vec{1}
-\]
-
-
+.. math::
+	w=W\ \vec{1}
+ 
 Mass center computed based on weighed centroid:
 
 \[
