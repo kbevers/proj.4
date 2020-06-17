@@ -50,27 +50,26 @@ higher weight.
 A standard 2D Helmert is described as:
 
 .. math::
-    :label: helmert2D
-	\left[\begin{array}{cc}
-	x \\
-	y
-	\end{array}\right]+\left[\begin{array}{cc}
-	v_x \\
-	v_y
-	\end{array}\right]=\left[\begin{array}{cc}
-	a & b \\
-	-b & a
-	\end{array}\right]\left[\begin{array}{cc}
-	u \\
-	v
-	\end{array}\right]+\left[\begin{array}{cc}
-	T_x \\
-	T_y
-	\end{array}\right]
-	 
+    :label: helmert2d
 
-Where u og v is 2D coordinates in source coodinate system and x og y in target
-coordinate system.
+    \left[\begin{array}{cc}
+    x \\
+    y
+    \end{array}\right]+\left[\begin{array}{cc}
+    v_x \\
+    v_y
+    \end{array}\right]=\left[\begin{array}{cc}
+    a & b \\
+    -b & a
+    \end{array}\right]\left[\begin{array}{cc}
+    u \\
+    v
+    \end{array}\right]+\left[\begin{array}{cc}
+    T_x \\
+    T_y
+    \end{array}\right]
+
+Where :math:`u` og :math:`v` is 2D coordinates in source coodinate system and x og y in target coordinate system. Helmert transformation parametres are denoted as :math:`T_x`, :math:`T_y`, :math:`a` and :math:`b`.
 
 The selected covariance function for this operation a modified first Gauss Markov.
 
@@ -79,36 +78,34 @@ Covariance matrix of the given common points:
 
 .. math::
     :label: cov_nn
-	C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}\\*
-	
-    where:\\*
-    {n} is the number of common points\\*
-    {d} is distance in km\\*
-    {c} is the ccoll parameter \\*
-    {k} is the kcoll parameter\\*
- 
+
+    C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
+
+
+where :math:`n` is the number of common points, :math:`d` distance in km, :math:`c` the ccoll parameter and :math:`k` is the kcoll parameter.
+
+
 
 Covariance matrix of the input point:
 
 .. math::
     :label: cov_mn
-	C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
-		
-    where:\\*
-    {n} is the number of common points\\*
-    {m} is the number of transformed and predicted points. {m} is mainly 1. \\* 
-    {d} is distance in km\\*
-    {c} is the ccoll parameter\\*
-    {k} is the kcoll parameter\\*
 
-Further mass center points are computed for both coordinate systems with
-weight from the inverted covariance function. The weights are noted w.
+    C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
+
+
+where :math:`n` is the number of common points, :math:`m` is the number of transformed and predicted points. :math:`m` is basically. :math:`d` is distance in km, :math:`c` the ccoll parameter and :math:`k` the kcoll parameter.
+
+
+Further mass center points are computed for both coordinate systems with weight from the inverted covariance function. The weights are noted :math:`W`.
+
 
 Weight matrix, inverse of Cnn:
 
 .. math::
     :label: weight_mat
-	W={C_{nn}}^{-1}
+
+    W={C_{nn}}^{-1}
 
 
 Ws is the sum of the entired weight matrix:
@@ -116,92 +113,80 @@ Ws is the sum of the entired weight matrix:
 
 .. math::
     :label: weight_sum
-	w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}
+
+    w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}
 
 
 Sum weight for each point:
 
 .. math::
-	w=W\ \vec{1}
+    :label: weight_point
+
+    w=W\ \vec{1}
  
 Mass center computed based on weighed centroid:
 
-\[
-u_0=\frac{w^Tu}{w_s}
-\]
+.. math::
 
-\[
-v_0=\frac{w^Tv}{w_s}
-\]
+    \begin{array}{cc}u_0=\frac{w^Tu}{w_s}\end{array}
+    \begin{array}{cc}v_0=\frac{w^Tv}{w_s}\end{array}
+    \begin{array}{cc}x_0=\frac{w^Tx}{w_s}\end{array}
+    \begin{array}{cc}y_0=\frac{w^Ty}{w_s}\end{array}
 
-\[
-x_0=\frac{w^Tx}{w_s}
-\]
 
-\[
-y_0=\frac{w^Ty}{w_s}
-\]
 
 
 Target and source points moved to mass center as centroids:
 
-\[
-\bar{u}=u-\vec{1}u_0
-\]
+.. math::
 
-\[
-\bar{v}=v-\vec{1}v_0
-\]
+    \begin{array}{cc}bar{u}=u-\vec{1}u_0\end{array}
+    \begin{array}{cc}bar{v}=v-\vec{1}v_0\end{array}
+    \begin{array}{cc}bar{x}=x-\vec{1}x_0\end{array}
+    \begin{array}{cc}bar{y}=y-\vec{1}y_0\end{array}
 
-\[
-\bar{x}=x-\vec{1}x_0
-\]
 
-\[
-\bar{y}=y-\vec{1}y_0
-\]
 
 
 The modified observation equation is now transformed with centroids as input and output.
- 
- \[
- \left[\begin{array}{cc}
- \bar{x} \\
- \bar{y}
- \end{array}\right]+\ \left[\begin{array}{cc}
- v_x \\
- v_y
- \end{array}\right]=\left[\begin{array}{cc}
- a & b \\
- -b & a
- \end{array}\right]\left[\begin{array}{cc}
- \bar{u} \\
- \bar{v}
- \end{array}\right]+\left[\begin{array}{cc}
- T_x \\
- T_y
- \end{array}\right]
- \]
+
+.. math::
+    :label: helmert2d_mod
+
+    \left[\begin{array}{cc}
+    \bar{x} \\
+    \bar{y}
+    \end{array}\right]+\ \left[\begin{array}{cc}
+    v_x \\
+    v_y
+    \end{array}\right]=\left[\begin{array}{cc}
+    a & b \\
+    -b & a
+    \end{array}\right]\left[\begin{array}{cc}
+    \bar{u} \\
+    \bar{v}
+    \end{array}\right]+\left[\begin{array}{cc}
+    T_x \\
+    T_y
+    \end{array}\right]
 
 
 Least Squares Estimation of Helmert 2D parameter based on simplified inversed normal equation.
 
+.. math::
+    :label: bullshit
 
-\[
-\left[\begin{array}{
-cc}
-\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2) & 0 \\
-0 & \sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)
-\end{array}\right]\left[\begin{array}{
-cc}
-a \\
-b
-\end{array}\right]=\left[\begin{array}{
-cc}
-\sum_{i=1}^nw_i({\bar{u}}_i{\bar{x}}_i+{\bar{v}}_i{\bar{y}}_i) \\
-\sum_{i=1}^nw_i({\bar{v}}_i{\bar{x}}_i-{\bar{u}}_i{\bar{y}}_i)
-\end{array}\right]
-\]
+    \left[\begin{array}{cc}
+    \sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2) & 0 \\
+    0 & \sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)
+    \end{array}\right]\left[\begin{array}{cc}
+    a \\
+    b
+    \end{array}\right]=\left[\begin{array}{cc}
+    \sum_{i=1}^nw_i({\bar{u}}_i{\bar{x}}_i+{\bar{v}}_i{\bar{y}}_i) \\
+    \sum_{i=1}^nw_i({\bar{v}}_i{\bar{x}}_i-{\bar{u}}_i{\bar{y}}_i)
+    \end{array}\right]
+
 
 Solved Helmert parameters a and b:
 
