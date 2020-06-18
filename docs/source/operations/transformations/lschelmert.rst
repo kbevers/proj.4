@@ -65,11 +65,11 @@ A standard 2D Helmert is described as:
     u \\
     v
     \end{array}\right]+\left[\begin{array}{cc}
-    T_x \\
-    T_y
-    \end{array}\right]
+    t_x \\
+    t_y
+    \end{array}\right]\\
 
-Where :math:`u` og :math:`v` is 2D coordinates in source coodinate system and x og y in target coordinate system. Helmert transformation parametres are denoted as :math:`T_x`, :math:`T_y`, :math:`a` and :math:`b`.
+Where :math:`u` og :math:`v` is 2D coordinates in source coodinate system and x og y in target coordinate system. Helmert transformation parametres are denoted as :math:`t_x`, :math:`t_y`, :math:`a` and :math:`b`.
 
 The selected covariance function for this operation a modified first Gauss Markov.
 
@@ -79,11 +79,10 @@ Covariance matrix of the given common points:
 .. math::
     :label: cov_nn
 
-    C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
+    C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}\\*
 
 
 where :math:`n` is the number of common points, :math:`d` distance in km, :math:`c` the ccoll parameter and :math:`k` is the kcoll parameter.
-
 
 
 Covariance matrix of the input point:
@@ -91,7 +90,7 @@ Covariance matrix of the input point:
 .. math::
     :label: cov_mn
 
-    C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}
+    C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}\\*
 
 
 where :math:`n` is the number of common points, :math:`m` is the number of transformed and predicted points. :math:`m` is basically. :math:`d` is distance in km, :math:`c` the ccoll parameter and :math:`k` the kcoll parameter.
@@ -105,24 +104,23 @@ Weight matrix, inverse of Cnn:
 .. math::
     :label: weight_mat
 
-    W={C_{nn}}^{-1}
+    W={C_{nn}}^{-1}\\*
 
 
 Ws is the sum of the entired weight matrix:
 
 
 .. math::
-    :label: weight_sum
 
-    w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}
+    w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}\\*
 
 
 Sum weight for each point:
 
 .. math::
-    :label: weight_point
 
-    w=W\ \vec{1}
+    w=W\ \vec{1}\\*
+
  
 Mass center computed based on weighed centroid:
 
@@ -133,22 +131,20 @@ Mass center computed based on weighed centroid:
     \begin{array}{cc}x_0=\frac{w^Tx}{w_s}\end{array}
     \begin{array}{cc}y_0=\frac{w^Ty}{w_s}\end{array}
 
-
-
+\
 
 Target and source points moved to mass center as centroids:
 
 .. math::
 
-    \begin{array}{cc}bar{u}=u-\vec{1}u_0\end{array}
-    \begin{array}{cc}bar{v}=v-\vec{1}v_0\end{array}
-    \begin{array}{cc}bar{x}=x-\vec{1}x_0\end{array}
-    \begin{array}{cc}bar{y}=y-\vec{1}y_0\end{array}
+    \begin{array}{cc}\bar{u}=u-\vec{1}u_0\end{array}
+    \begin{array}{cc}\bar{v}=v-\vec{1}v_0\end{array}
+    \begin{array}{cc}\bar{x}=x-\vec{1}x_0\end{array}
+    \begin{array}{cc}\bar{y}=y-\vec{1}y_0\end{array}
 
+\
 
-
-
-The modified observation equation is now transformed with centroids as input and output.
+The modified observation equation is now transformed with centroids as input and output:
 
 .. math::
     :label: helmert2d_mod
@@ -170,11 +166,12 @@ The modified observation equation is now transformed with centroids as input and
     T_y
     \end{array}\right]
 
+\
 
-Least Squares Estimation of Helmert 2D parameter based on simplified inversed normal equation.
+Least Squares Estimation of Helmert 2D parameter based on simplified inversed normal equation:
 
 .. math::
-    :label: bullshit
+    :label: normal_eq
 
     \left[\begin{array}{cc}
     \sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2) & 0 \\
@@ -187,49 +184,46 @@ Least Squares Estimation of Helmert 2D parameter based on simplified inversed no
     \sum_{i=1}^nw_i({\bar{v}}_i{\bar{x}}_i-{\bar{u}}_i{\bar{y}}_i)
     \end{array}\right]
 
+\
 
-Solved Helmert parameters a and b:
+Solved Helmert scale/rotation parameters :math:`a` and :math:`b`:
 
-\[
-a=\frac{\sum_{i=1}^nw_i({\bar{u}}_i{\bar{x}}_i+{\bar{v}}_i{\bar{y}}_i)}{\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)}
-\]
+.. math::
+    :label: normal_ab
 
-\[
-b=\frac{\sum_{i=1}^nw_i({\bar{v}}_i{\bar{x}}_i-{\bar{u}}_i{\bar{y}}_i)}{\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)}
-\]
+    \begin{array}{cc}a=\frac{\sum_{i=1}^nw_i({\bar{u}}_i{\bar{x}}_i+{\bar{v}}_i{\bar{y}}_i)}{\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)}\end{array}
+    \begin{array}{cc}b=\frac{\sum_{i=1}^nw_i({\bar{v}}_i{\bar{x}}_i-{\bar{u}}_i{\bar{y}}_i)}{\sum_{i=1}^nw_i({{\bar{u}}_i}^2+{{\bar{v}}_i}^2)}\end{array}
 
+\
 
-Solving translation parameters:
+Solving Helmert translation parameters :math:`t_x`, :math:`t_y`:
 
-\[
-t_x=x_0-u_0a-v_0b
-\]
+.. math::
+    :label: normal_t
 
-\[
-t_y=y_0+u_0b-v_0a
-\]
+    \begin{array}{cc}t_x=x_0-u_0a-v_0b\end{array}
+    \begin{array}{cc}t_y=y_0+u_0b-v_0a\end{array}
 
+\
 
-Residuals from least squares 2D Helmert: 
+Residuals from least squares 2D Helmert:
 
-\[
-v_x=\bar{x}-a\bar{u}-b\bar{v}
-\]
+.. math::
+    :label: residual_xy
 
-\[
-v_y=\bar{y}+b\bar{u}-a\bar{v}
-\]
+    \begin{array}{cc}v_x=\bar{x}-a\bar{u}-b\bar{v}\end{array}
+    \begin{array}{cc}v_y=\bar{y}+b\bar{u}-a\bar{v}\end{array}
 
+\
 
 Input coordinate transformed to the target coordinate system:
 
-\[
-{\varphi{}}_H=x_0-a\left(u_0-{\varphi{}}_{in}\right)-b(v_0-{\lambda{}}_{in}\cos{{\varphi{}}_{in}})
-\]
+.. math::
+    :label: pred_xy
 
-\[
-{\lambda{}}_H=\frac{y_0+b\left(u_0-{\varphi{}}_{in}\right)-a(v_0-{\lambda{}}_{in}\cos{{\varphi{}}_{in}})}{\cos{{\varphi{}}_{in}}}
-\]
+    {\varphi{}}_H=x_0-a\left(u_0-{\varphi{}}_{in}\right)-b(v_0-{\lambda{}}_{in}\cos{{\varphi{}}_{in}})
+
+    {\lambda{}}_H=\frac{y_0+b\left(u_0-{\varphi{}}_{in}\right)-a(v_0-{\lambda{}}_{in}\cos{{\varphi{}}_{in}})}{\cos{{\varphi{}}_{in}}}
  
 
 Least Squared Collocation
@@ -238,42 +232,43 @@ Least Squared Collocation
 The signal of the given common points are set as the same as the computed residuals from
 the least squares 2D Helmert.
 
+.. math::
+    :label: signal_n
 
-\[
-s_{nx}=v_x
-\]
+    \begin{array}{cc}s_{nx}=v_x\end{array}
+    \begin{array}{cc}s_{ny}=v_y\end{array}
 
-\[
-s_{ny}=v_y
-\]
+\
 
 Then the signal of the transformed points is given by:
 
+.. math::
+    :label: signal_m
 
-\[
-s_{mx}=C_{mn}W\ s_{nx}
-\]
+    \begin{array}{cc}s_{mx}=C_{mn}W\ s_{nx}\end{array}
+    \begin{array}{cc}s_{my}=C_{mn}W\ s_{ny}\end{array}
 
-
-\[
-s_{my}=C_{mn}W\ s_{ny}
-\]
-
+\
+ 
 The signal from Least Squares Collocation is added to the tranformed point. The location is called predicted point.
 
+\
 
 Predicted output latitude:
 
-\[
-{\varphi{}}_{out}={\varphi{}}_H+s_{mx}
-\]
+.. math::
+    :label: phi_out
 
+    {\varphi{}}_{out}={\varphi{}}_H+s_{mx}
+
+\
 
 Predicted output longitude:
 
-\[
-{\lambda{}}_{out}={\lambda{}}_H+\frac{s_{my}}{\cos{{\varphi{}}_{in}}}
-\]
+.. math::
+    :label: lambda_out
+
+    {\lambda{}}_{out}={\lambda{}}_H+\frac{s_{my}}{\cos{{\varphi{}}_{in}}}
 
 
 Examples
@@ -285,14 +280,30 @@ coordinate system and one for the target coodinate system:
 
 ::
 
-    +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt
+    +proj=lschelmert
+    +pp_trans=EUREF89_NGO48_20081014.cpt
 
-By adding the parameter `+polygons` :
+
+By adding the parameter `+polygons`, the selection of points might be separated in different areas:
 
 ::
 
-    +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt +polygons=Flater.geojson 
-	+ellps=GRS80
+    +proj=lschelmert
+    +pp_trans=EUREF89_NGO48_20081014.cpt
+    +polygons=Flater.geojson
+    +ellps=GRS80
+
+Proj string with entired set of optional parameters:
+
+::
+
+    +proj=lschelmert
+    +pp_trans=EUREF89_NGO48_20081014.cpt
+    +polygons=Flater.geojson
+    +points=15
+    +maximum_dist=80.0
+    +ccoll=10.0
+    +kcoll=0.0005
 
 Parameters
 ###############################################################################
@@ -302,45 +313,38 @@ Required
 
 .. option:: +pp_trans=<list>
 
-    A link to file with list of point pairs. A point pair is a object with
-	coordinates referred in two geodetic datums. The file itselfs is in binary
-	format.
+    A link to file with list of point pairs. A point pair is a object with coordinates referred in two geodetic datums. The file itselfs is in binary format.
 
 Optional
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. option:: +polygons=<list>
 
-    A link to geojson multipolygons. The operation tests if the input coordinates
-	are within some of the multipolygons. Multipolygons have a foreignkey areaid
-	which is a field in the point pair object from the cpt-file. Point pairs are
-	selected based on selected multipolygon.
+    A link to geojson multipolygons. The operation tests if the input coordinates are within some of the multipolygons. 
+    Multipolygons have a foreignkey areaid which is a field in the point pair object from the cpt-file. Point pairs are selected based on selected multipolygon.
 
 .. option:: +points=<value>
 
-    The number of maximum selected point candidates used in Least Square 
-	Collocation and 2D Helmert.  Units of latitude and longitude is in radians,
-	and height in meters.
-	
-	Default is 20. 
+    The number of maximum selected point candidates used in Least Square Collocation and 2D Helmert.
+    Units of latitude and longitude is in radians, and height in meters.
+
+    Default is 20. 
 
 .. option:: +maximum_dist=<value>
 
-    The maximum distance between input point and selected point candidate. Unit of the
-	distance is km. 
+    The maximum distance between input point and selected point candidate. Unit of the	distance is km. 
 	
-	Default is 100.0 km.
+    Default is 100.0 km.
 
 .. option:: +ccoll=<value>
     
-	The ccoll value is the distance where the empirical covariance touches zero. The
-	unit ccoll is in km. 
+    The ccoll value is the distance where the empirical covariance touches zero. The unit ccoll is in km. 
 
     Default is 7.7.	
 
 .. option:: +kcoll=<value>
 
-    The kcoll coefficient is simular to C0 in a standard Gauss Markov first order covariance
-	function.
+    The kcoll coefficient is simular to C0 in a standard Gauss Markov first order covariance function.
 	
-	Default is 0.00039.
+    Default is 0.00039.
+
