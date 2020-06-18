@@ -41,7 +41,7 @@ The processing is done in three steps:
 Selection of point pairs
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Bla-bla
+Bla-bla. Under construction...
 
 2D Helmert transformation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
