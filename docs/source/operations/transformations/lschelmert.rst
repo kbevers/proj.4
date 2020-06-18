@@ -32,20 +32,25 @@ this is huge planar gaps in some counties and municipalities. The gaps are upon
 2-3 meters on borders. Description and evaluation of the method are further
 documented in the articles see :cite:`OMathisen2002` and :cite:`OMathisen2003`.
 
-The processing is done in two steps:
+The processing is done in three steps:
 
-	1. Deterministic step: 2D Helmert transformation
-	2. Statistic step: Smoothing Least Squared Collocation
+	1. Selection of point pairs
+	2. Deterministic step: 2D Helmert transformation
+	3. Statistic step: Smoothing Least Squared Collocation
 
+Selection of point pairs
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Bla-bla
 
 2D Helmert transformation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 In the first step 2D Helmert transformation parameters are computed based on a
 certain number of selected common points (point pairs). 2D Helmert transformation
-consist of four parameters and those are solved by Least Squares Method. The inverted
-covariance matrix from LSC is used as weight matrix. That means closer points gets
-higher weight.
+consist of four parameters and those are solved by traditional Least Squares Method.
+The inverted covariance matrix from LSC is adopted as weight matrix. That means
+closer points gets higher weight.
  
 A standard 2D Helmert is described as:
 
@@ -69,7 +74,9 @@ A standard 2D Helmert is described as:
     t_y
     \end{array}\right]\\
 
-Where :math:`u` og :math:`v` is 2D coordinates in source coodinate system and x og y in target coordinate system. Helmert transformation parametres are denoted as :math:`t_x`, :math:`t_y`, :math:`a` and :math:`b`.
+Where :math:`u` og :math:`v` is 2D coordinates in source coodinate system and x og y in
+target coordinate system. Helmert transformation parametres are denoted as
+:math:`t_x`, :math:`t_y`, :math:`a` and :math:`b`.
 
 The selected covariance function for this operation a modified first Gauss Markov.
 
@@ -104,23 +111,26 @@ Weight matrix, inverse of Cnn:
 .. math::
     :label: weight_mat
 
-    W={C_{nn}}^{-1}\\*
+    W={C_{nn}}^{-1}
 
+\
 
 Ws is the sum of the entired weight matrix:
 
 
 .. math::
 
-    w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}\\*
+    w_s=\sum_{i=1}^n\sum_{j=1}^nw_{ji}
 
+\
 
 Sum weight for each point:
 
 .. math::
 
-    w=W\ \vec{1}\\*
+    w=W\ \vec{1}
 
+\
  
 Mass center computed based on weighed centroid:
 
@@ -332,7 +342,7 @@ Optional
 
 .. option:: +maximum_dist=<value>
 
-    The maximum distance between input point and selected point candidate. Unit of the	distance is km. 
+    The maximum distance between input point and selected point candidate. Unit of the distance is km. 
 	
     Default is 100.0 km.
 
