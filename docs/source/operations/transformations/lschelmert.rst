@@ -41,7 +41,11 @@ The processing is done in three steps:
 Selection of point pairs
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Bla-bla. Under construction 2...
+Both computations in step 2 and 3 are based on a certain number of point pairs
+according to the parameter ``+points``. The method selects the ``+points`` number
+of points that are closest to the input point. The selected points have to be
+within a radius of ``+maximum_dist`` km.
+
 
 2D Helmert transformation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -323,38 +327,56 @@ Required
 
 .. option:: +pp_trans=<list>
 
-    A link to file with list of point pairs. A point pair is a object with coordinates referred in two geodetic datums. The file itselfs is in binary format.
+    A link to file with list of point pairs. A point pair is a object with coordinates referred in two geodetic datums.
+    The file itselfs is in binary format.
+
+    If a file is prefixed by an @ the file is considered optional and PROJ will the not complain if the file is not available.
 
 Optional
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. option:: +polygons=<list>
 
-    A link to geojson multipolygons. The operation tests if the input coordinates are within some of the multipolygons. 
-    Multipolygons have a foreignkey areaid which is a field in the point pair object from the cpt-file. Point pairs are selected based on selected multipolygon.
+    A link to geojson multipolygons. The operation tests if the input coordinates are within some of the multipolygons.
+    Multipolygons have a foreignkey areaid which is a field in the point pair object from the cpt-file.
+    Point pairs are selected based on selected multipolygon.
+
+    If a file is prefixed by an @ the file is considered optional and PROJ will the not complain if the file is not available.
 
 .. option:: +points=<value>
 
     The number of maximum selected point candidates used in Least Square Collocation and 2D Helmert.
     Units of latitude and longitude is in radians, and height in meters.
 
-    Default is 20. 
+    *Default is 20.*
 
 .. option:: +maximum_dist=<value>
 
     The maximum distance between input point and selected point candidate. Unit of the distance is km. 
-	
-    Default is 100.0 km.
+
+    *Default is 100.0 km.*
 
 .. option:: +ccoll=<value>
     
     The ccoll value is the distance where the empirical covariance touches zero. The unit ccoll is in km. 
 
-    Default is 7.7.	
+    *Default is 7.7.*
 
 .. option:: +kcoll=<value>
 
     The kcoll coefficient is simular to C0 in a standard Gauss Markov first order covariance function.
-	
-    Default is 0.00039.
+
+    *Default is 0.00039.*
+
+.. include:: ../options/ellps.rst
+
+
+Further reading
+###############
+
+#. `Ligas, Banasik "LSC Alternative to Helmert's Tranformation with Hausbrandt's Post-Tranformation Correction" <https://www.degruyter.com/downloadpdf/j/rgg.2014.97.issue-1/rgg-2014-0009/rgg-2014-0009.pdf>`_
+
+#. `R. E. Deakin "Coordinate Transformation for Cadastral Surveying" <http://www.mygeodesy.id.au/documents/Coord%20Transforms%20in%20Cadastral%20Surveying.pdf>`_
+
+#. `Stackoverflow.com <https://stackoverflow.com/questions/4509798/finding-nearest-point-in-an-efficient-way>`_
 
