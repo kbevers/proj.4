@@ -197,8 +197,8 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	double coslat = cos(lp->phi);
 	double k = Q->kcoll == HUGE_VAL ? 0.00039 : Q->kcoll;
 	double c = Q->ccoll == HUGE_VAL ? 7.7 : Q->ccoll;
-
-    // Covariance matrices:
+    
+        // Covariance matrices:
 	Eigen::MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);
 	Eigen::MatrixXd cmn = CovarianceMN(lp, pairList, direction, k, c);
  
