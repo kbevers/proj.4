@@ -517,9 +517,8 @@ static void reassign_context(PJ* P, PJ_CONTEXT* ctx)
 
 PJ *TRANSFORMATION(lschelmert, 0)
 {
-	struct pj_opaque_lschelmert *Q;// = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
-	Q = (struct pj_opaque_lschelmert *)P->opaque;
-	//	auto Q = new pj_opaque_lschelmert;
+	//struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
+	auto Q = new pj_opaque_lschelmert;
 	P->opaque = (void *)Q;
 	P->destructor = destructor;
 	P->reassign_context = reassign_context;	
