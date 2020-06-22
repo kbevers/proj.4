@@ -6259,9 +6259,11 @@ void Conversion::_exportToPROJString(
                                          common::UnitOfMeasure::Type::LINEAR)
                        .exportToPROJString();
         auto reverse_uom =
-            common::UnitOfMeasure(std::string(), 1.0 / convFactor,
-                                  common::UnitOfMeasure::Type::LINEAR)
-                .exportToPROJString();
+            convFactor == 0.0
+                ? std::string()
+                : common::UnitOfMeasure(std::string(), 1.0 / convFactor,
+                                        common::UnitOfMeasure::Type::LINEAR)
+                      .exportToPROJString();
         if (uom == "m") {
             // do nothing
         } else if (!uom.empty()) {
@@ -9082,6 +9084,12 @@ extractGeographicCRSIfGeographicCRSOrEquivalent(const crs::CRSNNPtr &crs) {
                     }
                 }
             }
+        } else {
+            auto boundCRS = util::nn_dynamic_pointer_cast<crs::BoundCRS>(crs);
+            if (boundCRS) {
+                geogCRS = util::nn_dynamic_pointer_cast<crs::GeographicCRS>(
+                    boundCRS->baseCRS());
+            }
         }
     }
     return geogCRS;
@@ -10194,6 +10202,17 @@ void ConcatenatedOperation::fixStepsDirection(
 
     // Set of heuristics to assign CRS to steps, and possibly reverse them.
 
+    const auto isGeographic = [](const crs::CRS *crs) -> bool {
+        return dynamic_cast<const crs::GeographicCRS *>(crs) != nullptr;
+    };
+
+    const auto isGeocentric = [](const crs::CRS *crs) -> bool {
+        auto geodCRS = dynamic_cast<const crs::GeodeticCRS *>(crs);
+        if (geodCRS && geodCRS->coordinateSystem()->axisList().size() == 3)
+            return true;
+        return false;
+    };
+
     for (size_t i = 0; i < operationsInOut.size(); ++i) {
         auto &op = operationsInOut[i];
         auto l_sourceCRS = op->sourceCRS();
@@ -10284,18 +10303,6 @@ void ConcatenatedOperation::fixStepsDirection(
             }
         } else if (!conv && l_sourceCRS && l_targetCRS) {
 
-            const auto isGeographic = [](const crs::CRS *crs) -> bool {
-                return dynamic_cast<const crs::GeographicCRS *>(crs) != nullptr;
-            };
-
-            const auto isGeocentric = [](const crs::CRS *crs) -> bool {
-                auto geodCRS = dynamic_cast<const crs::GeodeticCRS *>(crs);
-                if (geodCRS &&
-                    geodCRS->coordinateSystem()->axisList().size() == 3)
-                    return true;
-                return false;
-            };
-
             // Transformations might be mentioned in their forward directions,
             // whereas we should instead use the reverse path.
             auto prevOpTarget = (i == 0) ? concatOpSourceCRS.as_nullable()
@@ -10340,10 +10347,20 @@ void ConcatenatedOperation::fixStepsDirection(
         auto l_targetCRS = operationsInOut.back()->targetCRS();
         if (l_targetCRS &&
             !compareStepCRS(l_targetCRS.get(), concatOpTargetCRS.get())) {
-            throw InvalidOperation("The target CRS of the last step of "
-                                   "concatenated operation is not the same "
-                                   "as the target CRS of the concatenated "
-                                   "operation itself");
+            if (l_targetCRS->nameStr() == concatOpTargetCRS->nameStr() &&
+                ((isGeographic(l_targetCRS.get()) &&
+                  isGeocentric(concatOpTargetCRS.get())) ||
+                 (isGeocentric(l_targetCRS.get()) &&
+                  isGeographic(concatOpTargetCRS.get())))) {
+                auto newOp(Conversion::createGeographicGeocentric(
+                    NN_NO_CHECK(l_targetCRS), concatOpTargetCRS));
+                operationsInOut.push_back(newOp);
+            } else {
+                throw InvalidOperation("The target CRS of the last step of "
+                                       "concatenated operation is not the same "
+                                       "as the target CRS of the concatenated "
+                                       "operation itself");
+            }
         }
     }
 }
@@ -11085,10 +11102,9 @@ struct CoordinateOperationFactory::Private {
         const crs::GeographicCRS *geogDst,
         std::vector<CoordinateOperationNNPtr> &res);
 
-    static void createOperationsCompoundToGeod(
+    static void createOperationsToGeod(
         const crs::CRSNNPtr &sourceCRS, const crs::CRSNNPtr &targetCRS,
-        Private::Context &context, const crs::CompoundCRS *compoundSrc,
-        const crs::GeodeticCRS *geodDst,
+        Private::Context &context, const crs::GeodeticCRS *geodDst,
         std::vector<CoordinateOperationNNPtr> &res);
 
     static void createOperationsCompoundToCompound(
@@ -13284,14 +13300,18 @@ CoordinateOperationFactory::Private::createOperations(
         return applyInverse(createOperations(targetCRS, sourceCRS, context));
     }
 
+    // Order of comparison between the geogDst vs geodDst is impotant
     if (boundSrc && geogDst) {
         createOperationsBoundToGeog(sourceCRS, targetCRS, context, boundSrc,
                                     geogDst, res);
         return res;
+    } else if (boundSrc && geodDst) {
+        createOperationsToGeod(sourceCRS, targetCRS, context, geodDst, res);
+        return res;
     }
 
     // reverse of previous case
-    if (geogSrc && boundDst) {
+    if (geodSrc && boundDst) {
         return applyInverse(createOperations(targetCRS, sourceCRS, context));
     }
 
@@ -13341,8 +13361,7 @@ CoordinateOperationFactory::Private::createOperations(
                                        compoundSrc, geogDst, res);
         return res;
     } else if (compoundSrc && geodDst) {
-        createOperationsCompoundToGeod(sourceCRS, targetCRS, context,
-                                       compoundSrc, geodDst, res);
+        createOperationsToGeod(sourceCRS, targetCRS, context, geodDst, res);
         return res;
     }
 
@@ -15046,10 +15065,9 @@ void CoordinateOperationFactory::Private::createOperationsCompoundToGeog(
 
 // ---------------------------------------------------------------------------
 
-void CoordinateOperationFactory::Private::createOperationsCompoundToGeod(
+void CoordinateOperationFactory::Private::createOperationsToGeod(
     const crs::CRSNNPtr &sourceCRS, const crs::CRSNNPtr &targetCRS,
-    Private::Context &context, const crs::CompoundCRS * /*compoundSrc*/,
-    const crs::GeodeticCRS *geodDst,
+    Private::Context &context, const crs::GeodeticCRS *geodDst,
     std::vector<CoordinateOperationNNPtr> &res) {
     auto datum = geodDst->datum();
     if (datum) {
@@ -15068,8 +15086,11 @@ void CoordinateOperationFactory::Private::createOperationsCompoundToGeod(
             createOperations(intermGeog3DCRS, targetCRS, context);
         if (!geog3DToTargetOps.empty()) {
             for (const auto &op : sourceToGeog3DOps) {
+                auto newOp = op->shallowClone();
+                setCRSs(newOp.get(), sourceCRS, intermGeog3DCRS);
                 res.emplace_back(ConcatenatedOperation::createComputeMetadata(
-                    {op, geog3DToTargetOps.front()}, !allowEmptyIntersection));
+                    {newOp, geog3DToTargetOps.front()},
+                    !allowEmptyIntersection));
             }
         }
     }
