@@ -12658,56 +12658,6 @@ TEST(json_import, multiple_ids) {
 
 // ---------------------------------------------------------------------------
 
-TEST(json_import, geojsonmultipolygon)
-{
-	auto json = "{\n"
-		"  \"$schema\": \"foo\",\n"
-		"  \"type\": \"FeatureCollection\",\n"
-		"  \"name\": \"NGO_areas\",\n"
-		"  \"crs\": {\n"
-		"    \"type\": \"name\",\n"
-		"    \"properties\": {\n"
-		"      \"name\": \"urn:ogc:def:crs:OGC:1.3:CRS84\",\n"
-		"      },\n"
-		"    },\n"
-		"  \"features\": [{\n"
-		"    \"type\": \"Feature\",\n"
-		"    \"properties\": {\n"
-		"      \"areaid\": 4,\n"
-		"      }],\n"
-		"    \"geometry\": {\n"
-		"      \"type\": \"MultiPolygon\",\n"
-		"      \"coordinates\": [{\n"
-		"        [\n"
-		"          [\n"		
-		"	         [9.172825706378122, 58.873072536513099],\n"
-		"	         [9.172825706378122, 58.873072536513099],\n"
-		"	         [9.173037067877814, 58.872607932808364],\n"
-		"	         [9.172825706378122, 58.873072536513099]\n"
-		"          ]\n"
-		"        ]\n"
-		"        }],\n"
-		"      },\n"
-		"    }],\n"
-		"}";
-
-	// Test string:
-	/*
-	{
-	"type": "FeatureCollection",
-	"name": "NGO_areas",
-	"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-	"features":
-	[
-      { "type": "Feature", "properties": { "areaid": 4 }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 9.172825706378122, 58.873072536513099 ], [ 9.172452176171898, 58.873496763387216 ], [ 9.173037067877814, 58.872607932808364 ], [ 9.172825706378122, 58.873072536513099 ] ] ] ] } }
-	]	
-	}	
-	*/
-
-}
-
-// ---------------------------------------------------------------------------
-
 TEST(json_export, coordinate_system_id) {
     auto json = "{\n"
                 "  \"$schema\": \"foo\",\n"
