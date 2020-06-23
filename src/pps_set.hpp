@@ -61,7 +61,7 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey);
 
 // ---------------------------------------------------------------------------
 
-PointPairs *findPointPairs(const ListOfPpSet &cps, const PJ_LPZ &input, double maxdist = 0.1);
+PointPairs *findPointPairs(PJ *P, const ListOfPpSet &cps, const PJ_LPZ &input, double maxdist = 0.1);
 
 NS_PROJ_END
 

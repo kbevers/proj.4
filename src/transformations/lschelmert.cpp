@@ -424,7 +424,7 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 
 	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 100.0 : Q->maximum_dist;
 
-	PointPairs* pointPairs = findPointPairs(Q->pps, lpz, Q->maximum_dist);
+	PointPairs* pointPairs = findPointPairs(P, Q->pps, lpz, Q->maximum_dist);
 	
 	if (pointPairs == nullptr)
 	{
@@ -462,7 +462,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 
 	Q->maximum_dist = Q->maximum_dist == HUGE_VAL ? 0.1 : Q->maximum_dist; // Default 100 km
 
-	PointPairs *pointPairs = findPointPairs(Q->pps, lpz, Q->maximum_dist);
+	PointPairs *pointPairs = findPointPairs(P, Q->pps, lpz, Q->maximum_dist);
 
 	if (pointPairs == nullptr)
 	{

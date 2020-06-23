@@ -136,10 +136,10 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 
 // ---------------------------------------------------------------------------
 
-PointPairs* findPointPairs(const ListOfPpSet &pps, const PJ_LPZ &input, double maxdist)
+PointPairs* findPointPairs(PJ *P, const ListOfPpSet &pps, const PJ_LPZ &input, double maxdist)
 {
 	// Scaled km to radians:
-	maxdist /= 6371.0;
+	maxdist /= P->a / 1000.0;
 
 	for (const auto &ppSet : pps)
 	{
