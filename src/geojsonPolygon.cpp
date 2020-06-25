@@ -85,7 +85,7 @@ GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
 {
 	if (filename == "null")
 	{
-		auto polygonSet = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet(ctx));
+		auto polygonSet = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
 		polygonSet->m_name = filename;
 		polygonSet->m_format = "null";	 
 		return polygonSet;
@@ -137,7 +137,7 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 
 	pj_acquire_lock();
 	
-	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet(ctx));
+	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
 
 	fp->seek(0, SEEK_END);
 	unsigned long long fsize = fp->tell();
@@ -199,21 +199,6 @@ std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT
 
 // ---------------------------------------------------------------------------
 
-void GeoJsonMultiPolygonSet::reassign_context(PJ_CONTEXT *ctx)
-{
-	for (const auto &poly : m_polygons)	 
-		poly->reassign_context(ctx);
-} 
-
-// ---------------------------------------------------------------------------
-
-GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet(PJ_CONTEXT *ctx)
-{
-	m_ctx = ctx;
-}  
-
-// ---------------------------------------------------------------------------
-
 GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
 
 // ---------------------------------------------------------------------------
@@ -248,13 +233,6 @@ GeoJsonMultiPolygon::GeoJsonMultiPolygon(const int &areaid) : Polygon(areaid)
 // ---------------------------------------------------------------------------
 
 GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
-
-// ---------------------------------------------------------------------------
-
-void GeoJsonMultiPolygon::reassign_context(PJ_CONTEXT *ctx)
-{
-	m_ctx = ctx;
-}
 
 // ---------------------------------------------------------------------------
 

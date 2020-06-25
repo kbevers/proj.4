@@ -38,16 +38,14 @@ NS_PROJ_START
 
 class PROJ_GCC_DLL Polygon
 {
-protected:
-	PJ_CONTEXT *m_ctx;
+protected:	 
 	int m_areaid;
 	vector<PolygonPoint> m_pointList { };
 public:
 	PROJ_FOR_TEST Polygon(const int &areaid);
 	PROJ_FOR_TEST virtual ~Polygon();
 	PROJ_FOR_TEST const int &Id() const { return m_areaid; }
-	PROJ_FOR_TEST void SetPointList(vector<PolygonPoint> &pointList);	
-	//PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
+	PROJ_FOR_TEST void SetPointList(vector<PolygonPoint> &pointList);	 
 };
 
 // ---------------------------------------------------------------------------
@@ -59,9 +57,7 @@ protected:
 public:
 	PROJ_FOR_TEST GeoJsonMultiPolygon(const int &areaid);
 	PROJ_FOR_TEST ~GeoJsonMultiPolygon() override; 
-	PROJ_FOR_TEST bool IsPointInArea(PJ_LP *lp);
-	PROJ_FOR_TEST void reassign_context(PJ_CONTEXT *ctx);
-    //PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;
+	PROJ_FOR_TEST bool IsPointInArea(PJ_LP *lp);	
 };
 
 // ---------------------------------------------------------------------------
@@ -75,8 +71,6 @@ protected:
 	std::vector<std::unique_ptr<GeoJsonMultiPolygon>> m_polygons{};
 
 	GeoJsonMultiPolygonSet();
-	GeoJsonMultiPolygonSet(PJ_CONTEXT *ctx);
-
 public:
     PROJ_FOR_TEST virtual ~GeoJsonMultiPolygonSet();
 
@@ -86,9 +80,7 @@ public:
 	PROJ_FOR_TEST const std::string &name() const { return m_name; }
  	PROJ_FOR_TEST const std::string &format() const { return m_format; }
 	PROJ_FOR_TEST const std::vector<std::unique_ptr<GeoJsonMultiPolygon>> &polygons() const { return m_polygons; } 
-    PROJ_FOR_TEST void reassign_context(PJ_CONTEXT *ctx);
-	// PROJ_FOR_TEST virtual void reassign_context(PJ_CONTEXT *ctx) = 0;	
-	PROJ_FOR_TEST virtual bool reopen(PJ_CONTEXT *ctx);	
+ 	PROJ_FOR_TEST virtual bool reopen(PJ_CONTEXT *ctx);	
 };
 
 typedef std::vector<std::unique_ptr<GeoJsonMultiPolygonSet>> ListOfMultiPolygons;

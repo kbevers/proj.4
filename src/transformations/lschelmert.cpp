@@ -505,16 +505,6 @@ static PJ *destructor(PJ *P, int errlev)
 	return pj_default_destructor(P, errlev);
 }
 
-// TODO: Static method might be deleted
-static void reassign_context(PJ* P, PJ_CONTEXT* ctx)
-{
-	auto Q = (struct pj_opaque_lschelmert *) P->opaque;
-	for (auto& poly : Q->polygonsets)
-	{
-		poly->reassign_context(ctx);
-	}
-}
-
 static struct pj_opaque_lschelmert * initQ()
 {
 	struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
@@ -574,8 +564,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	struct pj_opaque_lschelmert *Q = initQ();
 
 	P->opaque = (void *)Q;
-	P->destructor = destructor;
-	P->reassign_context = reassign_context;
+	P->destructor = destructor;	
 
 	if (Q == nullptr)
 		return destructor(P, ENOMEM);	
