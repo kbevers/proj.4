@@ -567,21 +567,15 @@ static struct pj_opaque_lschelmert * initQ()
 	Q->dopk.k = 0.0;
 	Q->dopk.o = 0.0;
 	Q->dopk.p = 0.0;
-
-	/*
-		ListOfMultiPolygons polygonsets{};
-		ListOfPpSet pps{};
-	*/
 }
 
 PJ *TRANSFORMATION(lschelmert, 0)
-{
-	//auto Q = new pj_opaque_lschelmert;
+{	
 	struct pj_opaque_lschelmert *Q = initQ();
 
 	P->opaque = (void *)Q;
 	P->destructor = destructor;
-	P->reassign_context = reassign_context;	
+	P->reassign_context = reassign_context;
 
 	if (Q == nullptr)
 		return destructor(P, ENOMEM);	
