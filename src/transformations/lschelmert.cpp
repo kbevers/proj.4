@@ -515,10 +515,70 @@ static void reassign_context(PJ* P, PJ_CONTEXT* ctx)
 	}
 }
 
+static struct pj_opaque_lschelmert * initQ()
+{
+	struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
+
+	if (nullptr == Q)
+		return nullptr;
+
+	Q->a = 1.0;
+	Q->b = 0.0;
+	Q->tx = 0.0;
+	Q->ty = 0.0;
+
+	Q->ccoll = 0.0;
+	Q->kcoll = 0.0;
+	Q->n_points = 0;
+	Q->maximum_dist = 0.0;
+	Q->sigmaHelmert = 0.0;
+	Q->signalx = 0.0;
+	Q->signaly = 0.0;
+
+	Q->u0 = 0.0;
+	Q->v0 = 0.0;
+	Q->x0 = 0.0;
+	Q->y0 = 0.0;
+
+	Q->xyz.x = 0.0;
+	Q->xyz.y = 0.0;
+	Q->xyz.z = 0.0;
+
+	Q->xyz_0.x = 0.0;
+	Q->xyz_0.y = 0.0;
+	Q->xyz_0.z = 0.0;
+
+	Q->dxyz.x = 0.0;
+	Q->dxyz.y = 0.0;
+	Q->dxyz.z = 0.0;
+
+	Q->refp.x = 0.0;
+	Q->refp.y = 0.0;
+	Q->refp.z = 0.0;
+
+	Q->opk.k = 0.0;
+	Q->opk.o = 0.0;
+	Q->opk.p = 0.0; 
+	
+	Q->opk_0.k = 0.0;
+	Q->opk_0.o = 0.0;
+	Q->opk_0.p = 0.0;
+
+	Q->dopk.k = 0.0;
+	Q->dopk.o = 0.0;
+	Q->dopk.p = 0.0;
+
+	/*
+		ListOfMultiPolygons polygonsets{};
+		ListOfPpSet pps{};
+	*/
+}
+
 PJ *TRANSFORMATION(lschelmert, 0)
 {
-	//struct pj_opaque_lschelmert *Q = static_cast<struct pj_opaque_lschelmert*>(pj_calloc(1, sizeof(struct pj_opaque_lschelmert)));
-	auto Q = new pj_opaque_lschelmert;
+	//auto Q = new pj_opaque_lschelmert;
+	struct pj_opaque_lschelmert *Q = initQ();
+
 	P->opaque = (void *)Q;
 	P->destructor = destructor;
 	P->reassign_context = reassign_context;	
