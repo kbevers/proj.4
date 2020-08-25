@@ -1,6 +1,6 @@
 /*****************************************************************************
 * Project:	PROJ
-* Purpose:	GeoJson Multipolygon
+* Purpose:	GeoJson
 * Author:	Sveinung Himle <sveinung.himle at kartverket.no>
 *
 ******************************************************************************
@@ -35,284 +35,620 @@
 
 #include "filemanager.hpp"
 #include "geojsonPolygon.hpp"
+#include "proj/io.hpp"
+#include "proj/nn.hpp"
 #include "proj/internal/lru_cache.hpp"
-#include "proj/internal/nlohmann/json.hpp"
+#include "proj/internal/include_nlohmann_json.hpp"
+#include "proj_json_streaming_writer.hpp"
 #include "proj_internal.h"
 #include "proj/internal/internal.hpp"
- 
+
 using json = nlohmann::json;
  
 NS_PROJ_START
 
 using namespace NS_PROJ::internal;
 
-template<class UnaryFunction>
-void recursive_iterate(const json& j, vector<PolygonPoint> &vlist, UnaryFunction f)
+namespace geoJson
 {
-	for (auto it = j.begin(); it != j.end(); ++it)
-	{
-		auto v = it.value();
+	// ---------------------------------------------------------------------------
 
-		if (it->is_array() || it->is_object())
-			recursive_iterate(*it, vlist, f);
-		else if (it->is_null())
-			f(it);
-		else if (it->is_number_float())
+	static util::BaseObjectNNPtr create(const json & j)
+	{
+		if (!j.is_object())		 
+			throw io::ParsingException("JSON object expected");
+		 
+		auto type = j["type"];
+		if (type == "FeatureCollection")		
+			return GeoJsonParser().builtGeoJson(j);
+		
+		throw io::ParsingException("Unsupported value of \"type\"");
+	}
+
+	// ---------------------------------------------------------------------------
+	
+    util::BaseObjectNNPtr createFromInput(const std::string &text, PJ_CONTEXT *ctx)
+	{
+		if (!text.empty() && text[0] == '{')
 		{
-			float x = it.value();
-			if (it != j.end())
+			json j;
+			try
 			{
-				++it;
+				j = json::parse(text);
+			}
+			catch (const std::exception &e)
+			{
+				throw io::ParsingException(e.what());
+			}
+			return create(j);
+		}
+		throw io::ParsingException("unrecognized format / unknown name");
+	}
+
+	// ---------------------------------------------------------------------------	
+	
+	GeoJson::GeoJson() = default;	 
+
+	// ---------------------------------------------------------------------------
+	
+	GeoJson::GeoJson(const string &name, const std::vector<FeatureNNPtr> &features, const GeoJsonCrsPtr &crs)		
+	{
+		m_name = name;
+		m_features = features;
+		m_GeoJsonCrs = crs;
+	};
+
+	// ---------------------------------------------------------------------------
+
+	GeoJson::GeoJson(const string &name, const std::map<std::string, FeatureNNPtr> &features, const GeoJsonCrsPtr &crs)
+	{
+		m_name = name;
+		m_featuresMap = features;
+		m_GeoJsonCrs = crs;
+	};
+
+	// ---------------------------------------------------------------------------
+
+	GeoJson::~GeoJson() = default;
+
+	// ---------------------------------------------------------------------------
+
+    void GeoJson::_exportToJSON(io::JSONFormatter *formatter) const
+	{
+		auto objectContext(formatter->MakeObjectContext("FeatureCollection", false));		
+		auto writer = formatter->writer();
+		
+		writer->AddObjKey("name");
+		writer->Add(name());
+
+		writer->AddObjKey("crs");
+		geoJsonCrs()->exportToJSON(formatter);
+		
+		writer->AddObjKey("features");
+
+		writer->StartArray();
+
+		for (auto feature : featuresMap())
+			feature.second->exportToJSON(formatter);
+
+		writer->EndArray();
+		
+		// TODO: Delete this
+		// Output to console, for testing.	
+		std::cout << formatter->toString() << "\n\n";
+	}
+	
+	// ---------------------------------------------------------------------------
+
+	GeoJsonNNPtr GeoJson::create(const string &name, const std::vector<FeatureNNPtr> &features, const GeoJsonCrsPtr &crs)
+	{
+		auto geojson(GeoJson::nn_make_shared<GeoJson>(name, features, crs));
+
+		return geojson;
+	}
+
+	GeoJsonNNPtr GeoJson::create(const string &name, const std::map<std::string, FeatureNNPtr> &features, const GeoJsonCrsPtr &crs)
+	{
+		auto geojson(GeoJson::nn_make_shared<GeoJson>(name, features, crs));
+
+		return geojson;
+	}
+
+	GeoJsonPtr GeoJson::openGeoJson(PJ_CONTEXT *ctx, const std::string &filename)
+	{
+		auto fp = FileManager::open_resource_file(ctx, filename.c_str());
+		
+		auto geoJson(GeoJson::nn_make_shared<GeoJson>());
+		
+		if (!fp)
+			return shared_ptr<GeoJson>(nullptr);
+
+		fp->seek(0, SEEK_END);
+		unsigned long long fsize = fp->tell();
+		fp->seek(0, SEEK_SET);
+
+		char *string = (char *)malloc(fsize + 1);
+		fp->read(string, fsize);
+
+		string[fsize] = 0;
+
+		const auto actualName(fp->name());
+
+		if (ends_with(tolower(actualName), "geojson"))
+		{
+			auto obj = createFromInput(string, ctx);
+			auto jsonObj = dropbox::oxygen::nn_dynamic_pointer_cast<GeoJson>(obj);
+			
+		 	return jsonObj;
+		}
+		return geoJson;
+	}
+
+	// ---------------------------------------------------------------------------
+
+	MultiPolygon::MultiPolygon() = default;
+
+	// ---------------------------------------------------------------------------
+
+	MultiPolygon::MultiPolygon(std::vector<PolygonPoint> &coordinates)
+	{
+		m_coordinates = coordinates;
+	}
+
+	// ---------------------------------------------------------------------------
+
+	MultiPolygon::~MultiPolygon() = default;
+	
+	// ---------------------------------------------------------------------------
+	
+	bool MultiPolygon::IsPointInArea(PJ_LP *lp)
+	{
+		PolygonPoint point = { lp->lam, lp->phi };
+		PolygonPoint *vectorPointer = m_coordinates.data();
+		int n = (int)size(m_coordinates);
+
+		return isInside(vectorPointer, n, point);
+	}
+
+	// ---------------------------------------------------------------------------
+
+	void MultiPolygon::_exportToJSON(io::JSONFormatter *formatter) const
+	{
+		auto objectContext(formatter->MakeObjectContext("MultiPolygon", false));
+		auto writer = formatter->writer();
+
+		writer->AddObjKey("coordinates");
+
+		writer->StartArray();
+		writer->StartArray();
+		writer->StartArray();
+
+	 	for (auto coordinate : coordinates())
+		{
+			writer->StartArray();
+			writer->Add(newPrecision(coordinate.x, 4), 4);
+			writer->Add(newPrecision(coordinate.y, 4), 4);
+			writer->EndArray();
+		}
+
+		writer->EndArray();
+		writer->EndArray();
+		writer->EndArray();
+	}
+
+	// ---------------------------------------------------------------------------
+
+	MultiPolygonNNPtr MultiPolygon::create(std::vector<PolygonPoint> coordinates)
+	{
+		auto multiPolygon(MultiPolygon::nn_make_shared<MultiPolygon>(coordinates));
+
+		return multiPolygon;
+	}
+
+	// ---------------------------------------------------------------------------
+
+	Feature::Feature() = default;
+
+	// ---------------------------------------------------------------------------
+
+	Feature::Feature(const int &areaid, const MultiPolygonPtr &multipolygonPtr)
+	{
+		m_s_areaid = to_string(areaid);
+		m_areaid = areaid;
+		MultiPolygon(multipolygonPtr);
+	}
+
+	// ---------------------------------------------------------------------------
+
+	Feature::Feature(const int &areaid, const string &name, const GeoJsonPointPtr &pointPtr)
+	{
+		m_areaid = areaid;
+		m_name = name;
+		GeoJsonPoint(pointPtr);
+	}
+
+	// ---------------------------------------------------------------------------
+
+	Feature::~Feature() = default;
+
+	// ---------------------------------------------------------------------------
+		
+	FeatureNNPtr Feature::create(const int &areaid, const MultiPolygonPtr &multipolygonPtr)
+	{
+		auto feature(Feature::nn_make_shared<Feature>(areaid, multipolygonPtr));	 
+
+		return feature;
+	}
+
+	FeatureNNPtr Feature::create(const int &areaid, const string &name, const GeoJsonPointPtr &pointPtr)
+	{
+		auto feature(Feature::nn_make_shared<Feature>(areaid, name, pointPtr));
+
+		return feature;
+	}
+
+	// ---------------------------------------------------------------------------
+
+	void Feature::_exportToJSON(io::JSONFormatter *formatter) const
+	{
+		auto objectContext(formatter->MakeObjectContext("Feature", false));
+		
+		auto writer = formatter->writer();
+
+		writer->AddObjKey("properties");
+		
+		writer->StartObj();
+		if (Name() != "")
+		{
+			writer->AddObjKey("PointName");
+			writer->Add(Name());
+		}
+		if (AreaId() >= 0)
+		{
+			writer->AddObjKey("areaid");
+			writer->Add(AreaId());
+		}
+		writer->EndObj();
+
+		writer->AddObjKey("geometry");
+
+		if (MultiPolygon() != nullptr)
+			MultiPolygon()->exportToJSON(formatter);
+		else if (Point() != nullptr)
+			Point()->exportToJSON(formatter);
+	}
+
+	// ---------------------------------------------------------------------------
+	
+	GeoJsonPoint::GeoJsonPoint(const double &x, const double &y)
+	{
+		m_x = x;
+		m_y = y;
+	}
+
+	// ---------------------------------------------------------------------------
+
+	GeoJsonPoint::~GeoJsonPoint() = default;
+
+	// ---------------------------------------------------------------------------
+
+	void GeoJsonPoint::_exportToJSON(io::JSONFormatter *formatter) const
+	{
+		auto objectContext(formatter->MakeObjectContext("Point", false));
+		auto writer = formatter->writer();
+
+		writer->AddObjKey("coordinates");
+	
+		writer->StartArray();
+		writer->Add(X(), 14);
+		writer->Add(Y(), 14);
+		writer->EndArray();
+	}
+	
+	// ---------------------------------------------------------------------------
+
+	GeoJsonPointNNPtr GeoJsonPoint::create(const double &x, const double &y)
+	{
+		GeoJsonPointNNPtr geojsonpoint(GeoJsonPoint::nn_make_shared<GeoJsonPoint>(x, y));
+
+		return geojsonpoint;
+	}
+
+	// ---------------------------------------------------------------------------
+	
+	GeoJsonCrs::GeoJsonCrs(const string &name)
+	{
+		m_name = name;
+	}
+	
+	// ---------------------------------------------------------------------------
+	 
+	GeoJsonCrs::~GeoJsonCrs() = default;
+
+	// ---------------------------------------------------------------------------
+
+	void GeoJsonCrs::_exportToJSON(io::JSONFormatter *formatter) const
+	{
+		auto objectContext(formatter->MakeObjectContext("name", false));		
+		auto writer = formatter->writer();
+
+		writer->AddObjKey("properties");
+
+		writer->StartObj();
+		writer->AddObjKey("name");
+		writer->Add(Name());
+		writer->EndObj();
+	}
+
+	// ---------------------------------------------------------------------------
+
+	GeoJsonCrsNNPtr GeoJsonCrs::create(const string &name)
+	{
+		auto geojsoncrs(GeoJsonCrs::nn_make_shared<GeoJsonCrs>(name));
+
+		return geojsoncrs;
+	}
+
+	// ---------------------------------------------------------------------------	
+
+	GeoJsonGeometry::GeoJsonGeometry() = default;
+
+	// ---------------------------------------------------------------------------
+
+	GeoJsonGeometry::~GeoJsonGeometry() = default;
+	   
+	// ---------------------------------------------------------------------------
+	
+	GeoJsonNNPtr GeoJsonParser::builtGeoJson(const json &j)
+	{
+		GeoJsonPtr geoJson;
+		 
+		auto type = j["type"].get<std::string>();
+		
+		if (type == "FeatureCollection")
+		{
+			auto featureCollection = j["type"];
+
+			if (!j.contains("name"))
+				throw io::ParsingException("\"name\" is missing");
+			
+			std::string name = j["name"].get<std::string>();
+
+			if (!j.contains("crs"))
+				throw io::ParsingException("\"crs\" is missing");			 
+			 
+			std::map<std::string, FeatureNNPtr> featurePtrMap;
+
+			auto crs(GeoJsonCrs::nn_make_shared<GeoJsonCrs>(""));
+
+			if (j.contains("crs"))
+			{
+				auto crsJson = j["crs"];
+
+				crs = builtCrs(crsJson);
+			}
+	 		if (j.contains("features"))
+			{
+				auto features = j["features"];				 
+
+				for (const auto &feature : features)
+				{
+					if (feature["type"].get<std::string>() == "Feature")
+					{
+						auto feat = builtFeature(feature);
+
+						if (feat->Name() != "")
+							featurePtrMap.emplace(feat->Name(), feat);
+						else if (feat->AreaIdString() != "")
+							featurePtrMap.emplace(feat->AreaIdString(), feat);
+					}
+				}
+			}
+			return GeoJson::create(name, featurePtrMap, crs);
+		}
+		throw io::ParsingException("builtGeoJson failed.");
+	} 
+ 
+	// ---------------------------------------------------------------------------
+	 
+	MultiPolygonNNPtr GeoJsonParser::builtMultipolygon(const json &j)
+	{
+		std::vector<PolygonPoint> coordinateList{};
+
+		if (!j.contains("coordinates"))
+			throw io::ParsingException("builtMultipolygon failed.");
+
+		auto coordinates = j["coordinates"];
+
+		for (const auto &coordinate : coordinates)
+			recursive_iterate(coordinate, coordinateList, [](json::const_iterator it) {});
+
+		return MultiPolygon::create(coordinateList);
+	}
+	 
+	// ---------------------------------------------------------------------------
+	 
+	GeoJsonPointNNPtr GeoJsonParser::builtPoint(const json &j)
+	{
+		if (!j.contains("coordinates"))
+			throw io::ParsingException("builtPoint failed.");
+
+		auto coordinates = j["coordinates"];
+
+		double x = 0.0;
+		double y = 0.0;
+
+		if (coordinates.is_array())
+		{
+			for (auto it = coordinates.begin(); it != coordinates.end(); ++it)
+			{
 				if (it->is_number_float())
 				{
-					float y = it.value();
+					x = it.value();
 
-					// Converts to radians
-					PolygonPoint p{ proj_torad(x), proj_torad(y) };
-					vlist.push_back(p);
+					if (it != coordinates.end())
+					{
+						++it;
+
+						if (it->is_number_float())
+							y = it.value();
+					}
+					break;
 				}
 			}
 		}
-		else
-			f(it);
+		return GeoJsonPoint::create(x, y);
 	}
-}
-
-// ---------------------------------------------------------------------------
-
-std::unique_ptr<GeoJsonMultiPolygonSet>
-GeoJsonMultiPolygonSet::open(PJ_CONTEXT *ctx, const std::string &filename)
-{
-	if (filename == "null")
-	{
-		auto polygonSet = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
-		polygonSet->m_name = filename;
-		polygonSet->m_format = "null";	 
-		return polygonSet;
-	}
-	auto fp = FileManager::open_resource_file(ctx, filename.c_str());
-	if (!fp)
-		return nullptr;
 	 
-	const auto actualName(fp->name());
-	
-	if (ends_with(tolower(actualName), "geojson"))
+	// ---------------------------------------------------------------------------
+	 
+	FeatureNNPtr GeoJsonParser::builtFeature(const json &j)
 	{
-		auto polygonSet = GeoJsonMultiPolygonSet::parse(ctx, std::move(fp));
+		MultiPolygonPtr multipolygonPtr;
+		GeoJsonPointPtr geoJsonPointPtr;
 
-	 	if (!polygonSet)
-	 		return nullptr;
-
-		//auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());	
-		polygonSet->m_format = "geojson";
-		polygonSet->m_name = filename;
-
-		return polygonSet;
-	}
-	return nullptr;
-};
-
-// ---------------------------------------------------------------------------
-
-bool GeoJsonMultiPolygonSet::reopen(PJ_CONTEXT *ctx) 
-{
-	pj_log(ctx, PJ_LOG_DEBUG_MAJOR, "Polygon %s has changed. Re-loading it", m_name.c_str());
-
-	auto newGS = open(ctx, m_name);
-	m_format.clear();
-	
-	if (newGS)
-	{
-		// TODO: Complete this...
-		//	m_grids = std::move(newGS->m_grids);
-	}
-	return !m_format.empty();
-}
-
-// ---------------------------------------------------------------------------
-
-std::unique_ptr<GeoJsonMultiPolygonSet> GeoJsonMultiPolygonSet::parse(PJ_CONTEXT *ctx, std::unique_ptr<File> fp)
-{	
-	// TODO: Parsing method is very slow. 
-
-	pj_acquire_lock();
-	
-	auto set = std::unique_ptr<GeoJsonMultiPolygonSet>(new GeoJsonMultiPolygonSet());
-
-	fp->seek(0, SEEK_END);
-	unsigned long long fsize = fp->tell();
-	fp->seek(0, SEEK_SET);
-
-	char *string = (char *)malloc(fsize + 1);
-	fp->read(string, fsize);
-	
-	string[fsize] = 0;
-
-	// parse and serialize JSON
-	json j_complete = json::parse(string);
-	
-	// Output to console. For testing.
-	// std::cout << std::setw(4) << j_complete << "\n\n";
-
-	auto feat = j_complete.at("features");
-
-	for (auto it = feat.begin(); it != feat.end(); ++it)
-	{	
-		bool isMultiPolygon = false;
-		vector<PolygonPoint> pointVector;
-
-		auto areas = (*it)["properties"];
-		auto area = areas.find("areaid"); 
-		
-		if (area.value().is_number_integer())
+		if (j.contains("properties"))
 		{
-			int areaid = area.value();
-			auto polygon = new GeoJsonMultiPolygon(areaid);
-			
-			auto geo = (*it)["geometry"];
-			
-			for (auto& el : geo.items())
+			auto properties = j["properties"];
+
+			if (!properties.contains("areaid"))
+				throw io::ParsingException("\"areaid\" is missing");
+
+			int areaid = (int)properties["areaid"].get<double>();
+		  
+			if (!j.contains("geometry"))
+				throw io::ParsingException("\"geometry\" is missing");
+
+			auto geometry = j["geometry"];
+			 
+			if (geometry["type"].get<std::string>() == "MultiPolygon")
 			{
-				if (el.key() == "type")
-				{
-					if (el.value() == "MultiPolygon")
-						isMultiPolygon = true;
-				}
-				if (el.key() == "coordinates")
-				{
-					recursive_iterate(el, pointVector, [](json::const_iterator it) {});
-					polygon->SetPointList(pointVector);
-				}
-				if (isMultiPolygon)
-					set->m_polygons.push_back(std::unique_ptr<GeoJsonMultiPolygon>(polygon));
-			}		
+				multipolygonPtr = util::nn_dynamic_pointer_cast<MultiPolygon>(builtMultipolygon(geometry));
+				return Feature::create(areaid, multipolygonPtr);
+			}
+			else if (geometry["type"].get<std::string>() == "Point")
+			{
+				if (!properties.contains("PointName"))
+					throw io::ParsingException("Point name is missing.");
+				
+				auto pointName = properties["PointName"].get<std::string>();
+
+				geoJsonPointPtr = util::nn_dynamic_pointer_cast<GeoJsonPoint>(builtPoint(geometry));
+				return Feature::create(areaid, pointName, geoJsonPointPtr);
+			}
+			throw io::ParsingException("built method missing.");
 		}
+		throw io::ParsingException("builtFeature failed.");
 	}
 
-	// Testing Json dump
-	auto json_string = j_complete.dump();
+	// ---------------------------------------------------------------------------
 
-	pj_release_lock();
-
-	return set;
-}
-
-// ---------------------------------------------------------------------------
-
-GeoJsonMultiPolygonSet::GeoJsonMultiPolygonSet() = default;
-
-// ---------------------------------------------------------------------------
-
-GeoJsonMultiPolygonSet::~GeoJsonMultiPolygonSet() = default;
-
-// ---------------------------------------------------------------------------
-
-Polygon::Polygon(const int &areaid) 
-{
-	m_areaid = areaid;
-};
-
-// ---------------------------------------------------------------------------
-
-Polygon::~Polygon() = default;
-
-// ---------------------------------------------------------------------------
-
-void Polygon::SetPointList(vector<PolygonPoint> &pointList)
-{
-	m_pointList = pointList;
-}
-
-// ---------------------------------------------------------------------------
-
-GeoJsonMultiPolygon::GeoJsonMultiPolygon(const int &areaid) : Polygon(areaid)
-{
-	m_areaid = areaid;
-};
-
-// ---------------------------------------------------------------------------
-
-GeoJsonMultiPolygon::~GeoJsonMultiPolygon() = default;
-
-// ---------------------------------------------------------------------------
-
-bool GeoJsonMultiPolygon::IsPointInArea(PJ_LP *lp)
-{
-	PolygonPoint point = { lp->lam, lp->phi };
-	PolygonPoint *vectorPointer = m_pointList.data();	
-	int n = (int)size(m_pointList);
-
-	return isInside(vectorPointer, n, point);	 
-}
-
-// ---------------------------------------------------------------------------
-
-ListOfMultiPolygons pj_polygon_init(PJ *P, const char *polygonkey)
-{
-	std::string key("s");
-	key += polygonkey;
-	const char *polygonnames = pj_param(P->ctx, P->params, key.c_str()).s;
-
-	if (polygonnames == nullptr)
-		return {};
-
-	auto listOfPolygonNames = split(std::string(polygonnames), ',');
-	ListOfMultiPolygons polygons;
-
-	for (const auto &polygonStr : listOfPolygonNames)
+	GeoJsonCrsNNPtr GeoJsonParser::builtCrs(const json &j)
 	{
-		const char *polygonname = polygonStr.c_str();
-		bool canFail = false;
-		if (polygonname[0] == '@')
+		if (!j.contains("properties"))
+			throw io::ParsingException("builtCrs failed.");
+
+		auto crs(GeoJsonCrs::nn_make_shared<GeoJsonCrs>(""));
+
+		auto prop = j["properties"];
+
+		if (prop.contains("name"))
 		{
-			canFail = true;
-			polygonname++;
-		}	
-	    auto polySet = GeoJsonMultiPolygonSet::open(P->ctx, polygonname);
-		
-		if (!polySet)
+			auto name = prop["name"].get<std::string>();		 
+
+			return GeoJsonCrs::create(name);
+		}
+		return crs;
+	}
+
+	util::BaseObjectNNPtr GeoJsonParser::create(const json & j)
+	{
+		if (!j.is_object())
+			throw io::ParsingException("JSON object expected");
+
+		auto type = j["type"];
+		if (type == "FeatureCollection")
+			return GeoJsonParser().builtGeoJson(j);
+
+		throw io::ParsingException("Unsupported value of \"type\"");
+	}	 
+	 
+	// ---------------------------------------------------------------------------
+
+	ListOfGeoJson pj_geojson_init(PJ *P, const char *geojsonkey)
+	{
+		std::string key("s");
+		key += geojsonkey;
+
+		const char *geojsonnames = pj_param(P->ctx, P->params, key.c_str()).s;
+
+		if (geojsonnames == nullptr)
+			return {};
+
+		auto listOfGeoJsonNames = split(std::string(geojsonnames), ',');
+
+		ListOfGeoJson geoJsons;
+
+		for (const auto &geoJsonStr : listOfGeoJsonNames)
 		{
-	 		if (!canFail) 
+			const char *geoJsonname = geoJsonStr.c_str();
+
+			if (geoJsonname[0] == '@')
+				geoJsonname++;
+			 
+			auto polyset = geoJson::GeoJson::openGeoJson(P->ctx, geoJsonname);
+
+			if (!polyset)
 			{
-			   // if (proj_context_errno(P->ctx) != PJD_ERR_NETWORK_ERROR)
-				{
-					pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GEOJSON);
-				}
+				pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GEOJSON);
+
 				return {};
 			}
-			pj_ctx_set_errno(P->ctx, 0);
+			else
+				geoJsons.emplace_back(std::move(polyset));
 		}
-		else 
-		{
-			polygons.emplace_back(std::move(polySet)); 
-		}
+		return geoJsons;
 	}
-	return polygons;
-}
 
-// ---------------------------------------------------------------------------
-
-int areaIdPoint(PJ *P, const ListOfMultiPolygons &polygonList, PJ_LP *lp)
-{ 
-	for (const auto& polygonSet : polygonList)
-	{ 
-		for (const auto& polygon : polygonSet->polygons())
+	// ---------------------------------------------------------------------------
+	 
+	int areaIdPoint(PJ *P, const ListOfGeoJson &geoJsonList, PJ_LP *lp)
+	{
+		for (const auto& geoJson : geoJsonList)
 		{
-			auto areaId = polygon->Id();
-
-			if (polygon->IsPointInArea(lp))
+			for (const auto& feature : geoJson->featuresMap())
 			{
-				if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-					proj_log_trace(P, "Input point was found in area with id %d", areaId);	
+				if (!feature.second.get())
+				{
+					if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+						proj_log_trace(P, "GeoJson feature is empty");
 
-				return areaId;
-			}
+					return 0;
+				}
 				
-		}
-	} 
-	if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
-		proj_log_trace(P, "Input point was not found in any areas");
+				auto feat = feature.second;
+				auto areaId = feat->AreaId();
+			 
+				if (!feat->MultiPolygon())
+				{
+					if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+						proj_log_trace(P, "GeoJson feature is empty");
 
-	return 0;
+					return 0;
+				}
+				if (feat->MultiPolygon()->IsPointInArea(lp))
+				{
+					if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+						proj_log_trace(P, "Input point was found in area with id %d", areaId);
+
+					return areaId;
+				}
+			}
+		}
+		if (proj_log_level(P->ctx, PJ_LOG_TELL) >= PJ_LOG_TRACE)
+			proj_log_trace(P, "Input point was not found in any areas");
+
+		return 0;
+	}
 }
 NS_PROJ_END

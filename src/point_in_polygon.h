@@ -14,8 +14,8 @@ using namespace std;
 *  https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/
 *
 **************************************************************************************/
-//namespace
-//{	
+//namespace geoJson
+//{
 	struct PolygonPoint
 	{
 		double x;

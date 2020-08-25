@@ -75,6 +75,8 @@
 
 using namespace NS_PROJ;
 using namespace Eigen;
+using namespace geoJson;
+
 using json = nlohmann::json;
 
 PROJ_HEAD(lschelmert, "2D Helmert parameter estimation with collocation");
@@ -108,8 +110,8 @@ namespace
 		double maximum_dist;
 		double ccoll;
 		double kcoll;
-
-		ListOfMultiPolygons polygonsets{};
+		
+		ListOfGeoJson geosjonsets{};
 		ListOfPpSet pps{};
 	};
 }
@@ -356,7 +358,7 @@ std::vector<LPZ_Pair> findClosestPoints(PJ *P, PointPairs *ppList, PJ_LP lp, int
 		if (distance > maximum_dist)
 			continue;
 
-		pair.SetDistance(distance);
+		pair.Distance(distance);
 		
 		distances.push_back(pair);
 	}	 
@@ -431,13 +433,13 @@ static PJ_XYZ forward_3d(PJ_LPZ lpz, PJ *P)
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
-
- 	int areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
+  
+	int areaId = areaIdPoint(P, Q->geosjonsets, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates	 
 	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_FWD, n, Q->maximum_dist);
 	
 	if (closestPoints.size() < 5)
-	{		
+	{
 		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 		return point.xyz;
 	}
@@ -470,7 +472,7 @@ static PJ_LPZ reverse_3d(PJ_XYZ xyz, PJ *P)
 		return point.lpz;
 	}
 
-	int areaId = areaIdPoint(P, Q->polygonsets, &point.lp);
+	int areaId = areaIdPoint(P, Q->geosjonsets, &point.lp);
 	int n = Q->n_points == FP_NORMAL ? 20 : Q->n_points; // Default 20 point candidates
 	auto closestPoints = findClosestPoints(P, pointPairs, point.lp, areaId, PJ_INV, n, Q->maximum_dist);
 
@@ -557,6 +559,8 @@ static struct pj_opaque_lschelmert * initQ()
 	Q->dopk.k = 0.0;
 	Q->dopk.o = 0.0;
 	Q->dopk.p = 0.0;
+
+	return Q;
 }
 
 PJ *TRANSFORMATION(lschelmert, 0)
@@ -605,8 +609,8 @@ PJ *TRANSFORMATION(lschelmert, 0)
 
 	int has_polygons = pj_param(P->ctx, P->params, "tpolygons").i;
 	if (has_polygons > 0)
-		Q->polygonsets = pj_polygon_init(P, "polygons");
-
+		Q->geosjonsets = pj_geojson_init(P, "polygons"); 
+	 
 	if (proj_errno(P))
 	{		 
 		proj_log_error(P, "pair_trans: could not find required pair_trans file.");

@@ -34,6 +34,7 @@
 #include "proj_internal.h"
 #include "pps.hpp"
 #include "pps_set.hpp"
+#include "geojsonPolygon.hpp"
 
 NS_PROJ_START
 
@@ -45,8 +46,8 @@ PointPairs::PointPairs() = default;
 
 // ---------------------------------------------------------------------------
 
-PointPairs::PointPairs(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format, int noOfPoints)
-	: m_fp(std::move(fp)), m_name(nameIn), m_format(format), m_noOfPoints(noOfPoints)
+PointPairs::PointPairs(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format)
+	: m_fp(std::move(fp)), m_name(nameIn), m_format(format)
 {
 }
 
@@ -71,18 +72,18 @@ PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const st
 
 	if (noOfPoints < 4)
 		return nullptr;
+	
+	std::string name = filename;
+	std::string format = "cpt";
 
-	 std::string name = filename;
-	 std::string format = "cpt";
-
-	return new PointPairs(std::move(fp), name, format, noOfPoints);
+	return new PointPairs(std::move(fp), name, format);
 }
 
 // ---------------------------------------------------------------------------
 
 bool PointPairs::load(PJ_CONTEXT *ctx)
 {
-	if ((int)m_LpzPairList.size() == NoOfPoints())
+	if ((int)m_LpzPairList.size() > 0 && (int)m_LpzPairList.size() == NoOfPoints())
 		return true;
 	
 	unsigned long offset = 404;
@@ -107,24 +108,68 @@ bool PointPairs::load(PJ_CONTEXT *ctx)
 	return true;
 }
 
+// THIS IS A TEST
+bool PointPairs::loadGeoJson(PJ_CONTEXT *ctx)
+{
+	if (NoOfPoints() > 0)
+		return true;
+	 
+	auto geoJsonSource = geoJson::GeoJson::openGeoJson(ctx, "EUREF89_NGO48_20081014_source.geojson");
+	if (!geoJsonSource)
+		return false;
+
+	auto geoJsonTarget = geoJson::GeoJson::openGeoJson(ctx, "EUREF89_NGO48_20081014_target.geojson");
+	if (!geoJsonTarget)
+		return false;
+
+	auto pointPairSets = new PointPairsSet();
+
+	for (auto &feature : geoJsonSource->featuresMap())
+	{
+		auto name = feature.first;
+		auto featureSource = feature.second;
+
+		if (geoJsonTarget->FeatureExits(name))
+		{
+			auto featureTarget = geoJsonTarget->GetFeature(name);
+
+			double xSource = featureSource->Point()->X_rad();
+			double ySource = featureSource->Point()->Y_rad();
+
+			double xTarget = featureTarget->Point()->X_rad();
+			double yTarget = featureTarget->Point()->Y_rad();
+
+			int areaId = featureTarget->AreaId();
+			auto name = featureTarget->Name();
+		
+			auto pair = new LPZ_Pair();
+
+			pair->SetFromPointPosition(xSource, ySource);
+			pair->SetToPointPosition(xTarget, yTarget);
+			pair->Area(areaId);
+			pair->Name(strdup(name.c_str())); 
+
+			m_LpzPairList.push_back(*pair);
+		}
+	}
+	return true;
+}
+
 const PointPairs *PointPairs::pairsAt(double lon, double lat, double maxdist) const
 {
 	double coslat = cos(lat);
-	 
+
 	for (auto&& pair : m_LpzPairList)
 	{
 		auto point = pair.FromPoint();
+
 		double deltaPhi = point.phi - lat;
 		double deltaLam = (point.lam - lon) * coslat;
 
 		if (hypot(deltaPhi, deltaLam) < maxdist)
 			return this;
-	}	
+	}
 	return nullptr;
-}; 
-
-TestClass::TestClass() = default;
-
-TestClass::~TestClass() = default;
+};
 
 NS_PROJ_END

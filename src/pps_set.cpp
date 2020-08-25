@@ -31,6 +31,7 @@
 
 #include "pps.hpp"
 #include "pps_set.hpp"
+#include "geojsonPolygon.hpp"
 #include "filemanager.hpp"
 #include "proj/internal/internal.hpp"
 #include "proj.h"
@@ -77,6 +78,10 @@ std::unique_ptr<PointPairsSet> PointPairsSet::open(PJ_CONTEXT *ctx, const std::s
 		if (!pp)
 			return nullptr;
 
+		// TODO: Test loading GeoJson
+		//if (!pp->loadGeoJson(ctx))
+		//	return nullptr;
+
 		if (!pp->load(ctx))
 			return nullptr;
 		
@@ -86,9 +91,16 @@ std::unique_ptr<PointPairsSet> PointPairsSet::open(PJ_CONTEXT *ctx, const std::s
 		set->m_pairs.push_back(std::unique_ptr<PointPairs>(pp));
 
 		return set;
-	}
+	}	
 	return nullptr;
 };
+
+// ---------------------------------------------------------------------------
+
+bool IsName(geoJson::Feature name)
+{
+	return true;
+}
 
 // ---------------------------------------------------------------------------
 
@@ -107,29 +119,22 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 	for (const auto &ppnameStr : list)
 	{
 		const char *ppname = ppnameStr.c_str();
-		bool canFail = false;
+		
 		if (ppname[0] == '@')
-		{
-			canFail = true;
-			ppname++;
-		}
+			ppname++;		
+	
 		auto ppSet = PointPairsSet::open(P->ctx, ppname);
+		 
 		if (!ppSet)
 		{
-			if (!canFail)
-			{
-		 	//	if (proj_context_errno(P->ctx) != PJD_ERR_NETWORK_ERROR) 
-				{
-					pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
-				}
-				return {};
-			}
+			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
+			
+			return {};
+			
 			pj_ctx_set_errno(P->ctx, 0);
 		}
 		else
-		{
 			pps.emplace_back(std::move(ppSet));
-		}	
 	}
 	return pps;
 } 
@@ -154,7 +159,7 @@ PointPairs* findPointPairs(PJ *P, const ListOfPpSet &pps, const PJ_LPZ &input, d
 PointPairs *PointPairsSet::pairsAt(double lon, double lat, double maxdist) const
 {
 	for (const auto &pairs : m_pairs)
-	{ 
+	{
 		if (pairs->pairsAt(lon, lat, maxdist) != nullptr)
 			return pairs.get();
 	}
