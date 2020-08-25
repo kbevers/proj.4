@@ -147,7 +147,7 @@ bool PointPairs::loadGeoJson(PJ_CONTEXT *ctx)
 			pair->SetFromPointPosition(xSource, ySource);
 			pair->SetToPointPosition(xTarget, yTarget);
 			pair->Area(areaId);
-			pair->Name(strdup(name.c_str())); 
+			pair->Name(strdup(name.c_str()));
 
 			m_LpzPairList.push_back(*pair);
 		}

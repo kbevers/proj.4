@@ -243,7 +243,7 @@ namespace geoJson
 	{
 	protected:
 		string m_name{};
-		GeoJsonCrsPtr m_GeoJsonCrs;
+		GeoJsonCrsPtr m_GeoJsonCrs{};
 		std::vector<FeatureNNPtr> m_features{};
 		std::map<std::string, FeatureNNPtr> m_featuresMap{};
 	public:
@@ -264,7 +264,7 @@ namespace geoJson
 		PROJ_INTERNAL static GeoJsonNNPtr create(const string &name, const std::map<std::string, FeatureNNPtr> &features, const GeoJsonCrsPtr &crs);
 		PROJ_FOR_TEST static GeoJsonPtr openGeoJson(PJ_CONTEXT *ctx, const std::string &filename);
 		
-		PROJ_FOR_TEST const bool FeatureExits(std::string name)
+		PROJ_FOR_TEST bool FeatureExits(std::string name)
 		{
 			std::map<std::string, FeatureNNPtr>::iterator it;
 			it = m_featuresMap.find(name);

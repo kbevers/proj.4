@@ -97,13 +97,6 @@ std::unique_ptr<PointPairsSet> PointPairsSet::open(PJ_CONTEXT *ctx, const std::s
 
 // ---------------------------------------------------------------------------
 
-bool IsName(geoJson::Feature name)
-{
-	return true;
-}
-
-// ---------------------------------------------------------------------------
-
 ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 {
 	std::string key("s");
