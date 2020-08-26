@@ -196,8 +196,8 @@ namespace geoJson
 		int m_areaid = -1;
 		string m_name{};
 		string m_s_areaid{};
-		MultiPolygonPtr m_multipolygonPtr;
-		GeoJsonPointPtr m_pointPtr;
+		MultiPolygonPtr m_multipolygonPtr = nullptr;
+		GeoJsonPointPtr m_pointPtr = nullptr;
 		std::vector<std::unique_ptr<PJ_LPZ>> m_coordinates{};
 	public:
 		PROJ_FOR_TEST Feature();
@@ -228,7 +228,7 @@ namespace geoJson
 				return true;
 
 			return false;
-		};		 	
+		};
 	};
 
 	// ---------------------------------------------------------------------------

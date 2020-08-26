@@ -78,6 +78,7 @@ namespace geoJson
 			}
 			catch (const std::exception &e)
 			{
+				pj_ctx_set_errno(ctx, PJD_ERR_FAILED_TO_LOAD_GEOJSON);
 				throw io::ParsingException(e.what());
 			}
 			return create(j);
