@@ -461,9 +461,9 @@ namespace geoJson
 
 		auto coordinates = j["coordinates"];
 
-		for (const auto &coordinate : coordinates)
-			recursive_iterate(coordinate, coordinateList, [](json::const_iterator it) {});
-
+		for (const auto &coordinate : coordinates)			 
+			recursive_iterate(coordinate, coordinateList, [](json::const_iterator) {});
+		
 		return MultiPolygon::create(coordinateList);
 	}
 	 

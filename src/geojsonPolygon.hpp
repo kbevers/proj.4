@@ -68,7 +68,7 @@ namespace geoJson
 					{
 						double y = it.value();
 
-						// Converts to radians						 
+						// Converts to radians
 						PolygonPoint p{ proj_torad(x), proj_torad(y) };
 						vlist.push_back(p);
 					}
@@ -88,7 +88,9 @@ namespace geoJson
 
 		return num / denom;
 	}
- 
+
+	// ---------------------------------------------------------------------------
+
 	class GeoJsonCrs;
 	using GeoJsonCrsPtr = std::shared_ptr<GeoJsonCrs>;
 	using GeoJsonCrsNNPtr = util::nn<GeoJsonCrsPtr>;
