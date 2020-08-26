@@ -227,8 +227,10 @@ namespace geoJson
 	 	for (auto coordinate : coordinates())
 		{
 			writer->StartArray();
-			writer->Add(newPrecision(coordinate.x, 4), 4);
-			writer->Add(newPrecision(coordinate.y, 4), 4);
+
+			writer->Add(newPrecision(proj_todeg(coordinate.x), 4), 4);
+			writer->Add(newPrecision(proj_todeg(coordinate.y), 4), 4);
+
 			writer->EndArray();
 		}
 
