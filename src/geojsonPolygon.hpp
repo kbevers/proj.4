@@ -136,8 +136,8 @@ namespace geoJson
 		public GeoJsonGeometry	   
 	{
 	protected:
-		double m_x;
-		double m_y;
+		double m_x = 0;
+		double m_y = 0;
 	public:
 		PROJ_FOR_TEST explicit GeoJsonPoint(const double &x, const double &y);
 		INLINED_MAKE_SHARED
@@ -193,7 +193,7 @@ namespace geoJson
 		public io::IJSONExportable
 	{
 	protected:
-		int m_areaid;
+		int m_areaid = -1;
 		string m_name{};
 		string m_s_areaid{};
 		MultiPolygonPtr m_multipolygonPtr;

@@ -140,14 +140,14 @@ bool PointPairs::loadGeoJson(PJ_CONTEXT *ctx)
 			double yTarget = featureTarget->Point()->Y_rad();
 
 			int areaId = featureTarget->AreaId();
-			auto name = featureTarget->Name();
+			auto nameStr = featureTarget->Name();
 		
 			auto pair = new LPZ_Pair();
 
 			pair->SetFromPointPosition(xSource, ySource);
 			pair->SetToPointPosition(xTarget, yTarget);
 			pair->Area(areaId);
-			pair->Name(strdup(name.c_str()));
+			pair->Name(strdup(nameStr.c_str()));
 
 			m_LpzPairList.push_back(*pair);
 		}
