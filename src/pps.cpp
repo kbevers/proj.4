@@ -47,8 +47,9 @@ PointPairs::PointPairs() = default;
 // ---------------------------------------------------------------------------
 
 PointPairs::PointPairs(std::unique_ptr<File> &&fp, const std::string &nameIn, const std::string &format)
-	: m_fp(std::move(fp)), m_name(nameIn), m_format(format)
+	: /*m_fp(std::move(fp)),*/ m_name(nameIn), m_format(format)
 {
+	m_fp = std::move(fp);
 }
 
 // ---------------------------------------------------------------------------
@@ -68,7 +69,7 @@ PointPairs *PointPairs::open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const st
 	}
 
 	int noOfPoints = 0;
-	memcpy(&noOfPoints, header + 400, 4);	
+	memcpy(&noOfPoints, header + 400, 4);
 
 	if (noOfPoints < 4)
 		return nullptr;
@@ -122,7 +123,7 @@ bool PointPairs::loadGeoJson(PJ_CONTEXT *ctx)
 	if (!geoJsonTarget)
 		return false;
 
-	auto pointPairSets = new PointPairsSet();
+	//auto pointPairSets = new PointPairsSet();
 
 	for (auto &feature : geoJsonSource->featuresMap())
 	{

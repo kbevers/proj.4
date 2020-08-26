@@ -133,7 +133,7 @@ namespace geoJson
 	using GeoJsonPointNNPtr = util::nn<GeoJsonPointPtr>;
  
 	class PROJ_GCC_DLL GeoJsonPoint final :
-		public GeoJsonGeometry	   
+		public GeoJsonGeometry
 	{
 	protected:
 		double m_x = 0;
