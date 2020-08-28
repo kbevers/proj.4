@@ -110,53 +110,6 @@ bool PointPairs::load(PJ_CONTEXT *ctx)
 	return true;
 }
 
-// THIS IS A TEST
-bool PointPairs::loadGeoJson(PJ_CONTEXT *ctx)
-{
-	if (NoOfPoints() > 0)
-		return true;
-	 
-	auto geoJsonSource = geoJson::GeoJson::openGeoJson(ctx, "EUREF89_NGO48_20081014_source.geojson");
-	if (!geoJsonSource)
-		return false;
-
-	auto geoJsonTarget = geoJson::GeoJson::openGeoJson(ctx, "EUREF89_NGO48_20081014_target.geojson");
-	if (!geoJsonTarget)
-		return false;
-
-	//auto pointPairSets = new PointPairsSet();
-
-	for (auto &feature : geoJsonSource->featuresMap())
-	{
-		auto name = feature.first;
-		auto featureSource = feature.second;
-
-		if (geoJsonTarget->FeatureExits(name))
-		{
-			auto featureTarget = geoJsonTarget->GetFeature(name);
-
-			double xSource = featureSource->Point()->X_rad();
-			double ySource = featureSource->Point()->Y_rad();
-
-			double xTarget = featureTarget->Point()->X_rad();
-			double yTarget = featureTarget->Point()->Y_rad();
-
-			int areaId = featureTarget->AreaId();
-			auto nameStr = featureTarget->Name();
-		
-			auto pair = new LPZ_Pair();
-
-			pair->SetFromPointPosition(xSource, ySource);
-			pair->SetToPointPosition(xTarget, yTarget);
-			pair->Area(areaId);
-			pair->Name(strdup(nameStr.c_str()));
-
-			m_LpzPairList.push_back(*pair);
-		}
-	}
-	return true;
-}
-
 const PointPairs *PointPairs::pairsAt(double lon, double lat, double maxdist) const
 {
 	double coslat = cos(lat);

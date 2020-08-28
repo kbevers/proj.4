@@ -39,15 +39,24 @@ class PROJ_GCC_DLL PointPairsSet
 private:
 protected:
 	std::string m_name{};
+	std::string m_sourceName{};
+	std::string m_targetName{};
 	std::string m_format{};
 	std::vector<std::unique_ptr<PointPairs>> m_pairs {};
 public:
 	PROJ_FOR_TEST PointPairsSet();
 	PROJ_FOR_TEST virtual ~PointPairsSet();
 	PROJ_FOR_TEST static std::unique_ptr<PointPairsSet> open(PJ_CONTEXT *ctx, const std::string &filename);
+	PROJ_FOR_TEST static std::unique_ptr<PointPairsSet> open(PJ_CONTEXT *ctx, const std::string &sourcename, const std::string &targetname);
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
+	PROJ_FOR_TEST void Name(std::string name) { m_name = std::move(name); }
+	PROJ_FOR_TEST const std::string &SourceName() const { return m_sourceName; }
+	PROJ_FOR_TEST void SourceName(std::string name) { m_sourceName = std::move(name); }
+	PROJ_FOR_TEST const std::string &TargetName() const { return m_targetName; }
+	PROJ_FOR_TEST void TargetName(std::string name) { m_name = std::move(m_targetName); }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
-	PROJ_FOR_TEST const std::vector<std::unique_ptr<PointPairs>> & Pairs() const { return m_pairs; }
+	PROJ_FOR_TEST void Format(std::string format) { m_format = std::move(format); }
+	PROJ_FOR_TEST /*const*/ std::vector<std::unique_ptr<PointPairs>> &Pairs() /*const*/ { return m_pairs; }
 	PROJ_FOR_TEST PointPairs *pairsAt(double lon, double lat, double maxdist) const;
 };
 
@@ -57,7 +66,11 @@ typedef std::vector<std::unique_ptr<PointPairsSet>> ListOfPpSet;
 
 // ---------------------------------------------------------------------------
 
-ListOfPpSet pj_cp_init(PJ *P, const char *cpkey);
+ListOfPpSet pj_pp_init(PJ *P, const char *ppkey);
+
+// ---------------------------------------------------------------------------
+
+ListOfPpSet pj_pp_init(PJ *P, const char *sourcekey, const char *targetkey);
 
 // ---------------------------------------------------------------------------
 

@@ -90,10 +90,11 @@ public:
 	PROJ_FOR_TEST int NoOfPoints() const { return (int)m_LpzPairList.size(); }	 
 	PROJ_FOR_TEST const std::string &Name() const { return m_name; }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
-	PROJ_FOR_TEST const std::vector<LPZ_Pair> &LpzPairList() const { return m_LpzPairList; }
+	PROJ_FOR_TEST void Format(std::string name) { m_format = std::move(name); }
+
+	PROJ_FOR_TEST /*const*/ std::vector<LPZ_Pair> &LpzPairList() /* const */ { return m_LpzPairList; }
     PROJ_FOR_TEST static PointPairs *open(PJ_CONTEXT *ctx, std::unique_ptr<File> fp, const std::string &filename);
-	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);
-	PROJ_FOR_TEST bool loadGeoJson(PJ_CONTEXT *ctx);
+	PROJ_FOR_TEST bool load(PJ_CONTEXT *ctx);	 
 	PROJ_FOR_TEST const PointPairs *pairsAt(double lon, double lat, double maxdist = 0.1) const;
 };
 

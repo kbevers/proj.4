@@ -200,7 +200,7 @@ static PJ* calculateHelmertParameter(PJ *P, PJ_LP *lp, std::vector<LPZ_Pair> *pa
 	double k = Q->kcoll == HUGE_VAL ? 0.00039 : Q->kcoll;
 	double c = Q->ccoll == HUGE_VAL ? 7.7 : Q->ccoll;
     
-        // Covariance matrices:
+    // Covariance matrices:
 	Eigen::MatrixXd cnn = CovarianceNN(lp, pairList, direction, k, c);
 	Eigen::MatrixXd cmn = CovarianceMN(lp, pairList, direction, k, c);
  
@@ -525,7 +525,7 @@ static struct pj_opaque_lschelmert * initQ()
 	Q->maximum_dist = 0.0;
 	Q->sigmaHelmert = 0.0;
 	Q->signalx = 0.0;
-	Q->signaly = 0.0;
+	Q->signaly = 0.0;	
 
 	Q->u0 = 0.0;
 	Q->v0 = 0.0;
@@ -560,6 +560,8 @@ static struct pj_opaque_lschelmert * initQ()
 	Q->dopk.o = 0.0;
 	Q->dopk.p = 0.0;
 
+	Q->geosjonsets.clear();	
+
 	return Q;
 }
 
@@ -568,7 +570,7 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	struct pj_opaque_lschelmert *Q = initQ();
 
 	P->opaque = (void *)Q;
-	P->destructor = destructor;	
+	P->destructor = destructor;
 
 	if (Q == nullptr)
 		return destructor(P, ENOMEM);	
@@ -584,12 +586,19 @@ PJ *TRANSFORMATION(lschelmert, 0)
 	P->left = PJ_IO_UNITS_RADIANS; 
 	P->right = PJ_IO_UNITS_RADIANS;
 
-	if (0 == pj_param(P->ctx, P->params, "tpp_trans").i) 
+	if (0 == pj_param(P->ctx, P->params, "tpp_trans").i && 
+		(0 == pj_param(P->ctx, P->params, "tsource").i || 0 == pj_param(P->ctx, P->params, "ttarget").i)) 
 	{
-		proj_log_error(P, "pp_trans: +pp_trans parameter missing.");
+		if (0 == pj_param(P->ctx, P->params, "tpp_trans").i)		
+			proj_log_error(P, "pp_trans: +pp_trans parameter is missing.");
+		else
+			proj_log_error(P, "source or target: +source or +target parameters are missing.");
 		return pj_default_destructor(P, PJD_ERR_NO_ARGS);
 	}
-	Q->pps = pj_cp_init(P, "pp_trans");
+	if (pj_param_exists(P->params, "pp_trans"))
+		Q->pps = pj_pp_init(P, "pp_trans");
+	else if (pj_param_exists(P->params, "source") && pj_param_exists(P->params, "target"))
+		Q->pps = pj_pp_init(P, "source", "target");
 
 	Q->n_points = FP_NORMAL;
 	if (pj_param_exists(P->params, "n_points"))	

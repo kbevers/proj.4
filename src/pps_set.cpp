@@ -77,11 +77,7 @@ std::unique_ptr<PointPairsSet> PointPairsSet::open(PJ_CONTEXT *ctx, const std::s
 	
 		if (!pp)
 			return nullptr;
-
-		// TODO: Test loading GeoJson
-		//if (!pp->loadGeoJson(ctx))
-		//	return nullptr;
-
+		
 		if (!pp->load(ctx))
 			return nullptr;
 		
@@ -91,16 +87,87 @@ std::unique_ptr<PointPairsSet> PointPairsSet::open(PJ_CONTEXT *ctx, const std::s
 		set->m_pairs.push_back(std::unique_ptr<PointPairs>(pp));
 
 		return set;
-	}	
+	}
 	return nullptr;
 };
 
+std::unique_ptr<PointPairsSet> PointPairsSet::open(PJ_CONTEXT *ctx, const std::string &sourcename, const std::string &targetname)
+{
+	if (sourcename == "null" || targetname == "null")
+	{
+		auto set = std::unique_ptr<PointPairsSet>(new PointPairsSet());
+
+		set->m_sourceName = sourcename;
+		set->m_targetName = targetname;
+		set->m_format = "null";
+		set->m_pairs.push_back(std::unique_ptr<PointPairs>(new PointPairs()));
+
+		return set;
+	}
+
+	auto fpSource = FileManager::open_resource_file(ctx, sourcename.c_str());
+	if (!fpSource)
+		return nullptr;
+
+	auto fpTarget = FileManager::open_resource_file(ctx, targetname.c_str());
+	if (!fpTarget)
+		return nullptr;
+
+	auto geoJsonSource = geoJson::GeoJson::openGeoJson(ctx, sourcename);
+	if (!geoJsonSource)
+		return nullptr;
+
+	auto geoJsonTarget = geoJson::GeoJson::openGeoJson(ctx, targetname);
+	if (!geoJsonTarget)
+		return nullptr;
+
+	auto pointPairs = new PointPairs();
+	 
+	// Pairing source and target points
+	for (auto &feature : geoJsonSource->featuresMap())
+	{
+		auto name = feature.first;
+		auto featureSource = feature.second;
+
+		if (geoJsonTarget->FeatureExits(name))
+		{
+			auto featureTarget = geoJsonTarget->GetFeature(name);
+
+			double xSource = featureSource->Point()->X_rad();
+			double ySource = featureSource->Point()->Y_rad();
+
+			double xTarget = featureTarget->Point()->X_rad();
+			double yTarget = featureTarget->Point()->Y_rad();
+
+			int areaId = featureTarget->AreaId();
+			auto nameStr = featureTarget->Name();
+
+			auto pair = new LPZ_Pair();
+
+			pair->Area(areaId);
+			pair->Name(strdup(nameStr.c_str()));
+			pair->SetFromPointPosition(xSource, ySource);
+			pair->SetToPointPosition(xTarget, yTarget);
+			 
+			pointPairs->LpzPairList().push_back(*pair);
+		}
+	}
+	
+	auto set = std::unique_ptr<PointPairsSet>(new PointPairsSet());
+	set->m_sourceName = sourcename;
+	set->m_targetName = targetname;
+	set->m_format = "geojson";
+	set->m_pairs.push_back(std::unique_ptr<PointPairs>(pointPairs));
+	
+	return set;
+}
+
 // ---------------------------------------------------------------------------
 
-ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
+ListOfPpSet pj_pp_init(PJ *P, const char *ppkey)
 {
 	std::string key("s");
-	key += cpkey;
+	key += ppkey;
 
 	const char *ppnames = pj_param(P->ctx, P->params, key.c_str()).s;
 	if (ppnames == nullptr)
@@ -114,7 +181,7 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 		const char *ppname = ppnameStr.c_str();
 		
 		if (ppname[0] == '@')
-			ppname++;		
+			ppname++;
 	
 		auto ppSet = PointPairsSet::open(P->ctx, ppname);
 		 
@@ -123,14 +190,59 @@ ListOfPpSet pj_cp_init(PJ *P, const char *cpkey)
 			pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_CPT);
 			
 			return {};
-			
-			pj_ctx_set_errno(P->ctx, 0);
 		}
 		else
 			pps.emplace_back(std::move(ppSet));
 	}
 	return pps;
 } 
+
+// ---------------------------------------------------------------------------
+
+ListOfPpSet pj_pp_init(PJ *P, const char *sourcekey, const char *targetkey)
+{
+	std::string keyS("s");
+	std::string keyT("s");
+
+	keyS += sourcekey;
+	keyT += targetkey;
+
+	ListOfPpSet pps;
+
+	const char *sourcename;
+	const char *targetname;
+
+	const char *sourcenames = pj_param(P->ctx, P->params, keyS.c_str()).s;
+	if (sourcenames == nullptr)
+		return {};
+	
+	const char *targetnames = pj_param(P->ctx, P->params, keyT.c_str()).s;
+	if (targetnames == nullptr)
+		return {};
+
+	auto listSource = internal::split(std::string(sourcenames), ',');
+
+	for (const auto &sourceStr : listSource)
+		sourcename = sourceStr.c_str();
+
+	auto listTarget = internal::split(std::string(targetnames), ',');
+	
+	for (const auto &targetStr : listTarget)
+	    targetname = targetStr.c_str();
+
+	auto ppSet = PointPairsSet::open(P->ctx, sourcename, targetname);
+  
+	if (!ppSet)
+	{
+		pj_ctx_set_errno(P->ctx, PJD_ERR_FAILED_TO_LOAD_GEOJSON);
+
+		return {};
+	}
+	else
+		pps.emplace_back(std::move(ppSet));
+
+	return pps;
+}
 
 // ---------------------------------------------------------------------------
 
