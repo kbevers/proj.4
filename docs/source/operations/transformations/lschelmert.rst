@@ -297,14 +297,13 @@ coordinate system and one for the target coodinate system:
     +proj=lschelmert
     +pp_trans=EUREF89_NGO48_20081014.cpt
 
-
 By adding the parameter `+polygons`, the selection of points might be separated in different areas:
 
 ::
 
     +proj=lschelmert
     +pp_trans=EUREF89_NGO48_20081014.cpt
-    +polygons=Flater.geojson
+    +polygons=Areas_in_source_coordinate_system.geojson
     +ellps=GRS80
 
 Proj string with entired set of optional parameters:
@@ -313,7 +312,7 @@ Proj string with entired set of optional parameters:
 
     +proj=lschelmert
     +pp_trans=EUREF89_NGO48_20081014.cpt
-    +polygons=Flater.geojson
+    +polygons=Areas_in_source_coordinate_system.geojson
     +points=15
     +maximum_dist=80.0
     +ccoll=10.0
@@ -324,8 +323,8 @@ Proj string with alternative point pair clouds from GeoJson:
 ::
 
     +proj=lschelmert
-    +source=source.geojson
-	+target=target.geojson
+    +source=pointcloud_in_source_coordinate_system.geojson
+    +target=pointcloud_in_target_coordinate_system.geojson
     +polygons=Flater.geojson
     +ellps=GRS80
 
