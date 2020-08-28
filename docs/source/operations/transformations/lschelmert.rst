@@ -104,7 +104,7 @@ Covariance matrix of the input point:
     C_{mn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}\\*
 
 
-where :math:`n` is the number of common points, :math:`m` is the number of transformed and predicted points. :math:`m` is basically. :math:`d` is distance in km, :math:`c` the ccoll parameter and :math:`k` the kcoll parameter.
+where :math:`n` is the number of common points, :math:`m` is the number of transformed and predicted points. :math:`m` is basically. :math:`d` is distance in km, :math:`c` the ``+ccoll`` parameter and :math:`k` the ``+kcoll`` parameter.
 
 
 Further mass center points are computed for both coordinate systems with weight from the inverted covariance function. The weights are noted :math:`W`.
@@ -264,7 +264,7 @@ Then the signal of the transformed points is given by:
 
 \
  
-The signal from Least Squares Collocation is added to the tranformed point. The location is called predicted point.
+The signal from Least Squares Collocation is added to the transformed point. The location is called predicted point.
 
 \
 
@@ -332,8 +332,41 @@ Required
 
     If a file is prefixed by an @ the file is considered optional and PROJ will the not complain if the file is not available.
 
+
 Optional
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. option:: +source=<geojsonfile> +target=<geojsonfile>
+
+    As an alternative to ``++pp_trans``, ``++source`` and ``++target`` can be used instead. ``++source`` and ``++target`` 
+    point to source and target point clouds defined in GeoJson format. Points from the point clouds are merged into point pairs simular to the
+    file format linked with ``++pp_trans=``. 
+
+Example GeoJson source file::
+
+    {
+    "type": "FeatureCollection",
+    "name": "SourcePoints",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::4258" } },
+     "features": [
+    { "type": "Feature", "properties": { "PointName": "D41T0015", "areaid": 1 }, "geometry": { "type": "Point", "coordinates": [ 7.5656589314124, 57.961921820471922 ] } },
+    { "type": "Feature", "properties": { "PointName": "D41T0006", "areaid": 1 }, "geometry": { "type": "Point", "coordinates": [ 7.49628510591813, 57.968806542574711 ] } },
+    { "type": "Feature", "properties": { "PointName": "D41T0008", "areaid": 1 }, "geometry": { "type": "Point", "coordinates": [ 7.68176981177472, 57.974987421760297 ] } }
+    ]
+    }
+
+Example GeoJson target file::
+
+    {
+    "type": "FeatureCollection",
+    "name": "TargetPoints",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::4273" } },
+    "features": [
+    { "type": "Feature", "properties": { "PointName": "D41T0015", "areaid": 1 }, "geometry": { "type": "Point", "coordinates": [ 7.570042992984277, 57.96103569003175 ] } },
+    { "type": "Feature", "properties": { "PointName": "D41T0006", "areaid": 1 }, "geometry": { "type": "Point", "coordinates": [ 7.500665908824106, 57.967922720955677 ] } },
+    { "type": "Feature", "properties": { "PointName": "D41T0008", "areaid": 1 }, "geometry": { "type": "Point", "coordinates": [ 7.686169616304847, 57.974099635052838 ] } }
+    ]
+    }
 
 .. option:: +polygons=<list>
 
@@ -358,7 +391,7 @@ Optional
 
 .. option:: +ccoll=<value>
     
-    The ccoll value is the distance where the empirical covariance touches zero. The unit ccoll is in km. 
+    The ccoll value is the distance where the empirical covariance touches zero. The unit ``+ccoll`` is in km. 
 
     *Default is 7.7.*
 
