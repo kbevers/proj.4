@@ -6165,6 +6165,25 @@ void Conversion::_exportToPROJString(
                 std::string("Unsupported value for ") +
                 EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN);
         }
+    } else if (methodEPSGCode ==
+               EPSG_CODE_METHOD_TRANSVERSE_MERCATOR_SOUTH_ORIENTATED) {
+        // We map TMSO to tmerc with axis=wsu. This only works if false easting
+        // and northings are zero, which is the case in practice for South
+        // African and Namibian EPSG CRS
+        const auto falseEasting = parameterValueNumeric(
+            EPSG_CODE_PARAMETER_FALSE_EASTING, common::UnitOfMeasure::METRE);
+        if (falseEasting != 0) {
+            throw io::FormattingException(
+                std::string("Unsupported value for ") +
+                EPSG_NAME_PARAMETER_FALSE_EASTING);
+        }
+        const auto falseNorthing = parameterValueNumeric(
+            EPSG_CODE_PARAMETER_FALSE_NORTHING, common::UnitOfMeasure::METRE);
+        if (falseNorthing != 0) {
+            throw io::FormattingException(
+                std::string("Unsupported value for ") +
+                EPSG_NAME_PARAMETER_FALSE_NORTHING);
+        }
         // PROJ.4 specific hack for webmercator
     } else if (formatter->getCRSExport() &&
                methodEPSGCode ==
@@ -6282,6 +6301,8 @@ void Conversion::_exportToPROJString(
         bEllipsoidParametersDone = true;
     }
 
+    auto l_targetCRS = targetCRS();
+
     bool bAxisSpecFound = false;
     if (!bConversionDone) {
         const MethodMapping *mapping = getMapping(l_method.get());
@@ -6291,14 +6312,32 @@ void Conversion::_exportToPROJString(
                 formatter->addParam("approx");
             }
             if (mapping->proj_name_aux) {
+                bool addAux = true;
                 if (internal::starts_with(mapping->proj_name_aux, "axis=")) {
+                    if (mapping->epsg_code == EPSG_CODE_METHOD_KROVAK) {
+                        auto projCRS = dynamic_cast<const crs::ProjectedCRS *>(
+                            l_targetCRS.get());
+                        if (projCRS) {
+                            const auto &axisList =
+                                projCRS->coordinateSystem()->axisList();
+                            if (axisList[0]->direction() ==
+                                    cs::AxisDirection::WEST &&
+                                axisList[1]->direction() ==
+                                    cs::AxisDirection::SOUTH) {
+                                formatter->addParam("czech");
+                                addAux = false;
+                            }
+                        }
+                    }
                     bAxisSpecFound = true;
                 }
-                auto kv = split(mapping->proj_name_aux, '=');
-                if (kv.size() == 2) {
-                    formatter->addParam(kv[0], kv[1]);
-                } else {
-                    formatter->addParam(mapping->proj_name_aux);
+                if (addAux) {
+                    auto kv = split(mapping->proj_name_aux, '=');
+                    if (kv.size() == 2) {
+                        formatter->addParam(kv[0], kv[1]);
+                    } else {
+                        formatter->addParam(mapping->proj_name_aux);
+                    }
                 }
             }
 
@@ -6352,7 +6391,6 @@ void Conversion::_exportToPROJString(
         }
     }
 
-    auto l_targetCRS = targetCRS();
     if (l_targetCRS && applyTargetCRSModifiers) {
         crs::CRS *horiz = l_targetCRS.get();
         const auto compound = dynamic_cast<const crs::CompoundCRS *>(horiz);
@@ -13700,7 +13738,8 @@ CoordinateOperationFactory::Private::createOperationsGeogToVertFromGeoid(
         return ret;
     };
 
-    const auto getProjGeoidTransformation = [&sourceCRS, &targetCRS, &vertDst](
+    const auto getProjGeoidTransformation = [&sourceCRS, &targetCRS, &vertDst,
+                                             &context](
         const CoordinateOperationNNPtr &model,
         const std::string &projFilename) {
 
@@ -13746,8 +13785,32 @@ CoordinateOperationFactory::Private::createOperationsGeogToVertFromGeoid(
         const auto properties = util::PropertyMap().set(
             common::IdentifiedObject::NAME_KEY,
             buildOpName("Transformation", vertCRSMetre, geogSrcCRS));
+
+        // Try to find a representative value for the accuracy of this grid
+        // from the registered transformations.
+        std::vector<metadata::PositionalAccuracyNNPtr> accuracies;
+        const auto &modelAccuracies = model->coordinateOperationAccuracies();
+        if (modelAccuracies.empty()) {
+            const auto &authFactory = context.context->getAuthorityFactory();
+            if (authFactory) {
+                const auto transformationsForGrid =
+                    io::DatabaseContext::getTransformationsForGridName(
+                        authFactory->databaseContext(), projFilename);
+                double accuracy = -1;
+                for (const auto &transf : transformationsForGrid) {
+                    accuracy = std::max(accuracy, getAccuracy(transf));
+                }
+                if (accuracy >= 0) {
+                    accuracies.emplace_back(
+                        metadata::PositionalAccuracy::create(
+                            toString(accuracy)));
+                }
+            }
+        }
+
         return Transformation::createGravityRelatedHeightToGeographic3D(
-            properties, vertCRSMetre, geogSrcCRS, nullptr, projFilename, {});
+            properties, vertCRSMetre, geogSrcCRS, nullptr, projFilename,
+            !modelAccuracies.empty() ? modelAccuracies : accuracies);
     };
 
     std::vector<CoordinateOperationNNPtr> res;

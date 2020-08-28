@@ -132,6 +132,15 @@ class CApi : public ::testing::Test {
         ObjectKeeper &operator=(const ObjectKeeper &) = delete;
     };
 
+    struct PjContextKeeper {
+        PJ_CONTEXT *m_ctxt = nullptr;
+        explicit PjContextKeeper(PJ_CONTEXT *ctxt) : m_ctxt(ctxt) {}
+        ~PjContextKeeper() { proj_context_destroy(m_ctxt); }
+
+        PjContextKeeper(const PjContextKeeper &) = delete;
+        PjContextKeeper &operator=(const PjContextKeeper &) = delete;
+    };
+
     struct ContextKeeper {
         PJ_OPERATION_FACTORY_CONTEXT *m_op_ctxt = nullptr;
         explicit ContextKeeper(PJ_OPERATION_FACTORY_CONTEXT *op_ctxt)
@@ -714,6 +723,31 @@ TEST_F(CApi, proj_get_type) {
         EXPECT_EQ(proj_get_type(obj), PJ_TYPE_VERTICAL_CRS);
     }
     {
+        auto wkt = "TDATUM[\"Gregorian calendar\",\n"
+                   "     CALENDAR[\"proleptic Gregorian\"],\n"
+                   "     TIMEORIGIN[0000-01-01]]";
+
+        auto datum =
+            proj_create_from_wkt(m_ctxt, wkt, nullptr, nullptr, nullptr);
+        ObjectKeeper keeper(datum);
+        ASSERT_NE(datum, nullptr);
+        EXPECT_EQ(proj_get_type(datum), PJ_TYPE_TEMPORAL_DATUM);
+    }
+    {
+        auto wkt = "ENGINEERINGDATUM[\"Engineering datum\"]";
+        auto datum =
+            proj_create_from_wkt(m_ctxt, wkt, nullptr, nullptr, nullptr);
+        ObjectKeeper keeper(datum);
+        EXPECT_EQ(proj_get_type(datum), PJ_TYPE_ENGINEERING_DATUM);
+    }
+    {
+        auto wkt = "PDATUM[\"Mean Sea Level\",ANCHOR[\"1013.25 hPa at 15°C\"]]";
+        auto datum =
+            proj_create_from_wkt(m_ctxt, wkt, nullptr, nullptr, nullptr);
+        ObjectKeeper keeper(datum);
+        EXPECT_EQ(proj_get_type(datum), PJ_TYPE_PARAMETRIC_DATUM);
+    }
+    {
         auto obj = proj_create_from_wkt(
             m_ctxt, createVerticalCRS()
                         ->datum()
@@ -1132,6 +1166,9 @@ TEST_F(CApi, proj_get_codes_from_database) {
                              PJ_TYPE_VERTICAL_REFERENCE_FRAME,
                              PJ_TYPE_DYNAMIC_VERTICAL_REFERENCE_FRAME,
                              PJ_TYPE_DATUM_ENSEMBLE,
+                             PJ_TYPE_TEMPORAL_DATUM,
+                             PJ_TYPE_ENGINEERING_DATUM,
+                             PJ_TYPE_PARAMETRIC_DATUM,
 
                              PJ_TYPE_CRS,
                              PJ_TYPE_GEODETIC_CRS,
@@ -1156,7 +1193,9 @@ TEST_F(CApi, proj_get_codes_from_database) {
         auto list = proj_get_codes_from_database(m_ctxt, "EPSG", type, true);
         ListFreer feer(list);
         if (type == PJ_TYPE_TEMPORAL_CRS || type == PJ_TYPE_BOUND_CRS ||
-            type == PJ_TYPE_UNKNOWN) {
+            type == PJ_TYPE_UNKNOWN || type == PJ_TYPE_TEMPORAL_DATUM ||
+            type == PJ_TYPE_ENGINEERING_DATUM ||
+            type == PJ_TYPE_PARAMETRIC_DATUM) {
             EXPECT_EQ(list, nullptr) << type;
         } else {
             ASSERT_NE(list, nullptr) << type;
@@ -4008,6 +4047,58 @@ TEST_F(Fixture_proj_context_set_autoclose_database,
 
 // ---------------------------------------------------------------------------
 
+TEST_F(CApi, proj_context_clone) {
+    auto c_path = proj_context_get_database_path(m_ctxt);
+    ASSERT_TRUE(c_path != nullptr);
+    std::string path(c_path);
+
+    FILE *f = fopen(path.c_str(), "rb");
+    ASSERT_NE(f, nullptr);
+    fseek(f, 0, SEEK_END);
+    auto length = ftell(f);
+    std::string content;
+    content.resize(static_cast<size_t>(length));
+    fseek(f, 0, SEEK_SET);
+    auto read_bytes = fread(&content[0], 1, content.size(), f);
+    ASSERT_EQ(read_bytes, content.size());
+    fclose(f);
+    const char *tempdir = getenv("TEMP");
+    if (!tempdir) {
+        tempdir = getenv("TMP");
+    }
+    if (!tempdir) {
+        tempdir = "/tmp";
+    }
+    std::string tmp_filename(std::string(tempdir) +
+                             "/test_proj_context_set_autoclose_database.db");
+    f = fopen(tmp_filename.c_str(), "wb");
+    if (!f) {
+        std::cerr << "Cannot create " << tmp_filename << std::endl;
+        return;
+    }
+    fwrite(content.data(), 1, content.size(), f);
+    fclose(f);
+
+    auto c_default_path = proj_context_get_database_path(nullptr);
+    std::string default_path(c_default_path ? c_default_path : "");
+    EXPECT_TRUE(proj_context_set_database_path(nullptr, tmp_filename.c_str(),
+                                               nullptr, nullptr));
+
+    PJ_CONTEXT *new_ctx = proj_context_create();
+    EXPECT_TRUE(proj_context_set_database_path(
+        nullptr, default_path.empty() ? nullptr : default_path.c_str(), nullptr,
+        nullptr));
+
+    EXPECT_NE(new_ctx, nullptr);
+    PjContextKeeper keeper_ctxt(new_ctx);
+    auto c_new_path = proj_context_get_database_path(new_ctx);
+    ASSERT_TRUE(c_new_path != nullptr);
+    std::string new_db_path(c_new_path);
+    ASSERT_EQ(new_db_path, tmp_filename);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST_F(CApi, proj_create_crs_to_crs_from_pj) {
 
     auto src = proj_create(m_ctxt, "EPSG:4326");
@@ -4480,10 +4571,11 @@ TEST_F(CApi, proj_create_vertical_crs_ex) {
     ObjectKeeper keeper_horiz_crs(horiz_crs);
     ASSERT_NE(horiz_crs, nullptr);
 
+    const char *options[] = {"ACCURACY=123", nullptr};
     auto vert_crs = proj_create_vertical_crs_ex(
         m_ctxt, "myVertCRS (ftUS)", "myVertDatum", nullptr, nullptr,
         "US survey foot", 0.304800609601219, "PROJ @foo.gtx", nullptr, nullptr,
-        nullptr, nullptr);
+        nullptr, options);
     ObjectKeeper keeper_vert_crs(vert_crs);
     ASSERT_NE(vert_crs, nullptr);
 
@@ -4518,6 +4610,8 @@ TEST_F(CApi, proj_create_vertical_crs_ex) {
               "+step +proj=vgridshift +grids=@foo.gtx +multiplier=1 "
               "+step +proj=unitconvert +xy_in=rad +xy_out=deg "
               "+step +proj=axisswap +order=2,1");
+
+    ASSERT_EQ(proj_coordoperation_get_accuracy(m_ctxt, P), 123.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -4596,6 +4690,54 @@ TEST_F(CApi, proj_create_vertical_crs_ex_with_geog_crs) {
     auto proj_5_bis = proj_as_proj_string(m_ctxt, P2, PJ_PROJ_5, nullptr);
     ASSERT_NE(proj_5_bis, nullptr);
     EXPECT_EQ(std::string(proj_5_bis), std::string(proj_5));
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(CApi, proj_create_vertical_crs_ex_implied_accuracy) {
+
+    PJ *crsH = proj_create(m_ctxt, "EPSG:4283"); // GDA94
+    ASSERT_NE(crsH, nullptr);
+    ObjectKeeper keeper_crsH(crsH);
+    PJ *crsV = proj_create(m_ctxt, "EPSG:5711"); // AHD height
+    ASSERT_NE(crsV, nullptr);
+    ObjectKeeper keeper_crsV(crsV);
+    PJ *crsGeoid = proj_create(m_ctxt, "EPSG:4939"); // GDA94 3D
+    ASSERT_NE(crsGeoid, nullptr);
+    ObjectKeeper keeper_crsGeoid(crsGeoid);
+
+    PJ *vertDatum = proj_crs_get_datum(m_ctxt, crsV);
+    ObjectKeeper keeper_vertDatum(vertDatum);
+    const char *vertDatumName = proj_get_name(vertDatum);
+    const char *vertDatumAuthority = proj_get_id_auth_name(vertDatum, 0);
+    const char *vertDatumCode = proj_get_id_code(vertDatum, 0);
+    PJ *crsVGeoid = proj_create_vertical_crs_ex(
+        m_ctxt, "Vertical", vertDatumName, vertDatumAuthority, vertDatumCode,
+        "metre", 1.0, "PROJ au_ga_AUSGeoid09_V1.01.tif", nullptr, nullptr,
+        crsGeoid, nullptr);
+    ObjectKeeper keeper_crsVGeoid(crsVGeoid);
+    PJ *crsCompoundGeoid = proj_create_compound_crs(
+        m_ctxt, "Compound with geoid", crsH, crsVGeoid);
+    ObjectKeeper keeper_crsCompoundGeoid(crsCompoundGeoid);
+
+    PJ_OPERATION_FACTORY_CONTEXT *ctxt =
+        proj_create_operation_factory_context(m_ctxt, nullptr);
+    ASSERT_NE(ctxt, nullptr);
+    ContextKeeper keeper_ctxt(ctxt);
+    proj_operation_factory_context_set_grid_availability_use(
+        m_ctxt, ctxt, PROJ_GRID_AVAILABILITY_IGNORED);
+    proj_operation_factory_context_set_spatial_criterion(
+        m_ctxt, ctxt, PROJ_SPATIAL_CRITERION_PARTIAL_INTERSECTION);
+    PJ_OBJ_LIST *operations =
+        proj_create_operations(m_ctxt, crsCompoundGeoid, crsGeoid, ctxt);
+    ASSERT_NE(operations, nullptr);
+    ObjListKeeper keeper_operations(operations);
+    EXPECT_GE(proj_list_get_count(operations), 1);
+    PJ *transform = proj_list_get(m_ctxt, operations, 0);
+    ObjectKeeper keeper_transform(transform);
+
+    // This is the accuracy of operations EPSG:5656 / 5657
+    ASSERT_EQ(proj_coordoperation_get_accuracy(m_ctxt, transform), 0.03);
 }
 
 // ---------------------------------------------------------------------------
@@ -4702,6 +4844,51 @@ TEST_F(CApi, proj_context_set_sqlite3_vfs_name) {
     proj_destroy(crs_4326);
 
     proj_context_destroy(ctx);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(CApi, proj_context_set_sqlite3_vfs_name__from_global_context) {
+
+    // Set a dummy VFS and check it is taken into account
+    // (failure to open proj.db)
+    proj_context_set_sqlite3_vfs_name(nullptr, "dummy_vfs_name");
+
+    PJ_CONTEXT *ctx = proj_context_create();
+    proj_log_func(ctx, nullptr, [](void *, int, const char *) -> void {});
+
+    ASSERT_EQ(proj_create(ctx, "EPSG:4326"), nullptr);
+
+    // Restore default VFS
+    proj_context_set_sqlite3_vfs_name(nullptr, nullptr);
+    proj_context_destroy(ctx);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(CApi, use_proj4_init_rules) {
+    PJ_CONTEXT *ctx = proj_context_create();
+    proj_context_use_proj4_init_rules(ctx, true);
+    ASSERT_TRUE(proj_context_get_use_proj4_init_rules(ctx, true));
+    proj_context_use_proj4_init_rules(ctx, false);
+    ASSERT_TRUE(!proj_context_get_use_proj4_init_rules(ctx, true));
+    proj_context_destroy(ctx);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(CApi, use_proj4_init_rules_from_global_context) {
+
+    int initial_rules = proj_context_get_use_proj4_init_rules(nullptr, true);
+    proj_context_use_proj4_init_rules(nullptr, true);
+    PJ_CONTEXT *ctx = proj_context_create();
+    ASSERT_TRUE(proj_context_get_use_proj4_init_rules(ctx, true));
+    proj_context_destroy(ctx);
+    proj_context_use_proj4_init_rules(nullptr, false);
+    ctx = proj_context_create();
+    ASSERT_TRUE(!proj_context_get_use_proj4_init_rules(ctx, true));
+    proj_context_destroy(ctx);
+    proj_context_use_proj4_init_rules(nullptr, initial_rules);
 }
 
 // ---------------------------------------------------------------------------

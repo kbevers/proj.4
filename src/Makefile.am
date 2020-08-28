@@ -7,7 +7,7 @@ check_PROGRAMS = geodtest
 
 AM_CPPFLAGS =	-DPROJ_LIB=\"$(pkgdatadir)\" \
 		-DMUTEX_@MUTEX_SETTING@ -I$(top_srcdir)/include @SQLITE3_CFLAGS@ @TIFF_CFLAGS@ @TIFF_ENABLED_FLAGS@ @CURL_CFLAGS@ @CURL_ENABLED_FLAGS@
-AM_CXXFLAGS =    @CXX_WFLAGS@ @FLTO_FLAG@ @TARGET_CLONES_FMA_FLAGS@
+AM_CXXFLAGS =    @CXX_WFLAGS@ @FLTO_FLAG@
 
 include_HEADERS = proj.h proj_experimental.h proj_constants.h proj_api.h geodesic.h \
 	 proj_symbol_rename.h
@@ -52,7 +52,7 @@ geodtest_LDADD = libproj.la
 
 lib_LTLIBRARIES = libproj.la
 
-libproj_la_LDFLAGS = -no-undefined -version-info 19:0:0
+libproj_la_LDFLAGS = -no-undefined -version-info 20:0:1
 libproj_la_LIBADD = @SQLITE3_LIBS@ @TIFF_LIBS@ @CURL_LIBS@
 
 libproj_la_SOURCES = \
