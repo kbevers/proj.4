@@ -1256,6 +1256,25 @@ DatabaseContext::getNonDeprecated(const std::string &tableName,
     return res;
 }
 
+// ---------------------------------------------------------------------------
+
+std::vector<operation::CoordinateOperationNNPtr>
+DatabaseContext::getTransformationsForGridName(
+    const DatabaseContextNNPtr &databaseContext, const std::string &gridName) {
+    auto sqlRes = databaseContext->d->run(
+        "SELECT auth_name, code FROM grid_transformation "
+        "WHERE grid_name = ? OR grid_name = "
+        "(SELECT original_grid_name FROM grid_alternatives "
+        "WHERE proj_grid_name = ?)",
+        {gridName, gridName});
+    std::vector<operation::CoordinateOperationNNPtr> res;
+    for (const auto &row : sqlRes) {
+        res.emplace_back(AuthorityFactory::create(databaseContext, row[0])
+                             ->createCoordinateOperation(row[1], true));
+    }
+    return res;
+}
+
 //! @endcond
 
 // ---------------------------------------------------------------------------
@@ -5642,7 +5661,7 @@ AuthorityFactory::createObjectsFromNameEx(
             sql += "AND deprecated = 1 ";
         }
         if (!approximateMatch) {
-            sql += "AND name LIKE ? ";
+            sql += "AND name = ? COLLATE NOCASE ";
             params.push_back(searchedNameWithoutDeprecated);
         }
         if (d->hasAuthorityRestriction()) {
@@ -5672,7 +5691,7 @@ AuthorityFactory::createObjectsFromNameEx(
             sql += "AND ov.deprecated = 1 ";
         }
         if (!approximateMatch) {
-            sql += "AND a.alt_name LIKE ? ";
+            sql += "AND a.alt_name = ? COLLATE NOCASE ";
             params.push_back(searchedNameWithoutDeprecated);
         }
         if (d->hasAuthorityRestriction()) {

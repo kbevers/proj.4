@@ -1306,13 +1306,6 @@ TEST(wkt_parse, wkt1_krovak_south_west) {
               expectedPROJString);
 
     obj = PROJStringParser().createFromPROJString(
-        "+proj=krovak +czech +type=crs");
-    crs2 = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
-    ASSERT_TRUE(crs2 != nullptr);
-    EXPECT_EQ(crs2->exportToPROJString(PROJStringFormatter::create().get()),
-              expectedPROJString);
-
-    obj = PROJStringParser().createFromPROJString(
         "+type=crs +proj=pipeline +step +proj=unitconvert +xy_in=deg "
         "+xy_out=rad "
         "+step +proj=krovak +lat_0=49.5 "
@@ -4013,7 +4006,7 @@ TEST(wkt_parse, TemporalDatum_no_calendar) {
 
 // ---------------------------------------------------------------------------
 
-TEST(wkt_parse, dateTimeTemporalCRS_WKT2) {
+TEST(wkt_parse, dateTimeTemporalCRS_WKT2_2015) {
     auto wkt = "TIMECRS[\"Temporal CRS\",\n"
                "    TDATUM[\"Gregorian calendar\",\n"
                "        TIMEORIGIN[0000-01-01]],\n"
@@ -4117,6 +4110,34 @@ TEST(wkt_parse, temporalCountCRSWithoutConvFactor_WKT2_2019) {
     EXPECT_EQ(crs->coordinateSystem()->axisList()[0]->unit().name(), "hour");
     EXPECT_EQ(crs->coordinateSystem()->axisList()[0]->unit().conversionToSI(),
               0.0);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, temporalMeasureCRS_WKT2_2015) {
+    auto wkt = "TIMECRS[\"GPS Time\",\n"
+               "    TDATUM[\"Time origin\",\n"
+               "        TIMEORIGIN[1980-01-01T00:00:00.0Z]],\n"
+               "    CS[temporal,1],\n"
+               "    AXIS[\"time\",future],\n"
+               "    TIMEUNIT[\"day\",86400.0]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<TemporalCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    EXPECT_EQ(crs->nameStr(), "GPS Time");
+    auto tdatum = crs->datum();
+    EXPECT_EQ(tdatum->nameStr(), "Time origin");
+    EXPECT_EQ(tdatum->temporalOrigin().toString(), "1980-01-01T00:00:00.0Z");
+    EXPECT_TRUE(nn_dynamic_pointer_cast<TemporalMeasureCS>(
+                    crs->coordinateSystem()) != nullptr);
+    auto cs = crs->coordinateSystem();
+    ASSERT_EQ(cs->axisList().size(), 1U);
+    auto axis = cs->axisList()[0];
+    EXPECT_EQ(axis->nameStr(), "Time");
+    EXPECT_EQ(axis->unit().name(), "day");
+    EXPECT_EQ(axis->unit().conversionToSI(), 86400.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -5326,8 +5347,23 @@ static const struct {
      }},
 
     {"Goode_Homolosine",
-     {{"False_Easting", 1}, {"False_Northing", 2}, {"Central_Meridian", 3}},
-     "Goode Homolosine",
+     {{"False_Easting", 1},
+      {"False_Northing", 2},
+      {"Central_Meridian", 3},
+      {"Option", 1.0}},
+     "Interrupted Goode Homolosine",
+     {
+         {"Longitude of natural origin", 3},
+         {"False easting", 1},
+         {"False northing", 2},
+     }},
+
+    {"Goode_Homolosine",
+     {{"False_Easting", 1},
+      {"False_Northing", 2},
+      {"Central_Meridian", 3},
+      {"Option", 2.0}},
+     "Interrupted Goode Homolosine Ocean",
      {
          {"Longitude of natural origin", 3},
          {"False easting", 1},
@@ -5870,6 +5906,42 @@ TEST(wkt_parse, wkt1_esri_gauss_kruger) {
             WKTFormatter::create(WKTFormatter::Convention::WKT1_ESRI, dbContext)
                 .get()),
         wkt);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, wkt1_oracle) {
+    // WKT from mdsys.cs_srs Oracle table
+    auto wkt = "PROJCS[\"RGF93 / Lambert-93\", GEOGCS [ \"RGF93\", "
+               "DATUM [\"Reseau Geodesique Francais 1993 (EPSG ID 6171)\", "
+               "SPHEROID [\"GRS 1980 (EPSG ID 7019)\", 6378137.0, "
+               "298.257222101]], PRIMEM [ \"Greenwich\", 0.000000000 ], "
+               "UNIT [\"Decimal Degree\", 0.0174532925199433]], "
+               "PROJECTION [\"Lambert Conformal Conic\"], "
+               "PARAMETER [\"Latitude_Of_Origin\", 46.5], "
+               "PARAMETER [\"Central_Meridian\", 3.0], "
+               "PARAMETER [\"Standard_Parallel_1\", 49.0], "
+               "PARAMETER [\"Standard_Parallel_2\", 44.0], "
+               "PARAMETER [\"False_Easting\", 700000.0], "
+               "PARAMETER [\"False_Northing\", 6600000.0], "
+               "UNIT [\"Meter\", 1.0]]";
+
+    auto dbContext = DatabaseContext::create();
+    auto obj = WKTParser().attachDatabaseContext(dbContext).createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    EXPECT_EQ(crs->baseCRS()->datum()->nameStr(),
+              "Reseau Geodesique Francais 1993");
+    EXPECT_EQ(crs->baseCRS()->datum()->getEPSGCode(), 6171);
+    EXPECT_EQ(crs->derivingConversion()->method()->nameStr(),
+              "Lambert Conic Conformal (2SP)");
+
+    auto factoryAll = AuthorityFactory::create(dbContext, std::string());
+    auto res = crs->identify(factoryAll);
+    ASSERT_GE(res.size(), 1U);
+    EXPECT_EQ(res.front().first->getEPSGCode(), 2154);
+    EXPECT_EQ(res.front().second, 100);
 }
 
 // ---------------------------------------------------------------------------
@@ -8666,6 +8738,33 @@ TEST(io, projparse_krovak_axis_swu) {
 
 // ---------------------------------------------------------------------------
 
+TEST(io, projparse_krovak_czech) {
+    auto obj = PROJStringParser().createFromPROJString(
+        "+proj=krovak +czech +type=crs");
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(crs->exportToPROJString(PROJStringFormatter::create().get()),
+              "+proj=krovak +czech +lat_0=49.5 +lon_0=24.8333333333333 "
+              "+alpha=30.2881397527778 +k=0.9999 +x_0=0 +y_0=0 "
+              "+ellps=bessel +units=m +no_defs +type=crs");
+    WKTFormatterNNPtr f(WKTFormatter::create());
+    f->simulCurNodeHasId();
+    f->setMultiLine(false);
+    crs->exportToWKT(f.get());
+    auto wkt = f->toString();
+    EXPECT_TRUE(wkt.find("METHOD[\"Krovak\",ID[\"EPSG\",9819]]") !=
+                std::string::npos)
+        << wkt;
+    EXPECT_TRUE(wkt.find(",AXIS[\"westing\",west,ORDER[1]") !=
+                std::string::npos)
+        << wkt;
+    EXPECT_TRUE(wkt.find(",AXIS[\"southing\",south,ORDER[2]") !=
+                std::string::npos)
+        << wkt;
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(io, projparse_etmerc) {
     auto obj =
         PROJStringParser().createFromPROJString("+proj=etmerc +type=crs");
@@ -9253,18 +9352,11 @@ TEST(io, projparse_projected_to_meter_unknown) {
 TEST(io, projparse_projected_vunits) {
     auto obj = PROJStringParser().createFromPROJString(
         "+proj=tmerc +vunits=ft +type=crs");
-    auto crs = nn_dynamic_pointer_cast<CompoundCRS>(obj);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
-    WKTFormatterNNPtr f(WKTFormatter::create());
-    f->simulCurNodeHasId();
-    f->setMultiLine(false);
-    crs->exportToWKT(f.get());
-    auto wkt = f->toString();
-    EXPECT_TRUE(wkt.find("CS[Cartesian,2]") != std::string::npos) << wkt;
-    EXPECT_TRUE(wkt.find("CS[vertical,1],AXIS[\"gravity-related height "
-                         "(H)\",up,LENGTHUNIT[\"foot\",0.3048]") !=
-                std::string::npos)
-        << wkt;
+    auto cs = crs->coordinateSystem();
+    ASSERT_EQ(cs->axisList().size(), 3U);
+    EXPECT_EQ(cs->axisList()[2]->unit().name(), "foot");
 }
 
 // ---------------------------------------------------------------------------
