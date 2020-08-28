@@ -42,7 +42,7 @@ Selection of point pairs
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Both computations in step 2 and 3 are based on a certain number of point pairs
-according to the parameter ``+points``. The method selects the ``+points`` number
+according to the parameter ``+n_points``. The method selects the ``+n_points`` number
 of points that are closest to the input point. The selected points have to be
 within a radius of ``+maximum_dist`` km.
 
@@ -93,7 +93,7 @@ Covariance matrix of the given common points:
     C_{nn}=ke^{-\frac{\pi{}}{2}\frac{d}{c}}\cos{\frac{\pi{}}{2}\frac{d}{c}}\\*
 
 
-where :math:`n` is the number of common points, :math:`d` distance in km, :math:`c` the ccoll parameter and :math:`k` is the kcoll parameter.
+where :math:`n` is the number of common points, :math:`d` distance in km, :math:`c` the ``+ccoll`` parameter and :math:`k` is the ``+kcoll`` parameter.
 
 
 Covariance matrix of the input point:
@@ -319,6 +319,16 @@ Proj string with entired set of optional parameters:
     +ccoll=10.0
     +kcoll=0.0005
 
+Proj string with alternative point pair clouds from GeoJson:
+
+::
+
+    +proj=lschelmert
+    +source=source.geojson
+	+target=target.geojson
+    +polygons=Flater.geojson
+    +ellps=GRS80
+
 Parameters
 ###############################################################################
 
@@ -376,7 +386,18 @@ Example GeoJson target file::
 
     If a file is prefixed by an @ the file is considered optional and PROJ will the not complain if the file is not available.
 
-.. option:: +points=<value>
+Example GeoJson multipolygon file::
+
+    {
+    "type": "FeatureCollection",
+    "name": "NGO_areas",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    "features": [
+    { "type": "Feature", "properties": { "areaid": 1 }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 9.1, 58.8 ], [ 9.2, 58.8 ], [ 9.2, 58.9 ], [ 9.3, 58.9 ], [ 9.1, 58.8 ] ] ] ] } }
+    ]
+    }
+
+.. option:: +n_points=<value>
 
     The number of maximum selected point candidates used in Least Square Collocation and 2D Helmert.
     Units of latitude and longitude is in radians, and height in meters.
