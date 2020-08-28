@@ -53,10 +53,10 @@ public:
 	PROJ_FOR_TEST const std::string &SourceName() const { return m_sourceName; }
 	PROJ_FOR_TEST void SourceName(std::string name) { m_sourceName = std::move(name); }
 	PROJ_FOR_TEST const std::string &TargetName() const { return m_targetName; }
-	PROJ_FOR_TEST void TargetName(std::string name) { m_name = std::move(m_targetName); }
+	PROJ_FOR_TEST void TargetName(std::string name) { m_targetName = std::move(name); }
 	PROJ_FOR_TEST const std::string &Format() const { return m_format; }
 	PROJ_FOR_TEST void Format(std::string format) { m_format = std::move(format); }
-	PROJ_FOR_TEST /*const*/ std::vector<std::unique_ptr<PointPairs>> &Pairs() /*const*/ { return m_pairs; }
+	PROJ_FOR_TEST const std::vector<std::unique_ptr<PointPairs>> &Pairs() const { return m_pairs; }
 	PROJ_FOR_TEST PointPairs *pairsAt(double lon, double lat, double maxdist) const;
 };
 
