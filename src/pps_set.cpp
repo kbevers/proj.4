@@ -209,8 +209,8 @@ ListOfPpSet pj_pp_init(PJ *P, const char *sourcekey, const char *targetkey)
 
 	ListOfPpSet pps;
 
-	const char *sourcename;
-	const char *targetname;
+	const char *sourcename = "";
+	const char *targetname = "";
 
 	const char *sourcenames = pj_param(P->ctx, P->params, keyS.c_str()).s;
 	if (sourcenames == nullptr)
