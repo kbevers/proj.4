@@ -71,7 +71,8 @@
 #include "pps.hpp"
 #include "pps_set.hpp"
 #include "proj/internal/include_nlohmann_json.hpp" 
-#include <eigen3/Eigen/Dense>
+//#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 using namespace NS_PROJ;
 using namespace Eigen;
