@@ -165,7 +165,8 @@ namespace geoJson
 			return shared_ptr<GeoJson>(nullptr);
 
 		fp->seek(0, SEEK_END);
-		unsigned long long fsize = fp->tell();
+		//unsigned long long fsize = fp->tell();
+		size_t fsize = fp->tell();
 		fp->seek(0, SEEK_SET);
 
 		char *string = (char *)malloc(fsize + 1);
