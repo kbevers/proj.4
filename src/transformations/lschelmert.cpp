@@ -70,9 +70,13 @@
 #include "geojsonPolygon.hpp"
 #include "pps.hpp"
 #include "pps_set.hpp"
-#include "proj/internal/include_nlohmann_json.hpp" 
-//#include <eigen3/Eigen/Dense>
+#include "proj/internal/include_nlohmann_json.hpp"
+
+#if defined __GNUC__ || defined __APPLE__
 #include <Eigen/Dense>
+#else
+#include <eigen3/Eigen/Dense>
+#endif
 
 using namespace NS_PROJ;
 using namespace Eigen;
