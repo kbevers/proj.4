@@ -83,6 +83,7 @@ Thomas Knudsen, thokn@sdfe.dk, 2016-05-25/2017-10-26
 #include "proj_strtod.h"
 #include "optargpm.h"
 
+
 static void logger(void *data, int level, const char *msg);
 static void print(PJ_LOG_LEVEL log_level, const char *fmt, ...);
 
@@ -192,6 +193,7 @@ static void print(PJ_LOG_LEVEL log_level, const char *fmt, ...) {
     free( msg_buf );
 }
 
+
 int main(int argc, char **argv) {
     PJ *P;
     PJ_COORD point;
@@ -217,9 +219,10 @@ int main(int argc, char **argv) {
         "s=skip-lines",
         nullptr};
 
-    fout = stdout; 
+    fout = stdout;
 
-	o = opt_parse (argc, argv, "hvI", "cdozts", longflags, longkeys);
+    /* coverity[tainted_data] */
+    o = opt_parse (argc, argv, "hvI", "cdozts", longflags, longkeys);
     if (nullptr==o)
         return 0;
 
@@ -230,7 +233,7 @@ int main(int argc, char **argv) {
 
     PJ_DIRECTION direction = opt_given (o, "I")? PJ_INV: PJ_FWD;
 
-    verbose = MIN(opt_given (o, "v"), 3); /* log level can't be larger than 3 */
+    verbose   = MIN(opt_given (o, "v"), 3); /* log level can't be larger than 3 */
     if( verbose > 0 ) {
         proj_log_level (PJ_DEFAULT_CTX, static_cast<PJ_LOG_LEVEL>(verbose));
     }
@@ -326,6 +329,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+
     /* Loop over all records of all input files */
     while (opt_input_loop (o, optargs_file_format_text)) {
         int err;
@@ -354,8 +358,8 @@ int main(int argc, char **argv) {
             print (PJ_LOG_ERROR, "%s: Could not parse file '%s' line %d", o->progname, opt_filename (o), opt_record (o));
             continue;
         }
-		
-		if (proj_angular_input (P, direction)) {
+
+        if (proj_angular_input (P, direction)) {
             point.lpzt.lam = proj_torad (point.lpzt.lam);
             point.lpzt.phi = proj_torad (point.lpzt.phi);
         }
@@ -411,6 +415,10 @@ int main(int argc, char **argv) {
     free (buf);
     return 0;
 }
+
+
+
+
 
 /* return a pointer to the n'th column of buf */
 char *column (char *buf, int n) {

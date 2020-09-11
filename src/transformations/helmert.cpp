@@ -51,12 +51,6 @@ Last update: 2018-10-26
 
 #include <errno.h>
 #include <math.h>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <cstring>
-#include <cstddef>
-#include <algorithm>
 
 #include "proj_internal.h"
 
@@ -65,6 +59,8 @@ PROJ_HEAD(molobadekas, "Molodensky-Badekas transformation");
 
 static PJ_XYZ helmert_forward_3d (PJ_LPZ lpz, PJ *P);
 static PJ_LPZ helmert_reverse_3d (PJ_XYZ xyz, PJ *P);
+
+
 
 /***********************************************************************/
 namespace { // anonymous namespace
@@ -92,6 +88,7 @@ struct pj_opaque_helmert {
 };
 } // anonymous namespace
 
+
 /* Make the maths of the rotation operations somewhat more readable and textbook like */
 #define R00 (Q->R[0][0])
 #define R01 (Q->R[0][1])
@@ -104,7 +101,7 @@ struct pj_opaque_helmert {
 #define R20 (Q->R[2][0])
 #define R21 (Q->R[2][1])
 #define R22 (Q->R[2][2])
-	
+
 /**************************************************************************/
 static void update_parameters(PJ *P) {
 /***************************************************************************
@@ -319,6 +316,9 @@ static void build_rot_matrix(PJ *P) {
     }
 }
 
+
+
+
 /***********************************************************************/
 static PJ_XY helmert_forward (PJ_LP lp, PJ *P) {
 /***********************************************************************/
@@ -338,6 +338,7 @@ static PJ_XY helmert_forward (PJ_LP lp, PJ *P) {
     return point.xy;
 }
 
+
 /***********************************************************************/
 static PJ_LP helmert_reverse (PJ_XY xy, PJ *P) {
 /***********************************************************************/
@@ -356,6 +357,7 @@ static PJ_LP helmert_reverse (PJ_XY xy, PJ *P) {
 
     return point.lp;
 }
+
 
 /***********************************************************************/
 static PJ_XYZ helmert_forward_3d (PJ_LPZ lpz, PJ *P) {
@@ -396,6 +398,7 @@ static PJ_XYZ helmert_forward_3d (PJ_LPZ lpz, PJ *P) {
     return point.xyz;
 }
 
+
 /***********************************************************************/
 static PJ_LPZ helmert_reverse_3d (PJ_XYZ xyz, PJ *P) {
 /***********************************************************************/
@@ -432,6 +435,7 @@ static PJ_LPZ helmert_reverse_3d (PJ_XYZ xyz, PJ *P) {
     return point.lpz;
 }
 
+
 static PJ_COORD helmert_forward_4d (PJ_COORD point, PJ *P) {
     struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
 
@@ -448,6 +452,7 @@ static PJ_COORD helmert_forward_4d (PJ_COORD point, PJ *P) {
 
     return point;
 }
+
 
 static PJ_COORD helmert_reverse_4d (PJ_COORD point, PJ *P) {
     struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *) P->opaque;
@@ -468,6 +473,7 @@ static PJ_COORD helmert_reverse_4d (PJ_COORD point, PJ *P) {
 
 /* Arcsecond to radians */
 #define ARCSEC_TO_RAD (DEG_TO_RAD / 3600.0)
+
 
 static PJ* init_helmert_six_parameters(PJ* P) {
     struct pj_opaque_helmert *Q = static_cast<struct pj_opaque_helmert*>(pj_calloc (1, sizeof (struct pj_opaque_helmert)));
@@ -506,6 +512,7 @@ static PJ* init_helmert_six_parameters(PJ* P) {
     return P;
 }
 
+
 static PJ* read_convention(PJ* P) {
 
     struct pj_opaque_helmert *Q = (struct pj_opaque_helmert *)P->opaque;
@@ -542,6 +549,7 @@ static PJ* read_convention(PJ* P) {
 
     return P;
 }
+
 
 /***********************************************************************/
 PJ *TRANSFORMATION(helmert, 0) {

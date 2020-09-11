@@ -91,6 +91,7 @@ benefit from a better usage of errno.
     return res;
 }
 
+
 /**********************************************************************/
 void *pj_calloc (size_t n, size_t size) {
 /***********************************************************************
@@ -106,11 +107,13 @@ The array is initialized to zeros.
     return res;
 }
 
+
 /**********************************************************************/
 void pj_dalloc(void *ptr) {
 /**********************************************************************/
     free(ptr);
 }
+
 
 /**********************************************************************/
 void *pj_dealloc (void *ptr) {
@@ -148,6 +151,7 @@ char *pj_strdup(const char *str)
     return dup;
 }
 
+
 /*****************************************************************************/
 void *pj_dealloc_params (PJ_CONTEXT *ctx, paralist *start, int errlev) {
 /*****************************************************************************
@@ -165,6 +169,9 @@ void *pj_dealloc_params (PJ_CONTEXT *ctx, paralist *start, int errlev) {
     pj_ctx_set_errno (ctx, errlev);
     return (void *) nullptr;
 }
+
+
+
 
 /************************************************************************/
 /*                              pj_free()                               */
@@ -198,6 +205,7 @@ PJ *pj_new() {
     return new(std::nothrow) PJ();
 }
 
+
 /*****************************************************************************/
 PJ *pj_default_destructor (PJ *P, int errlev) {   /* Destructor */
 /*****************************************************************************
@@ -214,6 +222,7 @@ PJ *pj_default_destructor (PJ *P, int errlev) {   /* Destructor */
 
     if (nullptr==P)
         return nullptr;
+
 
     pj_dealloc(P->def_size);
     pj_dealloc(P->def_shape);
@@ -243,7 +252,7 @@ PJ *pj_default_destructor (PJ *P, int errlev) {   /* Destructor */
     pj_free (P->cart_wgs84);
     pj_free (P->hgridshift);
     pj_free (P->vgridshift);
-	pj_free (P->lschelmert);
+	pj_free(P->lschelmert);
 
     pj_dealloc (static_cast<struct pj_opaque*>(P->opaque));
     delete P;
