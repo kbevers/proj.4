@@ -192,6 +192,7 @@ libproj_la_SOURCES = \
 	transformations/affine.cpp \
 	transformations/deformation.cpp \
 	transformations/helmert.cpp \
+	transformations/lschelmert.cpp \
 	transformations/hgridshift.cpp \
 	transformations/horner.cpp \
 	transformations/molodensky.cpp \
@@ -204,6 +205,10 @@ libproj_la_SOURCES = \
 	\
 	aasincos.cpp adjlon.cpp \
 	dmstor.cpp auth.cpp \
+	pps_set.hpp pps_set.cpp \
+	pps.hpp pps.cpp \
+	geojsonPolygon.hpp geojsonPolygon.cpp \
+	point_in_polygon.h \
 	deriv.cpp ell_set.cpp ellps.cpp errno.cpp \
 	factors.cpp fwd.cpp init.cpp inv.cpp \
 	list.cpp malloc.cpp mlfn.cpp mlfn.hpp msfn.cpp proj_mdist.cpp \

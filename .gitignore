@@ -138,3 +138,6 @@ m4/lt~obsolete.m4
 
 # jniwrap
 jniwrap/out
+docs/source/operations/transformations/test.rst
+docs/source/operations/transformations/ut.pdf
+cpp.hint

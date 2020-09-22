@@ -133,6 +133,7 @@ add_executable(proj_test_cpp_api
   test_io.cpp
   test_operation.cpp
   test_datum.cpp
+  test_geojson.cpp
   test_factory.cpp
   test_c_api.cpp
   test_grids.cpp)

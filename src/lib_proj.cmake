@@ -180,6 +180,7 @@ set(SRC_LIBPROJ_TRANSFORMATIONS
   transformations/affine.cpp
   transformations/deformation.cpp
   transformations/helmert.cpp
+  transformations/lschelmert.cpp
   transformations/hgridshift.cpp
   transformations/horner.cpp
   transformations/molodensky.cpp
@@ -208,6 +209,10 @@ set(SRC_LIBPROJ_CORE
   aasincos.cpp
   adjlon.cpp
   auth.cpp
+  pps_set.hpp
+  pps_set.cpp
+  pps.hpp
+  pps.cpp
   ctx.cpp
   datum_set.cpp
   datums.cpp
@@ -222,6 +227,8 @@ set(SRC_LIBPROJ_CORE
   gauss.cpp
   generic_inverse.cpp
   geodesic.c
+  geojsonPolygon.hpp
+  geojsonPolygon.cpp
   init.cpp
   initcache.cpp
   internal.cpp
@@ -236,6 +243,7 @@ set(SRC_LIBPROJ_CORE
   phi2.cpp
   pipeline.cpp
   pj_list.h
+  point_in_polygon.h
   pr_list.cpp
   proj_internal.h
   proj_mdist.cpp
@@ -406,12 +414,14 @@ endif()
 target_include_directories(${PROJ_CORE_TARGET} PRIVATE ${SQLITE3_INCLUDE_DIR})
 target_link_libraries(${PROJ_CORE_TARGET} ${SQLITE3_LIBRARY})
 
+target_include_directories(${PROJ_CORE_TARGET} PRIVATE ${EIGEN3_INCLUDE_DIR})
+target_link_libraries(${PROJ_CORE_TARGET} ${EIGEN3_LIBRARY})
+ 
 if(TIFF_ENABLED)
   target_compile_definitions(${PROJ_CORE_TARGET} PRIVATE -DTIFF_ENABLED)
   target_include_directories(${PROJ_CORE_TARGET} PRIVATE ${TIFF_INCLUDE_DIR})
   target_link_libraries(${PROJ_CORE_TARGET} ${TIFF_LIBRARY})
 endif()
-
 if(CURL_ENABLED)
   target_compile_definitions(${PROJ_CORE_TARGET} PRIVATE -DCURL_ENABLED)
   target_include_directories(${PROJ_CORE_TARGET} PRIVATE ${CURL_INCLUDE_DIR})

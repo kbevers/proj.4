@@ -1,0 +1,212 @@
+###############################################################################
+#                                                                             #
+#                                                                             #
+#                       Norwegian transformations                             #
+#          Norwegian Mapping Authority, NMA (Statens Kartverk)                #
+#                                                                             #
+#          The test cases are compared with results from SkTrans              #
+#                                                                             #
+#             Distributed under Creative Commons CC-BY 4.0                    #
+#                                                                             #
+#        Verified by Sveinung Himle, himsve@kartverket.no, 20.06.03           #
+#                                                                             #
+###############################################################################
+
+<gie>
+-------------------------------------------------------------------------------
+1. Transformation EUREF89 lat lon > EUREF89 UTM32
+-------------------------------------------------------------------------------
+operation +proj=utm +zone=32
+
+tolerance   1 mm
+accept      10.0000          60.0000 10.0000 2019.0
+expect      555776.2668 6651832.7353 10.0000 2019.0
+
+
+-------------------------------------------------------------------------------
+2. Transformation EUREF89 lat lon > EUREF89 NTM10
+-------------------------------------------------------------------------------
+operation +proj=tmerc +lat_0=58 +lon_0=10.5 +k=1 +x_0=100000 +y_0=1000000 +ellps=GRS80
+
+tolerance   1 mm
+accept      10.0000         60.0000 10.0000 2019.0
+expect      72100.1761 1222895.5749 10.0000 2019.0
+
+
+-------------------------------------------------------------------------------
+3. Transformation EUREF89 UTM32 > EUREF89 NTM10
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=utm +zone=32 +ellps=GRS80 +inv
++step +proj=tmerc +lat_0=58.0000 +lon_0=10.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80
+
+tolerance   1 mm
+accept      555776.2668 6651832.7353 10.00 2019.0
+expect       72100.1761 1222895.5749 10.00 2019.0
+
+
+-------------------------------------------------------------------------------
+4. Transformation EUREF89 NTM10 > EUREF89 UTM32
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=tmerc +lat_0=58.0000 +lon_0=10.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80 +units=m +inv
++step +proj=utm +zone=32 +ellps=GRS80
+
+tolerance   1 mm
+accept       72100.1761 1222895.5749 10.00 2019.0
+expect      555776.2668 6651832.7353 10.00 2019.0
+
+
+-------------------------------------------------------------------------------
+5. Transformation EUREF89 lat lon > EUREF89 XYZ
+-------------------------------------------------------------------------------
+operation +proj=cart +ellps=GRS80
+
+tolerance   1 mm
+accept           10.0000     60.0000      10.0000 2019.0
+expect      3148538.3085 555172.2536 5500485.7941 2019.0
+
+
+-------------------------------------------------------------------------------
+6. Transformation EUREF89 UTM32 > EUREF89 UTM31
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=utm +zone=32 +ellps=GRS80 +inv
++step +proj=utm +zone=31 +ellps=GRS80
+
+tolerance   1 mm
+accept      555776.2668 6651832.7353 10.0000 2019.0
+expect      889956.7018 6672079.4938 10.0000 2019.0
+
+
+-------------------------------------------------------------------------------
+7. Transformation EUREF89 UTM32 > EUREF89 UTM33
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=utm +zone=32 +ellps=GRS80 +inv
++step +proj=utm +zone=33 +ellps=GRS80
+
+tolerance   1 mm
+accept      555776.2668 6651832.7353 10.0000 2019.0
+expect      221288.7702 6661953.0402 10.0000 2019.0 
+
+
+-------------------------------------------------------------------------------
+8. Transformation EUREF89 NTM10 > EUREF89 NTM11
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=tmerc +lat_0=58.0000 +lon_0=10.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80 +inv
++step +proj=tmerc +lat_0=58.0000 +lon_0=11.5000 +k=1 +x_0=100000.0000 +y_0=1000000.0000 +ellps=GRS80
+
+tolerance   1 mm
+accept       72100.1761 1222895.5749 10.0000 2019.0
+expect       16304.7750 1223739.0183 10.0000 2019.0
+
+
+-------------------------------------------------------------------------------
+9. Transformation EUREF89 UTM32 > ED50 UTM32
+   (Transformation is incorrect)
+-------------------------------------------------------------------------------
+#operation +proj=pipeline
+#+step +proj=utm +zone=32 +ellps=GRS80 +inv
+#+step +proj=cart +ellps=GRS80
+#+step +proj=helmert +convention=coordinate_frame +x=-81.0703 +y=-89.3603 +z=-115.7526 +rx=-0.48488 +ry=-0.02436 +rz=-0.41321
+#+step +proj=utm +zone=32 +ellps=intl
+#tolerance   10000 mm
+
+#accept      555776.2668 6651832.7353 10.0000 2019.0
+#expect      555857.7698 6652040.7392 10.0000 2019.0
+
+
+-------------------------------------------------------------------------------
+10. Transformation EUREF89 lat lon > NGO1948 lat lon
+-------------------------------------------------------------------------------
+operation +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt +polygons=Flater.geojson +ellps=GRS80
+
+tolerance 0.01 mm
+accept    10.000000000000000 60.000000000000000 10.0000 2019.0000
+expect    10.004772632516693 59.999247545887245 10.0000 2019.0000
+
+
+-------------------------------------------------------------------------------
+11. Transformation NGO1948 lat lon > NGO1948 III
+-------------------------------------------------------------------------------
+operation +proj=tmerc +lat_0=58.0 +lon_0=10.7229166666666667 +a=6377492.0176 +rf=299.15281285
+
+tolerance  1 mm
+accept        11.7229166700     60.000000000 10.0000 2019.0000
+expect     55792.5231573231 223188.836969841 10.0000 2019.0000
+
+
+-------------------------------------------------------------------------------
+12. Transformation EUREF89 UTM32 > NGO1948 III
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=utm +zone=32 +ellps=GRS80 +inv
++step +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt +polygons=Flater.geojson +ellps=GRS80
++step +proj=tmerc +lat_0=58.0 +lon_0=10.722916666666666667 +a=6377492.0176 +rf=299.15281285
+
+tolerance  1 mm
+accept     550000.0000 6700000.0000 10.0000 2019.0000
+expect     -44587.8073  271221.0044 10.0000 2019.0000
+
+
+-------------------------------------------------------------------------------
+13. Transformation EUREF89 UTM32 > NGO1948 III > EUREF89 UTM32 (Invertible)
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=utm +zone=32 +ellps=GRS80 +inv
++step +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt +polygons=Flater.geojson +ellps=GRS80
++step +proj=tmerc +lat_0=58.0 +lon_0=10.722916666666666667 +a=6377492.0176 +rf=299.15281285
++step +proj=tmerc +lat_0=58.0 +lon_0=10.722916666666666667 +a=6377492.0176 +rf=299.15281285 +inv
++step +proj=lschelmert +pp_trans=EUREF89_NGO48_20081014.cpt +polygons=Flater.geojson +ellps=GRS80 +inv
++step +proj=utm +zone=32 +ellps=GRS80
+
+tolerance  0.1 mm
+accept     550000.0000 6700000.0000 10.0000 2019.0000
+expect     550000.0000 6700000.0000 10.0000 2019.0000
+
+
+-------------------------------------------------------------------------------
+14. Transformation NGO1948 II > NGO1948 III
+-------------------------------------------------------------------------------
+operation +proj=pipeline
++step +proj=tmerc +lat_0=58.0 +lon_0=08.38958333333333 +a=6377492.0176 +rf=299.15281285 +inv
++step +proj=tmerc +lat_0=58.0 +lon_0=10.72291666666667 +a=6377492.0176 +rf=299.15281285
+
+tolerance   1 mm
+accept      50000.0000 200000.0000 10.0000 2019.0
+expect     -80994.5898 200545.4955 10.0000 2019.0
+
+
+-------------------------------------------------------------------------------
+15. Transformation EUREF89 lat lon ell > EUREF89 lat lon NN1954 (href2008a.tif)
+-------------------------------------------------------------------------------
+operation +proj=vgridshift +grids=href2008a.tif
+	
+tolerance   1 mm
+accept      12.0000 62.0000 100.000 2019.0
+expect      12.0000 62.0000  62.552 2019.0
+
+
+----------------------------------------------------------------------------------------------
+16. Transformation EUREF89 lat lon ell > EUREF89 lat lon NN2000 (HREF2018A_NN2000_EUREF89.tif)
+----------------------------------------------------------------------------------------------
+operation +proj=vgridshift +grids=HREF2018A_NN2000_EUREF89.tif
+	
+tolerance   1 mm
+accept      12.0000 62.0000 100.000 2019.0
+expect      12.0000 62.0000  62.789 2019.0
+
+
+--------------------------------------------------------------------------------------
+16. Transformation EUREF89 lat lon NN1954 > EUREF89 lat lon NN2000 (NNTrans2018B.tif)
+--------------------------------------------------------------------------------------
+operation +proj=vgridshift +grids=NNTrans2018B.tif +inv 
+	
+tolerance   1 mm
+accept      12.0000 62.0000 100.000 2019.0
+expect      12.0000 62.0000 100.219 2019.0
+
+
+</gie>
