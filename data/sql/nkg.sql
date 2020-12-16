@@ -145,7 +145,7 @@ INSERT INTO "concatenated_operation" VALUES (
     'Time-dependent transformation from ITRF2000 to NKG_ETRF00', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'NKG', 'ETRF00',-- target_crs:  NKG_ETRF00
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -174,7 +174,7 @@ VALUES(
     '+proj=deformation +t_epoch=2000.0 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','7930',  -- target_crs:  ETRF2000
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -216,7 +216,7 @@ INSERT INTO "concatenated_operation" VALUES (
     'Time-dependent transformation from ITRF2014 to NKG_ETRF14', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'NKG', 'ETRF14',-- target_crs:  NKG_ETRF14
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -245,7 +245,7 @@ VALUES(
     '+proj=deformation +t_epoch=2000.0 +grids=eur_nkg_nkgrf17vel.tif',
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF14
     'EPSG','8401',  -- target_crs:  ETRF2014
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -292,7 +292,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
     'EPSG','7920',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     0.03863,        -- x
     0.147,          -- y
     0.02776,        -- z
@@ -326,7 +326,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
     'EPSG','7926',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,           -- accuracy
     0.12194,        -- x
     0.02225,        -- y
     -0.03541,       -- z
@@ -360,7 +360,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
     'EPSG','7926',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     0.07251,        -- x
     -0.13019,       -- y
     -0.11323,       -- z
@@ -394,7 +394,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
     'EPSG','7914',  -- target auth+code
-    0.05,           -- accuracy
+    0.02,           -- accuracy
     0.41812,        -- x
     -0.78105,       -- y
     -0.01335,       -- z
@@ -427,7 +427,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
     'EPSG','7930',  -- target auth+code
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     0.05692,        -- x
     0.115495,       -- y
     -0.00078,       -- z
@@ -461,7 +461,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
     'EPSG','7922',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     -0.13116,       -- x
     -0.02817,       -- y
     0.02036,        -- z
@@ -495,7 +495,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
     'EPSG','7928',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     -0.01642,       -- x
     -0.00064,       -- y
     -0.0305,        -- z
@@ -533,7 +533,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
     'EPSG','7920',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     0.66818,        -- x
     0.04453,        -- y
     -0.45049,       -- z
@@ -568,7 +568,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
     'EPSG','7926',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     -0.05027,       -- x
     -0.11595,       -- y
     0.03012,        -- z
@@ -602,7 +602,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
     'EPSG','7926',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     0.15651,        -- x
     -0.10993,       -- y
     -0.10935,       -- z
@@ -636,7 +636,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
     'EPSG','7914',  -- target auth+code
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     0.09745,        -- x
     -0.69388,       -- y
     0.52901,        -- z
@@ -669,7 +669,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
     'EPSG','7930',  -- target auth+code
-    0.05,           -- accuracy
+    0.015,          -- accuracy
     0.36749,        -- x
     0.14351,        -- y
     -0.18472,       -- z
@@ -703,7 +703,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
     'EPSG','7922',  -- target auth+code
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     -0.05172,       -- x
     0.13747,        -- y
     -0.01648,       -- z
@@ -737,7 +737,7 @@ INSERT INTO "helmert_transformation" VALUES (
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
     'EPSG','7928',  -- target auth+code
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     0.02784,        -- x
     0.13387,        -- y
     -0.09034,        -- z
@@ -792,7 +792,7 @@ VALUES(
     '+proj=deformation +dt=-5.296 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7920',  -- source_crs:  ETRF92@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (DK)
-    0.05,           -- accuracy
+    0.005,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -811,7 +811,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF00@2000.0 to ETRF92@1994.704', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (DK)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -845,7 +845,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89(DK)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(DK)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 
@@ -897,7 +897,7 @@ VALUES(
     '+proj=deformation +dt=-2.44 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7926',  -- source_crs:  ETRF96@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -916,7 +916,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF00@2000.0 to ETRF96@1997.56', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -950,7 +950,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-EST97)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(EE)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 
@@ -1005,7 +1005,7 @@ VALUES(
     '+proj=deformation +dt=-3.0 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7926',  -- source_crs:  ETRF96@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1024,7 +1024,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF00@2000.0 to ETRF96@1997.0', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1058,7 +1058,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-FIN)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(FI)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 
@@ -1113,7 +1113,7 @@ VALUES(
     '+proj=deformation +dt=-7.25 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7914',  -- source_crs:  ETRF89@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1132,7 +1132,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF00@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1166,7 +1166,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89 (LKS-92)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(LV)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 
@@ -1220,7 +1220,7 @@ VALUES(
     '+proj=deformation +dt=3.75 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7930',  -- source_crs:  ETRF2000@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (LT)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1239,7 +1239,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF00@2000.0 to ETRF2000@2003.75', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LT)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1273,7 +1273,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89(LT)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(LT)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 
@@ -1327,7 +1327,7 @@ VALUES(
     '+proj=deformation +dt=-5 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7922',  -- source_crs:  ETRF93@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (NO)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1346,7 +1346,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF00@2000.0 to ETRF93@1995.0', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (NO)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1380,7 +1380,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89(NO)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(NO)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 
@@ -1434,7 +1434,7 @@ VALUES(
     '+proj=deformation +dt=-0.5 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7928',  -- source_crs:  ETRF97@2000.0
     'EPSG','4976',  -- target_crs:  SWEREF99
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1453,7 +1453,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF00@2000.0 to ETRF97@1999.5', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4976',  -- target_crs:  SWEREF99
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 );
@@ -1487,7 +1487,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89(SE)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4976', -- target_crs:  SWEREF99
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
 
@@ -1539,7 +1539,7 @@ VALUES(
     '+proj=deformation +dt=15.829 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7920',  -- source_crs:  ETRF92@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (DK)
-    0.05,           -- accuracy
+    0.005,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1558,7 +1558,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF14@2000.0 to ETRF92@1994.704', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (DK)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1592,7 +1592,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89(DK)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(DK)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 
@@ -1653,7 +1653,7 @@ VALUES(
     '+proj=deformation +dt=-2.44 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7926',  -- source_crs:  ETRF96@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1672,7 +1672,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF14@2000.0 to ETRF96@1997.56', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1706,7 +1706,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-EST97)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(EE)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 
@@ -1769,7 +1769,7 @@ VALUES(
     '+proj=deformation +dt=-3 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7926',  -- source_crs:  ETRF96@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1788,7 +1788,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF14@2000.0 to ETRF96@1997.0', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1822,7 +1822,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-FIN)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(FI)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 
@@ -1885,7 +1885,7 @@ VALUES(
     '+proj=deformation +dt=-7.25 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7914',  -- source_crs:  ETRF89@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1904,7 +1904,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF14@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -1938,7 +1938,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89 (LKS-92)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(LV)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 
@@ -2001,7 +2001,7 @@ VALUES(
     '+proj=deformation +dt=3.75 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7930',  -- source_crs:  ETRF2000@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (LT)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -2020,7 +2020,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF14@2000.0 to ETRF2000@2003.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LT)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -2054,7 +2054,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89(LT)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(LT)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 
@@ -2117,7 +2117,7 @@ VALUES(
     '+proj=deformation +dt=-5 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7922',  -- source_crs:  ETRF93@2000.0
     'EPSG','4936',  -- target_crs:  ETRS89 (NO)
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -2136,7 +2136,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF14@2000.0 to ETRF93@1995.0', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (NO)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -2170,7 +2170,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to ETRS89(NO)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(NO)
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 
@@ -2234,7 +2234,7 @@ VALUES(
     '+proj=deformation +dt=-0.5 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7928',  -- source_crs:  ETRF97@2000.0
     'EPSG','4976',  -- target_crs:  SWEREF99
-    0.05,           -- accuracy
+    0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -2253,7 +2253,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'Transformation from NKG_ETRF14@2000.0 to SWEREF99 (ETRF97@1999.5)', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4976',  -- target_crs:  SWEREF99
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 );
@@ -2287,7 +2287,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'Time-dependent transformation from ITRF2014 to SWEREF99', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4976', -- target_crs:  SWEREF99
-    0.05,           -- accuracy
+    0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
 
