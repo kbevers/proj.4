@@ -1554,7 +1554,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_DK', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(DK)', -- name
+    'NKG_ETRF14 to ETRS89(DK)', -- name
     'Transformation from NKG_ETRF00@2000 to ETRF92@1994.704', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (DK)
@@ -1668,7 +1668,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_EE', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(EE)', -- name
+    'NKG_ETRF14 to ETRS89(EE)', -- name
     'Transformation from NKG_ETRF00@2000 to ETRF96@1997.56', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
@@ -1784,7 +1784,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_FI', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(FI)', -- name
+    'NKG_ETRF14 to ETRS89(FI)', -- name
     'Transformation from NKG_ETRF00@2000 to ETRF96@1997.0', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
@@ -1900,7 +1900,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_LV', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(LV)', -- name
+    'NKG_ETRF14 to ETRS89(LV)', -- name
     'Transformation from NKG_ETRF00@2000 to ETRF89@1992.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
@@ -2016,7 +2016,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_LT', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(LT)', -- name
+    'NKG_ETRF14 to ETRS89(LT)', -- name
     'Transformation from NKG_ETRF00@2000 to ETRF2000@2003.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LT)
@@ -2132,7 +2132,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_NO', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(NO)', -- name
+    'NKG_ETRF14 to ETRS89(NO)', -- name
     'Transformation from NKG_ETRF00@2000 to ETRF93@1995.0', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (NO)
