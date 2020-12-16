@@ -287,7 +287,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','P1_2008_DK', -- operation auth+code
     'NKG_ETRF00 to ETRF92@2000.0', -- name
-    'Transformation from NKG_ETRF00 to ETRF92, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF00 to ETRF92, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
@@ -321,7 +321,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','P1_2008_EE', -- operation auth+code
     'NKG_ETRF00 to ETRF96@2000.0', -- name
-    'Transformation from NKG_ETRF00 to ETRF96, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF00 to ETRF96, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
@@ -355,7 +355,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','P1_2008_FI', -- operation auth+code
     'NKG_ETRF00 to ETRF96@2000.0', -- name
-    'Transformation from NKG_ETRF00 to ETRF96, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF00 to ETRF96, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
@@ -389,7 +389,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','P1_2008_LV', -- operation auth+code
     'NKG_ETRF00 to ETRF89@2000.0', -- name
-    'Transformation from NKG_ETRF00 to ETRF89, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF00 to ETRF89, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
@@ -422,7 +422,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','P1_2008_LT', -- operation auth+code
     'NKG_ETRF00 to ETRF2000@2000.0', -- name
-    'Transformation from NKG_ETRF00 to ETRF2000, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF00 to ETRF2000, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
@@ -456,7 +456,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','P1_2008_NO', -- operation auth+code
     'NKG_ETRF00 to ETRF93@2000.0', -- name
-    'Transformation from NKG_ETRF00 to ETRF93, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF00 to ETRF93, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
@@ -490,7 +490,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','P1_2008_SE', -- operation auth+code
     'NKG_ETRF00 to ETRF97@2000.0', -- name
-    'Transformation from NKG_ETRF00 to ETRF97, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF00 to ETRF97, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF00', -- source auth+code
@@ -528,7 +528,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','PAR_2020_DK', -- operation auth+code
     'NKG_ETRF14 to ETRF92@2000.0', -- name
-    'Transformation from NKG_ETRF14 to ETRF92, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF14 to ETRF92, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
@@ -563,7 +563,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','PAR_2020_EE', -- operation auth+code
     'NKG_ETRF14 to ETRF96@2000.0', -- name
-    'Transformation from NKG_ETRF14 to ETRF96, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF14 to ETRF96, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
@@ -597,7 +597,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','PAR_2020_FI', -- operation auth+code
     'NKG_ETRF14 to ETRF96@2000.0', -- name
-    'Transformation from NKG_ETRF14 to ETRF96, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF14 to ETRF96, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
@@ -631,7 +631,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','PAR_2020_LV', -- operation auth+code
     'NKG_ETRF14 to ETRF89@2000.0', -- name
-    'Transformation from NKG_ETRF14 to ETRF89, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF14 to ETRF89, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
@@ -664,7 +664,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','PAR_2020_LT', -- operation auth+code
     'NKG_ETRF14 to ETRF2000@2000.0', -- name
-    'Transformation from NKG_ETRF14 to ETRF2000, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF14 to ETRF2000, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
@@ -698,7 +698,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','PAR_2020_NO', -- operation auth+code
     'NKG_ETRF14 to ETRF93@2000.0', -- name
-    'Transformation from NKG_ETRF14 to ETRF93, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF14 to ETRF93, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
@@ -732,7 +732,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "helmert_transformation" VALUES (
     'NKG','PAR_2020_SE', -- operation auth+code
     'NKG_ETRF14 to ETRF97@2000.0', -- name
-    'Transformation from NKG_ETRF14 to ETRF97, epoch kept at 2000.0', -- description / remark
+    'Transformation from NKG_ETRF14 to ETRF97, at transformation reference epoch 2000.0', -- description / remark
     'EPSG','1033',  -- method auth+code
     'Position Vector transformation (geocentric domain)',
     'NKG','ETRF14', -- source auth+code
