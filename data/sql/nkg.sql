@@ -912,7 +912,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_EE', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(EE)', -- name
+    'NKG_ETRF00 to ETRS89 (EUREF-EST97)', -- name
     'Transformation from NKG_ETRF00@2000.0 to ETRF96@1997.56', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
@@ -947,7 +947,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation"  VALUES (
     'NKG', 'ITRF2000_TO_EE',  -- operation auth+code
     'ITRF2000 to ETRS89(EE)', -- name
-    'Time-dependent transformation from ITRF2014 to ETRS89(EE)', -- description
+    'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-EST97)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(EE)
     0.05,           -- accuracy
@@ -1020,7 +1020,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_FI', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(FI)', -- name
+    'NKG_ETRF00 to ETRS89 (EUREF-FIN)', -- name
     'Transformation from NKG_ETRF00@2000.0 to ETRF96@1997.0', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
@@ -1054,8 +1054,8 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation"  VALUES (
     'NKG', 'ITRF2000_TO_FI',  -- operation auth+code
-    'ITRF2000 to ETRS89(FI)', -- name
-    'Time-dependent transformation from ITRF2014 to ETRS89(FI)', -- description
+    'ITRF2000 to ETRS89 (EUREF-FIN)', -- name
+    'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-FIN)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(FI)
     0.05,           -- accuracy
@@ -1128,7 +1128,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_LV', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(LV)', -- name
+    'NKG_ETRF00 to ETRS89 (LKS-92)', -- name
     'Transformation from NKG_ETRF00@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
@@ -1162,8 +1162,8 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation"  VALUES (
     'NKG', 'ITRF2000_TO_LV',  -- operation auth+code
-    'ITRF2000 to ETRS89(LV)', -- name
-    'Time-dependent transformation from ITRF2014 to ETRS89(LV)', -- description
+    'ITRF2000 to ETRS89 (LKS-92)', -- name
+    'Time-dependent transformation from ITRF2014 to ETRS89 (LKS-92)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
     'EPSG', '4936', -- target_crs:  ETRS89(LV)
     0.05,           -- accuracy
@@ -1668,7 +1668,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_EE', -- operation auth+code
-    'NKG_ETRF14 to ETRS89(EE)', -- name
+    'NKG_ETRF14 to ETRS89 (EUREF-EST97)', -- name
     'Transformation from NKG_ETRF14@2000.0 to ETRF96@1997.56', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
@@ -1702,8 +1702,8 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation"  VALUES (
     'NKG', 'ITRF2014_TO_EE',  -- operation auth+code
-    'ITRF2014 to ETRS89(EE)', -- name
-    'Time-dependent transformation from ITRF2014 to ETRS89(EE)', -- description
+    'ITRF2014 to ETRS89 (EUREF-EST97)', -- name
+    'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-EST97)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(EE)
     0.05,           -- accuracy
@@ -1784,7 +1784,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_FI', -- operation auth+code
-    'NKG_ETRF14 to ETRS89(FI)', -- name
+    'NKG_ETRF14 to ETRS89 (EUREF-FIN)', -- name
     'Transformation from NKG_ETRF14@2000.0 to ETRF96@1997.0', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
@@ -1818,8 +1818,8 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation"  VALUES (
     'NKG', 'ITRF2014_TO_FI',  -- operation auth+code
-    'ITRF2014 to ETRS89(FI)', -- name
-    'Time-dependent transformation from ITRF2014 to ETRS89(FI)', -- description
+    'ITRF2014 to ETRS89 (EUREF-FIN)', -- name
+    'Time-dependent transformation from ITRF2014 to ETRS89 (EUREF-FIN)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(FI)
     0.05,           -- accuracy
@@ -1900,7 +1900,7 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_LV', -- operation auth+code
-    'NKG_ETRF14 to ETRS89(LV)', -- name
+    'NKG_ETRF14 to ETRS89 (LKS-92)', -- name
     'Transformation from NKG_ETRF14@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
@@ -1934,8 +1934,8 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation"  VALUES (
     'NKG', 'ITRF2014_TO_LV',  -- operation auth+code
-    'ITRF2014 to ETRS89(LV)', -- name
-    'Time-dependent transformation from ITRF2014 to ETRS89(LV)', -- description
+    'ITRF2014 to ETRS89 (LKS-92)', -- name
+    'Time-dependent transformation from ITRF2014 to ETRS89 (LKS-92)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
     'EPSG', '4936', -- target_crs:  ETRS89(LV)
     0.05,           -- accuracy
