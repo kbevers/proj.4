@@ -20,10 +20,10 @@ INSERT INTO "extent" VALUES(
     'NKG','EXTENT_2008',            -- extend auth+code
     'Nordic and Baltic countries',  -- name
     'Denmark; Estonia; Finland; Latvia; Lithuania; Norway; Sweden', -- description
-    52.9583333,                     -- south latitude
-    73.0416667,                     -- north latitude
-    2.916667,                       -- west longitude
-    40.083333,                      -- east longitude
+    53.0,                       -- south latitude
+    73.0,                       -- north latitude
+    3.0,                        -- west longitude
+    40.0,                       -- east longitude
     0
 );
 
@@ -32,10 +32,10 @@ INSERT INTO "extent" VALUES(
     'NKG','EXTENT_2020',            -- extend auth+code
     'Nordic and Baltic countries',  -- name
     'Denmark; Estonia; Finland; Latvia; Lithuania; Norway; Sweden', -- description
-    50.0833333,                     -- south latitude
-    75.0416667,                     -- north latitude
-    -0.0833333,                     -- west longitude
-    48.9583333,                     -- east longitude
+    50.0,                       -- south latitude
+    75.0,                       -- north latitude
+    0.0,                        -- west longitude
+    49.0,                       -- east longitude
     0
 );
 
