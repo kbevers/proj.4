@@ -808,7 +808,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_DK', -- operation auth+code
     'NKG_ETRF00 to ETRS89(DK)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF92@1994.704', -- description
+    'Transformation from NKG_ETRF00@2000.0 to ETRF92@1994.704', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (DK)
     0.05,           -- accuracy
@@ -913,7 +913,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_EE', -- operation auth+code
     'NKG_ETRF00 to ETRS89(EE)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF96@1997.56', -- description
+    'Transformation from NKG_ETRF00@2000.0 to ETRF96@1997.56', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
     0.05,           -- accuracy
@@ -978,7 +978,7 @@ INSERT INTO "usage" VALUES (
 
 
 -------------------------------------------------------
--- Transformation: NKG_ETRF00 -> ETRF96@1997 (FI)
+-- Transformation: NKG_ETRF00 -> ETRF96@1997.0 (FI)
 -------------------------------------------------------
 
 INSERT INTO "other_transformation" (
@@ -999,7 +999,7 @@ INSERT INTO "other_transformation" (
 )
 VALUES(
     'NKG', 'ETRF96_2000_TO_ETRF96_1997',-- object auth+code
-    'ETRF96@2000.0 to ETRF96@1997',     -- name
+    'ETRF96@2000.0 to ETRF96@1997.0',     -- name
     NULL,                               -- description
     'PROJ', 'PROJString',               -- method auth+cod
     '+proj=deformation +dt=-3.0 +grids=eur_nkg_nkgrf03vel_realigned.tif',
@@ -1021,7 +1021,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_FI', -- operation auth+code
     'NKG_ETRF00 to ETRS89(FI)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF96@1997', -- description
+    'Transformation from NKG_ETRF00@2000.0 to ETRF96@1997.0', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
     0.05,           -- accuracy
@@ -1049,7 +1049,7 @@ INSERT INTO "usage" VALUES (
 
 
 -------------------------------------------------------
--- Transformation: ITRF2000 -> ETRF96@1997 (FI)
+-- Transformation: ITRF2000 -> ETRF96@1997.0 (FI)
 -------------------------------------------------------
 
 INSERT INTO "concatenated_operation"  VALUES (
@@ -1086,7 +1086,7 @@ INSERT INTO "usage" VALUES (
 
 
 -------------------------------------------------------
--- Transformation: NKG_ETRF00 -> ETRF96@1997 (LV)
+-- Transformation: NKG_ETRF00 -> ETRF89@1992.75 (LV)
 -------------------------------------------------------
 
 INSERT INTO "other_transformation" (
@@ -1129,7 +1129,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_LV', -- operation auth+code
     'NKG_ETRF00 to ETRS89(LV)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF89@1992.75', -- description
+    'Transformation from NKG_ETRF00@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
     0.05,           -- accuracy
@@ -1157,7 +1157,7 @@ INSERT INTO "usage" VALUES (
 
 
 -------------------------------------------------------
--- Transformation: ITRF2000 -> ETRF96@1997 (LV)
+-- Transformation: ITRF2000 -> ETRF89@1992.75 (LV)
 -------------------------------------------------------
 
 INSERT INTO "concatenated_operation"  VALUES (
@@ -1236,7 +1236,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_LT', -- operation auth+code
     'NKG_ETRF00 to ETRS89(LT)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF2000@2003.75', -- description
+    'Transformation from NKG_ETRF00@2000.0 to ETRF2000@2003.75', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LT)
     0.05,           -- accuracy
@@ -1343,7 +1343,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_NO', -- operation auth+code
     'NKG_ETRF00 to ETRS89(NO)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF93@1995.0', -- description
+    'Transformation from NKG_ETRF00@2000.0 to ETRF93@1995.0', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (NO)
     0.05,           -- accuracy
@@ -1450,7 +1450,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_SE', -- operation auth+code
     'NKG_ETRF00 to SWEREF99', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF97@1999.5', -- description
+    'Transformation from NKG_ETRF00@2000.0 to ETRF97@1999.5', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
     'EPSG','4976',  -- target_crs:  SWEREF99
     0.05,           -- accuracy
@@ -1555,7 +1555,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_DK', -- operation auth+code
     'NKG_ETRF14 to ETRS89(DK)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF92@1994.704', -- description
+    'Transformation from NKG_ETRF14@2000.0 to ETRF92@1994.704', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (DK)
     0.05,           -- accuracy
@@ -1669,7 +1669,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_EE', -- operation auth+code
     'NKG_ETRF14 to ETRS89(EE)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF96@1997.56', -- description
+    'Transformation from NKG_ETRF14@2000.0 to ETRF96@1997.56', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (EE)
     0.05,           -- accuracy
@@ -1785,7 +1785,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_FI', -- operation auth+code
     'NKG_ETRF14 to ETRS89(FI)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF96@1997.0', -- description
+    'Transformation from NKG_ETRF14@2000.0 to ETRF96@1997.0', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (FI)
     0.05,           -- accuracy
@@ -1901,7 +1901,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_LV', -- operation auth+code
     'NKG_ETRF14 to ETRS89(LV)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF89@1992.75', -- description
+    'Transformation from NKG_ETRF14@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LV)
     0.05,           -- accuracy
@@ -2017,7 +2017,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_LT', -- operation auth+code
     'NKG_ETRF14 to ETRS89(LT)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF2000@2003.75', -- description
+    'Transformation from NKG_ETRF14@2000.0 to ETRF2000@2003.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (LT)
     0.05,           -- accuracy
@@ -2133,7 +2133,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_NO', -- operation auth+code
     'NKG_ETRF14 to ETRS89(NO)', -- name
-    'Transformation from NKG_ETRF00@2000 to ETRF93@1995.0', -- description
+    'Transformation from NKG_ETRF14@2000.0 to ETRF93@1995.0', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4936',  -- target_crs:  ETRS89 (NO)
     0.05,           -- accuracy
@@ -2250,7 +2250,7 @@ INSERT INTO "usage" VALUES (
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_SE', -- operation auth+code
     'NKG_ETRF14 to SWEREF99', -- name
-    'Transformation from NKG_ETRF00@2000 to SWEREF99 (ETRF97@1999.5)', -- description
+    'Transformation from NKG_ETRF14@2000.0 to SWEREF99 (ETRF97@1999.5)', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
     'EPSG','4976',  -- target_crs:  SWEREF99
     0.05,           -- accuracy
