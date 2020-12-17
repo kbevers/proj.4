@@ -1219,7 +1219,7 @@ VALUES(
     'PROJ', 'PROJString',               -- method auth+cod
     '+proj=deformation +dt=3.75 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7930',  -- source_crs:  ETRF2000@2000.0
-    'EPSG','4936',  -- target_crs:  ETRS89 (LT)
+    'EPSG','4950',  -- target_crs:  LKS94
     0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
@@ -1235,10 +1235,10 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF00_TO_LT', -- operation auth+code
-    'NKG_ETRF00 to ETRS89(LT)', -- name
+    'NKG_ETRF00 to LKS94', -- name
     'Transformation from NKG_ETRF00@2000.0 to ETRF2000@2003.75', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
-    'EPSG','4936',  -- target_crs:  ETRS89 (LT)
+    'EPSG','4950',  -- target_crs:  LKS94
     0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
@@ -1272,7 +1272,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'ITRF2000 to ETRS89(LT)', -- name
     'Time-dependent transformation from ITRF2014 to ETRS89(LT)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
-    'EPSG', '4936', -- target_crs:  ETRS89(LT)
+    'EPSG', '4950', -- target_crs:  LKS94
     0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
@@ -1995,12 +1995,12 @@ INSERT INTO "other_transformation" (
 )
 VALUES(
     'NKG', 'LT_2020_INTRAPLATE',            -- object auth+code
-    'ETRF2000@2000.0 to ETRF2000@2003.75',  -- name
+    'ETRF2000@2000.0 to ETRF2000@2003.75 (LKS94)',  -- name
     NULL,                                   -- description
     'PROJ', 'PROJString',               -- method auth+cod
     '+proj=deformation +dt=3.75 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7930',  -- source_crs:  ETRF2000@2000.0
-    'EPSG','4936',  -- target_crs:  ETRS89 (LT)
+    'EPSG','4950',  -- target_crs:  LKS94
     0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
@@ -2016,10 +2016,10 @@ INSERT INTO "usage" VALUES (
 
 INSERT INTO "concatenated_operation" VALUES(
     'NKG', 'ETRF14_TO_LT', -- operation auth+code
-    'NKG_ETRF14 to ETRS89(LT)', -- name
-    'Transformation from NKG_ETRF14@2000.0 to ETRF2000@2003.75', -- description
+    'NKG_ETRF14 to LKS94', -- name
+    'Transformation from NKG_ETRF14@2000.0 to ETRF2000@2003.75 (LKS94)', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
-    'EPSG','4936',  -- target_crs:  ETRS89 (LT)
+    'EPSG','4950',  -- target_crs:  LKS94
     0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
@@ -2053,7 +2053,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'ITRF2014 to ETRS89(LT)', -- name
     'Time-dependent transformation from ITRF2014 to ETRS89(LT)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
-    'EPSG', '4936', -- target_crs:  ETRS89(LT)
+    'EPSG', '4950', -- target_crs:  LKS94
     0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
