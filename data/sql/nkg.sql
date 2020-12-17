@@ -1112,7 +1112,7 @@ VALUES(
     'PROJ', 'PROJString',               -- method auth+cod
     '+proj=deformation +dt=-7.25 +grids=eur_nkg_nkgrf03vel_realigned.tif',
     'EPSG','7914',  -- source_crs:  ETRF89@2000.0
-    'EPSG','4936',  -- target_crs:  ETRS89 (LV)
+    'EPSG','4948',  -- target_crs:  LKS-92
     0.005,          -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
@@ -1131,7 +1131,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'NKG_ETRF00 to ETRS89 (LKS-92)', -- name
     'Transformation from NKG_ETRF00@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF00',-- source_crs:  NKG_ETRF00
-    'EPSG','4936',  -- target_crs:  ETRS89 (LV)
+    'EPSG','4948',  -- target_crs:  LKS-92
     0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
@@ -1165,7 +1165,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'ITRF2000 to ETRS89 (LKS-92)', -- name
     'Time-dependent transformation from ITRF2014 to ETRS89 (LKS-92)', -- description
     'EPSG', '4919', -- source_crs:  ITRF2000
-    'EPSG', '4936', -- target_crs:  ETRS89(LV)
+    'EPSG', '4948', -- target_crs:  LKS-92
     0.01,           -- accuracy
     'NKG 2008',     -- operation_version
     0               -- deprecated
@@ -1879,12 +1879,12 @@ INSERT INTO "other_transformation" (
 )
 VALUES(
     'NKG', 'LV_2020_INTRAPLATE',        -- object auth+code
-    'ETRF89@2000.0 to ETRF89@1992.75',  -- name
+    'ETRF89@2000.0 to ETRF89@1992.75 (LKS-92)',  -- name
     NULL,                               -- description
     'PROJ', 'PROJString',               -- method auth+cod
     '+proj=deformation +dt=-7.25 +grids=eur_nkg_nkgrf17vel.tif',
     'EPSG','7914',  -- source_crs:  ETRF89@2000.0
-    'EPSG','4936',  -- target_crs:  ETRS89 (LV)
+    'EPSG','4948',  -- target_crs:  LKS-92
     0.005,          -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
@@ -1903,7 +1903,7 @@ INSERT INTO "concatenated_operation" VALUES(
     'NKG_ETRF14 to ETRS89 (LKS-92)', -- name
     'Transformation from NKG_ETRF14@2000.0 to ETRF89@1992.75', -- description
     'NKG', 'ETRF14',-- source_crs:  NKG_ETRF00
-    'EPSG','4936',  -- target_crs:  ETRS89 (LV)
+    'EPSG','4948',  -- target_crs:  LKS-92
     0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
@@ -1937,7 +1937,7 @@ INSERT INTO "concatenated_operation"  VALUES (
     'ITRF2014 to ETRS89 (LKS-92)', -- name
     'Time-dependent transformation from ITRF2014 to ETRS89 (LKS-92)', -- description
     'EPSG', '7789', -- source_crs:  ITRF2014
-    'EPSG', '4936', -- target_crs:  ETRS89(LV)
+    'EPSG', '4948', -- target_crs:  LKS-92
     0.01,           -- accuracy
     'NKG 2020',     -- operation_version
     0               -- deprecated
