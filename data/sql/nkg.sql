@@ -738,15 +738,15 @@ INSERT INTO "helmert_transformation" VALUES (
     'NKG','ETRF14', -- source auth+code
     'EPSG','7928',  -- target auth+code
     0.005,          -- accuracy
-    0.02784,        -- x
-    0.13387,        -- y
-    -0.09034,        -- z
+    0.03054,        -- x
+    0.04606,        -- y
+   -0.07944,        -- z
     'EPSG','9001',
-    0.00406607,     -- rx
-    0.00013172,     -- ry
-    0.00047572,     -- rz
+    0.00141958,     -- rx
+    0.00015132,     -- ry
+    0.00150337,     -- rz
     'EPSG','9104',
-    0.002639,       -- s
+    0.003002,       -- s
     'EPSG','9202',
     NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
     'NKG 2020',     -- operation version
